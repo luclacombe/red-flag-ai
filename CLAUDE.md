@@ -6,6 +6,40 @@ AI contract red-flag detector. Upload a PDF, get clause-by-clause risk analysis 
 **Project spec:** `PROJECT.md` — product requirements, RAG knowledge base spec, error handling.
 **Tooling:** `TOOLING.md` — MCP servers, skills, development tools.
 
+## Session Workflow — MANDATORY
+
+Every session that writes code MUST follow this workflow. No exceptions.
+
+### At Session Start
+1. Read `docs/BUILD_PLAN.md` to understand current phase and pending tasks
+2. Read CLAUDE.md files in directories you'll be modifying
+
+### During Implementation
+3. **Check off BUILD_PLAN.md tasks as you complete them** — not at the end, but as each task is done. A task is complete when its acceptance criteria are met and the quality gate passes for that scope.
+4. **Update sub-directory CLAUDE.md files** when you:
+   - Add new files, exports, or patterns to a package
+   - Change how a package works (new commands, new conventions, new dependencies)
+   - Add something a future session would need to know to work in that package
+5. **Update root CLAUDE.md** when you:
+   - Add new dependencies (update Current Stack Versions table)
+   - Discover new conventions or anti-patterns
+   - Change architecture (update Key Architecture Notes)
+
+### Before Committing
+6. Run `pnpm turbo lint type-check test build` — must pass
+7. Verify all completed tasks are checked in BUILD_PLAN.md
+8. Verify CLAUDE.md files reflect the current state — not what was planned, what actually exists now
+
+### At Session End
+9. Verify all BUILD_PLAN.md exit criteria for the phase are addressed
+10. Push to GitHub and confirm CI passes before considering the phase done
+
+### CLAUDE.md Quality Standard
+- Document **what exists and how it works**, not aspirational descriptions
+- Include file paths, command examples, and gotchas a future session would hit
+- Keep it scannable — tables and bullet points, not paragraphs
+- Delete stale information rather than leaving it to mislead future sessions
+
 ## Package Structure
 
 ```
