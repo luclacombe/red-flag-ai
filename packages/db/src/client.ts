@@ -10,7 +10,21 @@ function getConnectionString(): string {
   return url;
 }
 
+// Lazy initialization — avoids crashing at build time when env vars aren't set.
 // { prepare: false } required for Supabase transaction pooler (pgBouncer/Supavisor)
-const client = postgres(getConnectionString(), { prepare: false });
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-export const db = drizzle(client, { schema });
+export function getDb() {
+  if (!_db) {
+    const client = postgres(getConnectionString(), { prepare: false });
+    _db = drizzle(client, { schema });
+  }
+  return _db;
+}
+
+/** @deprecated Use getDb() for lazy initialization. Kept for backwards compatibility. */
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_target, prop) {
+    return Reflect.get(getDb(), prop);
+  },
+});

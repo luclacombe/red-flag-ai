@@ -5,7 +5,8 @@ Database layer — Drizzle schema, client, migrations, and query functions (incl
 ## What's Here
 
 - `src/schema.ts` — 5 tables: documents, analyses, clauses, knowledge_patterns, rate_limits
-- `src/client.ts` — Drizzle client with `{ prepare: false }` for Supabase pooler
+- `src/client.ts` — Lazy-initialized Drizzle client (`db` proxy + `getDb()`) with `{ prepare: false }` for Supabase pooler
+- `src/index.ts` — Barrel export (also re-exports `eq` from `drizzle-orm` so web app doesn't need a direct dep)
 - `drizzle.config.ts` — Drizzle Kit config (`dialect: "postgresql"`)
 - `drizzle/` — Generated migration SQL files (gitignored from Biome linting)
 
@@ -31,4 +32,5 @@ pnpm --filter @redflag/db db:studio     # Open Drizzle Studio
 
 - All schema changes require a Drizzle migration — never modify DB directly
 - RAG vector search queries live here, not in `packages/agents`
-- `DATABASE_URL` env var is validated at client creation time
+- `DATABASE_URL` env var is validated at first DB access (lazy), not at import time — prevents build failures
+- Drizzle operators (e.g., `eq`) are re-exported from `src/index.ts` — import from `@redflag/db`, not `drizzle-orm`
