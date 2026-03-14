@@ -326,55 +326,55 @@ pnpm turbo lint type-check test build
 ### Tasks
 
 #### 1.1 — PDF upload route
-- [ ] Create `apps/web/app/api/upload/route.ts` (POST handler)
-- [ ] Accept `multipart/form-data` with a single PDF file
-- [ ] Validate:
+- [x] Create `apps/web/app/api/upload/route.ts` (POST handler)
+- [x] Accept `multipart/form-data` with a single PDF file
+- [x] Validate:
   - File type is `application/pdf` (MIME type check)
   - Magic bytes: first 5 bytes are `%PDF-` (prevents spoofed MIME type uploads)
   - File size ≤ 10MB
   - Return clear error messages for each validation failure
-- [ ] Install `unpdf` in `apps/web`
-- [ ] Extract text using `unpdf` (`getDocumentProxy` + `extractText`)
-- [ ] Use **Context7 MCP** if `unpdf` API is unclear
-- [ ] Validate post-extraction:
+- [x] Install `unpdf` in `apps/web`
+- [x] Extract text using `unpdf` (`getDocumentProxy` + `extractText`)
+- [x] Use **Context7 MCP** if `unpdf` API is unclear
+- [x] Validate post-extraction:
   - Page count ≤ 30 (reject if over, with message)
   - Text is not empty (detect scanned/image PDFs)
   - Minimum text length threshold (reject near-empty documents)
-- [ ] Upload original PDF to Supabase Storage (`contracts` bucket)
-- [ ] Create `documents` record in DB (filename, page_count, storage_path, extracted_text)
-- [ ] Return `{ documentId }` on success, `{ error }` on failure
+- [x] Upload original PDF to Supabase Storage (`contracts` bucket)
+- [x] Create `documents` record in DB (filename, page_count, storage_path, extracted_text)
+- [x] Return `{ documentId }` on success, `{ error }` on failure
 
 #### 1.2 — Relevance gate agent
-- [ ] Create `packages/agents/src/gate.ts`
-- [ ] Create `packages/agents/prompts/gate.ts` — system prompt for classification
-- [ ] Install `@anthropic-ai/sdk` in `packages/agents`
-- [ ] Use **Context7 MCP** for latest Anthropic SDK usage
-- [ ] Implement `relevanceGate(text: string)` → `GateResult`:
+- [x] Create `packages/agents/src/gate.ts`
+- [x] Create `packages/agents/src/prompts/gate.ts` — system prompt for classification
+- [x] Install `@anthropic-ai/sdk` in `packages/agents`
+- [x] Use **Context7 MCP** for latest Anthropic SDK usage
+- [x] Implement `relevanceGate(text: string)` → `GateResult`:
   - Call Claude Haiku with extracted text (truncated to first ~2000 chars for speed)
   - Return: `{ isContract, contractType, language, reason }`
   - Validate response against Zod schema from `@redflag/shared`
   - On API error: retry once, then return clear error
   - On malformed response: retry once, then return rejection with reason
-- [ ] Create shared Anthropic client factory in `packages/agents/src/client.ts`
+- [x] Create shared Anthropic client factory in `packages/agents/src/client.ts`
 
 #### 1.3 — Wire gate into upload route
-- [ ] After text extraction, call `relevanceGate(extractedText)`
-- [ ] If not a contract:
+- [x] After text extraction, call `relevanceGate(extractedText)`
+- [x] If not a contract:
   - Do NOT create analysis record
   - Return `{ isContract: false, reason: "..." }` — client shows the rejection message
-- [ ] If contract:
+- [x] If contract:
   - Update document record with `language` and `contract_type`
   - Create `analyses` record (status: `pending`)
   - Return `{ isContract: true, analysisId, contractType, language }`
 
 #### 1.4 — Tests
-- [ ] Unit test: `unpdf` text extraction with a sample PDF (use a small test fixture PDF in `packages/agents/test/fixtures/`)
-- [ ] Unit test: gate agent with mocked Claude responses:
+- [x] Unit test: `unpdf` text extraction with a sample PDF (use a small test fixture PDF in `packages/agents/src/__tests__/fixtures/`)
+- [x] Unit test: gate agent with mocked Claude responses:
   - Contract input → returns `isContract: true` with type
   - Non-contract input → returns `isContract: false` with reason
   - Malformed Claude response → retries, then returns error
-- [ ] Unit test: upload validation (file type, size, page count, empty text)
-- [ ] Integration test: upload route end-to-end with mocked Supabase + mocked Claude
+- [x] Unit test: upload validation (file type, size, page count, empty text)
+- [x] Integration test: upload route end-to-end with mocked Supabase + mocked Claude
 
 ### MCP Usage
 - **Context7**: `unpdf` API, Anthropic SDK (messages API, haiku model ID), Supabase Storage upload API
@@ -386,15 +386,15 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Can upload a real PDF via POST `/api/upload`
-- [ ] PDF stored in Supabase Storage, document record created
-- [ ] Text extraction works on text-based PDFs
-- [ ] Scanned/image PDFs detected and rejected with clear message
-- [ ] Relevance gate correctly classifies contracts vs. non-contracts
-- [ ] Non-contracts rejected with helpful reason
-- [ ] Contracts create analysis record, return `analysisId`
-- [ ] All tests pass
-- [ ] Quality gate passes
+- [x] Can upload a real PDF via POST `/api/upload`
+- [x] PDF stored in Supabase Storage, document record created
+- [x] Text extraction works on text-based PDFs
+- [x] Scanned/image PDFs detected and rejected with clear message
+- [x] Relevance gate correctly classifies contracts vs. non-contracts
+- [x] Non-contracts rejected with helpful reason
+- [x] Contracts create analysis record, return `analysisId`
+- [x] All tests pass
+- [x] Quality gate passes
 - [ ] Commit: `feat: pdf upload, text extraction, and contract relevance gate`
 
 ---
@@ -688,7 +688,7 @@ pnpm turbo lint type-check test build
 
 #### 4.1 — Design direction
 - [ ] Use **UI/UX Pro Max skill** to define design direction:
-  - Industry: legal tech / fintech
+  - Industry: legal tech / fintech / general
   - Mood: trustworthy, clean, professional, modern
   - Get: color palette, font pairing, UI style recommendation
 - [ ] Configure Tailwind theme with chosen design tokens (colors, fonts, spacing)
@@ -967,14 +967,15 @@ Read docs/BUILD_PLAN.md, begin Phase N
 - Run quality gate commands frequently — don't accumulate debt
 - If blocked, note the blocker and move to the next task if independent
 
-### Ending a phase
-1. Run quality gate: `pnpm turbo lint type-check test build`
-2. Fix any failures
-3. Update checkboxes in this file
-4. Commit with conventional commit message
-5. `/clear` before starting the next phase
+### Before finishing a phase
+Verify all of these before committing:
+- [ ] All completed tasks checked off in this file
+- [ ] CLAUDE.md updated in every package you modified (what exists, not what's planned)
+- [ ] Root CLAUDE.md updated if you added deps, conventions, or architecture changes
+- [ ] `pnpm turbo lint type-check test build` passes
+- [ ] Commit with conventional commit message
 
 ### Between phases
-- Do NOT carry context from the previous phase
+- `/clear` before starting the next phase
 - Start fresh — the build plan and code are the source of truth
 - Re-read this plan at the start of each session
