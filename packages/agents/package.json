@@ -1,0 +1,17 @@
+{
+  "name": "@redflag/agents",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@redflag/shared": "workspace:*",
+    "@redflag/db": "workspace:*"
+  },
+  "scripts": {
+    "lint": "biome check src/",
+    "type-check": "tsc --noEmit"
+  }
+}
