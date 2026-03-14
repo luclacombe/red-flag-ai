@@ -7,12 +7,16 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@redflag/shared": "workspace:*",
-    "@redflag/db": "workspace:*"
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@redflag/db": "workspace:*",
+    "@redflag/shared": "workspace:*"
   },
   "scripts": {
     "lint": "biome check src/",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "devDependencies": {
+    "unpdf": "^1.4.0"
   }
 }
