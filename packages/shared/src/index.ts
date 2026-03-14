@@ -32,4 +32,11 @@ export {
 } from "./schemas/events";
 export { type GateResult, GateResultSchema } from "./schemas/gate";
 export { type KnowledgePattern, KnowledgePatternSchema } from "./schemas/knowledge";
+export {
+  ParseClausesResponseSchema,
+  type ParsedClause,
+  ParsedClauseSchema,
+  type PositionedClause,
+  PositionedClauseSchema,
+} from "./schemas/parse";
 export { ClauseBreakdownSchema, type Summary, SummarySchema } from "./schemas/summary";

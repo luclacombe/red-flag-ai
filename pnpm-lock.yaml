@@ -117,6 +117,9 @@ importers:
       '@redflag/shared':
         specifier: workspace:*
         version: link:../shared
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       unpdf:
         specifier: ^1.4.0
