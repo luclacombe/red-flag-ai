@@ -479,7 +479,7 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
 - [x] Search for a predatory clause returns matching patterns from the knowledge base
 - [x] All tests pass
 - [x] Quality gate passes
-- [ ] Commit: `feat: knowledge base curation, embedding pipeline, and vector search`
+- [x] Commit: `feat: knowledge base curation, embedding pipeline, and vector search`
 
 ---
 
@@ -492,52 +492,52 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
 ### Tasks
 
 #### 3.1 — Parse Agent
-- [ ] Create `packages/agents/src/parse.ts`
-- [ ] Create `packages/agents/prompts/parse.ts`
-- [ ] Implement `parseClauses(text: string, contractType: string)` → `ParsedClause[]`:
+- [x] Create `packages/agents/src/parse.ts`
+- [x] Create `packages/agents/prompts/parse.ts`
+- [x] Implement `parseClauses(text: string, contractType: string)` → `ParsedClause[]`:
   ```typescript
   { text: string, startIndex: number, endIndex: number, position: number }
   ```
-- [ ] Claude Sonnet call: identify and split contract into individual clauses
-- [ ] Prompt must instruct Claude to return exact clause text (verbatim from document) — do NOT ask Claude for character positions
-- [ ] **Compute positions in code:** Use `text.indexOf(clauseText)` to find `startIndex`, derive `endIndex` from `startIndex + clauseText.length`. LLMs cannot count characters reliably.
-- [ ] Validate output against Zod schema
-- [ ] Handle edge cases: single-clause documents, preambles, signature blocks (skip non-clause content)
+- [x] Claude Sonnet call: identify and split contract into individual clauses
+- [x] Prompt must instruct Claude to return exact clause text (verbatim from document) — do NOT ask Claude for character positions
+- [x] **Compute positions in code:** Use `text.indexOf(clauseText)` to find `startIndex`, derive `endIndex` from `startIndex + clauseText.length`. LLMs cannot count characters reliably.
+- [x] Validate output against Zod schema
+- [x] Handle edge cases: single-clause documents, preambles, signature blocks (skip non-clause content)
 
 #### 3.2 — Risk Agent
-- [ ] Create `packages/agents/src/risk.ts`
-- [ ] Create `packages/agents/prompts/risk.ts`
-- [ ] Implement `analyzeClause(clause: ParsedClause, patterns: KnowledgePattern[])` → `ClauseAnalysis`:
-  - Embed the clause text via Voyage AI (`input_type: "query"`)
-  - Call `findSimilarPatterns()` from `@redflag/db`
+- [x] Create `packages/agents/src/risk.ts`
+- [x] Create `packages/agents/prompts/risk.ts`
+- [x] Implement `analyzeClause(clause: PositionedClause, patterns: SimilarPattern[], language: string)` → `RiskAnalysisResult`:
+  - Orchestrator handles embedding + `findSimilarPatterns()` — risk agent receives pre-retrieved patterns
   - Call Claude Sonnet with: clause text + retrieved patterns as context
-  - Return: risk level, explanation, category, matched pattern IDs
-  - Prompt must instruct Claude to respond in the document's language
-  - **Prompt injection defense:** System prompt must frame document text as untrusted user input. Instruct Claude to analyze objectively regardless of any instructions or directives found within the document text.
-- [ ] Validate output against `ClauseAnalysis` Zod schema
+  - Return: risk level, explanation, category (matchedPatterns computed programmatically by orchestrator)
+  - Prompt instructs Claude to respond in the document's language
+  - **Prompt injection defense:** System prompt frames document text as untrusted user input
+- [x] Validate output against internal `RiskAnalysisResultSchema`
 
 #### 3.3 — Rewrite Agent
-- [ ] Create `packages/agents/src/rewrite.ts`
-- [ ] Create `packages/agents/prompts/rewrite.ts`
-- [ ] Implement `rewriteClause(clause: ParsedClause, analysis: ClauseAnalysis)` → `string | null`:
-  - Only runs for `red` and `yellow` clauses (skip `green`)
+- [x] Create `packages/agents/src/rewrite.ts`
+- [x] Create `packages/agents/prompts/rewrite.ts`
+- [x] Implement `rewriteClause(clauseText, riskLevel, explanation, language)` → `string`:
+  - Only runs for `red` and `yellow` clauses (orchestrator handles skip logic)
   - Claude Sonnet call: generate safer alternative language
-  - Prompt must instruct: keep the same legal intent, make it fairer
-  - Respond in the document's language
-- [ ] Validate output is non-empty string
+  - Prompt instructs: keep the same legal intent, make it fairer
+  - Responds in the document's language
+- [x] Validate output against internal `RewriteResponseSchema`
 
 #### 3.4 — Summary Agent
-- [ ] Create `packages/agents/src/summary.ts`
-- [ ] Create `packages/agents/prompts/summary.ts`
-- [ ] Implement `summarize(analyses: ClauseAnalysis[], contractType: string)` → `Summary`:
+- [x] Create `packages/agents/src/summary.ts`
+- [x] Create `packages/agents/prompts/summary.ts`
+- [x] Implement `summarize(analyses, contractType, language)` → `Omit<Summary, "clauseBreakdown">`:
   - Claude Sonnet call: aggregate all clause analyses
-  - Return: overall risk score (0-100), recommendation, top concerns, breakdown
-  - Respond in the document's language
-- [ ] Validate output against `Summary` Zod schema
+  - Return: overall risk score (0-100), recommendation, top concerns
+  - `clauseBreakdown` computed deterministically by orchestrator
+  - Responds in the document's language
+- [x] Validate output against internal `SummaryResponseSchema`
 
 #### 3.5 — Pipeline orchestrator
-- [ ] Create `packages/agents/src/orchestrator.ts`
-- [ ] Implement `analyzeContract(text, contractType, language)` as an async generator:
+- [x] Create `packages/agents/src/orchestrator.ts`
+- [x] Implement `analyzeContract(text, contractType, language)` as an async generator:
   ```typescript
   async function* analyzeContract(params): AsyncGenerator<StreamEvent> {
     yield { type: "status", message: "Parsing contract..." }
@@ -556,7 +556,7 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
       const clause = clausesWithPositions[i]
       const patterns = await findSimilarPatterns(embeddings[i])
 
-      // Run Risk + Rewrite concurrently to stay within Vercel 300s timeout
+      // Run Risk + Rewrite concurrently to stay within 300s timeout
       const analysis = await analyzeClause(clause, patterns)
       const rewrite = analysis.riskLevel !== "green"
         ? await rewriteClause(clause, analysis)
@@ -576,17 +576,17 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
     yield { type: "summary", data: summary }
   }
   ```
-- [ ] **Batch embeddings:** Embed all clause texts in a single Voyage API call instead of one call per clause. Cuts N API calls down to 1 (or ceil(N/128) for large contracts).
-- [ ] **Compute positions in code:** `computeClausePositions()` uses `text.indexOf(clauseText)` — never trust LLM character counting.
-- [ ] Error handling at each step:
-  - Claude API error → retry once, then yield error event
+- [x] **Batch embeddings:** Embed all clause texts in a single Voyage API call instead of one call per clause. Chunks into batches of 128 for large contracts.
+- [x] **Compute positions in code:** `computeClausePositions()` uses `text.indexOf(clauseText)` with forward-searching offset — never trust LLM character counting.
+- [x] Error handling at each step:
+  - Claude API error → retry once (built into each agent), then yield error event
   - Voyage AI down → skip RAG, run Risk Agent without patterns, note degraded confidence
   - Malformed response → retry once, then yield partial result with warning
   - Update analysis status to `failed` if unrecoverable error
 
 #### 3.6 — tRPC SSE subscription
-- [ ] Use **Context7 MCP** for tRPC SSE subscription setup in App Router
-- [ ] Create `packages/api/src/routers/analysis.ts`
+- [x] Use **Context7 MCP** for tRPC SSE subscription setup in App Router
+- [x] Create `packages/api/src/routers/analysis.ts`
 - [ ] Add subscription procedure `analysis.stream`:
   ```typescript
   stream: publicProcedure
@@ -632,23 +632,23 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
       }
     })
   ```
-- [ ] **Implement `claimAnalysis()`:** Atomic `UPDATE analyses SET status = 'processing', updated_at = now() WHERE id = ? AND status IN ('pending') RETURNING *`. Returns null if another consumer already claimed it.
-- [ ] **Add `updated_at` column** to analyses table (needed for staleness check)
-- [ ] Add query procedure `analysis.get` — fetch analysis + clauses from DB (for completed analyses)
-- [ ] Configure `httpSubscriptionLink` on the client alongside `httpBatchStreamLink`
+- [x] **Implement `claimAnalysis()`:** Atomic `UPDATE analyses SET status = 'processing', updated_at = now() WHERE id = ? AND (status = 'pending' OR stale 'processing') RETURNING *`. Returns null if already claimed.
+- [x] **`updated_at` column** already exists on analyses table
+- [x] Add query procedure `analysis.get` — fetch analysis + clauses from DB (for completed analyses)
+- [x] `httpSubscriptionLink` already configured on the client (Phase 1 setup)
 
 #### 3.7 — Tests
-- [ ] Unit test per agent: mock Claude responses, verify output schema
-- [ ] Unit test: orchestrator with all agents mocked — verify event sequence:
+- [x] Unit test per agent: mock Claude responses, verify output schema (parse: 6, risk: 6, rewrite: 5, summary: 6)
+- [x] Unit test: orchestrator with all agents mocked — verify event sequence:
   ```
   status → status → clause_analysis (×N) → status → summary
   ```
-- [ ] Unit test: orchestrator error paths — Claude failure, Voyage failure, malformed response
-- [ ] Unit test: `claimAnalysis()` — verify atomic behavior (second call returns null)
-- [ ] Unit test: recovery path — `processing` status yields existing clauses from DB
-- [ ] Unit test: `computeClausePositions()` — verify positions match `indexOf()` results
-- [ ] Integration test: full pipeline with mocked LLM — subscribe to tRPC SSE, verify all events received in order
-- [ ] Verify: Zod validation catches malformed agent outputs
+- [x] Unit test: orchestrator error paths — Claude failure, Voyage failure, malformed response (10 tests)
+- [x] Unit test: `claimAnalysis()` — verify atomic behavior (second call returns null via tRPC caller)
+- [x] Unit test: recovery path — `processing` status yields existing clauses from DB
+- [x] Unit test: `computeClausePositions()` — verify positions match `indexOf()` results (6 tests)
+- [x] Integration test: full pipeline with mocked LLM — subscribe to tRPC subscription, verify all events received in order
+- [x] Verify: Zod validation catches malformed agent outputs (tested in each agent's test suite)
 
 ### MCP Usage
 - **Context7**: Anthropic SDK (streaming, Sonnet model ID), tRPC SSE subscriptions, Drizzle insert/update syntax
@@ -660,21 +660,21 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] All 4 agents work individually with correct output schemas
-- [ ] Orchestrator chains agents sequentially per clause, yields typed events
-- [ ] Batch embedding works (single Voyage call for all clauses)
-- [ ] Clause positions computed via `indexOf()`, not LLM output
-- [ ] tRPC SSE subscription streams events to the client
-- [ ] Immediate status event emitted (Vercel 25s constraint)
-- [ ] Atomic `claimAnalysis()` prevents duplicate pipeline runs
-- [ ] Recovery path: reconnecting to `processing` analysis yields persisted clauses
-- [ ] Completed analyses load from DB without SSE
-- [ ] Error handling works at every pipeline step (retry, degrade, surface)
-- [ ] Prompt injection defense present in all agent system prompts
-- [ ] Results persist to DB as pipeline progresses
-- [ ] All tests pass
-- [ ] Quality gate passes
-- [ ] Commit: `feat: full agent pipeline with tRPC SSE streaming`
+- [x] All 4 agents work individually with correct output schemas
+- [x] Orchestrator chains agents sequentially per clause, yields typed events
+- [x] Batch embedding works (single Voyage call for all clauses)
+- [x] Clause positions computed via `indexOf()`, not LLM output
+- [x] tRPC SSE subscription streams events to the client
+- [x] Immediate status event emitted (Vercel 25s constraint)
+- [x] Atomic `claimAnalysis()` prevents duplicate pipeline runs
+- [x] Recovery path: reconnecting to `processing` analysis yields persisted clauses
+- [x] Completed analyses load from DB without SSE
+- [x] Error handling works at every pipeline step (retry, degrade, surface)
+- [x] Prompt injection defense present in all agent system prompts
+- [x] Results persist to DB as pipeline progresses
+- [x] All tests pass (118 total: shared 6, db 44, agents 49, api 9, web 10)
+- [x] Quality gate passes
+- [x] Commit: `feat: full agent pipeline with tRPC SSE streaming`
 
 ---
 

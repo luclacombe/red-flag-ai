@@ -17,6 +17,7 @@ Leaf package — all other packages import from here, this imports nothing inter
 | SSEEventSchema | `schemas/events.ts` | Discriminated union of all streamed event types |
 | KnowledgePatternSchema | `schemas/knowledge.ts` | RAG knowledge base entry (no embedding field) |
 | GateResultSchema | `schemas/gate.ts` | Relevance gate output |
+| ParsedClauseSchema, PositionedClauseSchema | `schemas/parse.ts` | Parse agent output (text + position) and orchestrator-enriched version (with startIndex/endIndex) |
 | RiskLevelSchema etc. | `schemas/enums.ts` | Shared enum types |
 
 ## Rules
