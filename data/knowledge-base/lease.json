@@ -1,0 +1,402 @@
+[
+  {
+    "id": "a1b2c3d4-1001-4a00-b000-000000000001",
+    "clausePattern": "Landlord or Landlord's agents shall have the right to enter the Premises at any time, with or without notice, for any purpose deemed necessary by Landlord, including but not limited to inspection, repairs, or showing the Premises to prospective tenants or buyers.",
+    "category": "right_of_entry",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This gives the landlord unlimited, unannounced access to your home. In most jurisdictions, landlords must give at least 24-48 hours written notice before entering, except in genuine emergencies (like a burst pipe). Unrestricted entry effectively eliminates your right to privacy in your own home and is illegal in most US states, contrary to UK common law implied terms, and unfair under EU Directive 93/13/EEC.",
+    "saferAlternative": "Landlord may enter the Premises upon providing Tenant with no less than 24 hours' prior written notice, stating the date, approximate time, and purpose of entry. Entry without notice is permitted only in the event of a genuine emergency posing an immediate risk to life, health, or property. The Tenant's right to quiet enjoyment shall not be unreasonably disturbed.",
+    "jurisdictionNotes": "California Civil Code Section 1954 requires 24 hours' reasonable notice except in emergencies. New York has no specific statute but courts imply a covenant of quiet enjoyment requiring reasonable notice. UK common law implies a covenant of quiet enjoyment (Southwark LBC v Mills [2001] 1 AC 1). EU Directive 93/13/EEC Annex paragraph (b) prohibits terms inappropriately restricting the consumer's legal rights."
+  },
+  {
+    "id": "a1b2c3d4-1002-4a00-b000-000000000002",
+    "clausePattern": "Tenant acknowledges and agrees that Landlord shall retain a master key to the Premises at all times and may use said key to access the Premises without prior consent or notification to Tenant.",
+    "category": "right_of_entry",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "While landlords typically retain a key for emergencies, this clause removes your right to be told when they enter. Combining key retention with no-notice access essentially means someone can walk into your home at any time without telling you. This violates the implied covenant of quiet enjoyment -- a legal principle that says tenants have the right to use their home without unreasonable interference from the landlord.",
+    "saferAlternative": "Landlord shall retain a master key to the Premises solely for use in emergencies. Except in emergencies, Landlord shall not use the master key to enter the Premises without providing Tenant no less than 24 hours' prior written notice and obtaining Tenant's consent, which shall not be unreasonably withheld.",
+    "jurisdictionNotes": "California Civil Code Section 1954(d)(1) requires reasonable notice even when landlord possesses a key. UK Renters (Reform) Act proposals reinforce tenant right to control access. EU Directive 93/13/EEC Annex paragraph (b) flags terms that inappropriately exclude or limit consumer rights."
+  },
+  {
+    "id": "a1b2c3d4-1003-4a00-9a00-000000000003",
+    "clausePattern": "Landlord reserves the right to show the Premises to prospective tenants, buyers, lenders, or contractors at any reasonable time without prior notice to Tenant.",
+    "category": "right_of_entry",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "While landlords have a legitimate need to show property to prospective tenants or buyers, doing so without notice disrupts your daily life and privacy. The vague phrase 'any reasonable time' is subjective and could mean daily interruptions. Most state laws require advance notice even for showings.",
+    "saferAlternative": "Landlord may show the Premises to prospective tenants during the final 60 days of the lease term, and to prospective buyers at any time during the lease term, provided Landlord gives Tenant at least 24 hours' written notice specifying the date and a two-hour time window. Showings shall not exceed three per week without Tenant's written consent.",
+    "jurisdictionNotes": "California Civil Code Section 1954(d)(2) requires 24 hours' notice for showings. Illinois 765 ILCS 735/1 requires two days' notice. UK Housing Act 1988 Section 11 does not override implied quiet enjoyment rights. EU Directive 93/13/EEC Article 3(1) requires assessment of significant imbalance in parties' rights."
+  },
+  {
+    "id": "a1b2c3d4-1004-4a00-a000-000000000004",
+    "clausePattern": "Landlord and Landlord's employees, agents, and contractors may enter the Premises without notice to perform routine inspections on a schedule determined solely by Landlord, including but not limited to monthly inspections of all rooms, appliances, and fixtures.",
+    "category": "right_of_entry",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "Mandatory monthly inspections of your entire home with no notice requirement is excessive surveillance, not reasonable property management. This treats your home like a commercial property subject to audit. It creates a power dynamic where you feel constantly monitored, which courts have recognized as a violation of your right to quiet enjoyment and peaceful possession of the property.",
+    "saferAlternative": "Landlord may conduct a routine inspection of the Premises no more than once every six months, upon providing Tenant with at least 48 hours' prior written notice. Inspections shall be limited to verifying compliance with the lease terms and assessing the general condition of the Premises. Tenant shall have the right to be present during any inspection.",
+    "jurisdictionNotes": "Javins v. First National Realty Corp., 428 F.2d 1071 (D.C. Cir. 1970) established that residential leases carry implied habitability and quiet enjoyment rights. California Civil Code Section 1954 limits entry to specified purposes with 24 hours' notice. UK Consumer Rights Act 2015 Schedule 2 paragraph 4 targets terms giving the trader the right to determine whether goods/services are in conformity unilaterally."
+  },
+  {
+    "id": "a1b2c3d4-1005-4a00-8000-000000000005",
+    "clausePattern": "In the event Landlord installs or activates security cameras, smart locks, or other monitoring devices in or around the Premises, Tenant agrees not to disable, obstruct, or interfere with such devices and consents to any recordings made thereby.",
+    "category": "right_of_entry",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This gives your landlord the right to install cameras and monitoring equipment in your home and record you without limits. Even if cameras are in common areas, smart locks track every time you enter and leave. This is a serious invasion of privacy. In many places, recording someone in their home without clear, specific consent violates wiretapping and privacy laws.",
+    "saferAlternative": "Landlord may install security cameras only in shared common areas (lobbies, parking garages, building entrances) with clear signage disclosing their presence. No recording or monitoring devices shall be installed inside the Premises or in areas where Tenant has a reasonable expectation of privacy. Tenant shall have full control over any smart lock systems installed on the Premises' entry door.",
+    "jurisdictionNotes": "UK Data Protection Act 2018 and UK GDPR regulate surveillance in residential settings. EU General Data Protection Regulation Articles 6-7 require specific, informed consent for data processing. California Invasion of Privacy Act (Penal Code Section 632) prohibits recording confidential communications. New York Penal Law Section 250.00 makes unlawful surveillance a crime."
+  },
+  {
+    "id": "a1b2c3d4-2001-4a00-b000-000000000006",
+    "clausePattern": "The security deposit paid by Tenant upon execution of this Lease is non-refundable and shall be retained by Landlord in its entirety upon termination of the Lease, regardless of the condition of the Premises.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "A completely non-refundable security deposit is illegal in most jurisdictions. The whole point of a deposit is that it secures the landlord against actual damage -- it is your money that the landlord holds temporarily, not a fee you pay. If you leave the property in good condition, you are entitled to get your deposit back. Calling it 'non-refundable' is an attempt to convert your deposit into a hidden fee.",
+    "saferAlternative": "The security deposit shall be held by Landlord in a separate interest-bearing account. Within 30 days of Tenant vacating the Premises, Landlord shall return the full deposit to Tenant, less any amounts deducted for actual damages beyond normal wear and tear, accompanied by an itemized statement of deductions with receipts.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5 prohibits non-refundable deposits and requires itemized return within 21 days. New York GOL Section 7-108 requires deposits held in interest-bearing accounts and return within 14 days. UK Tenant Fees Act 2019 caps deposits at 5 weeks' rent and requires government-approved deposit protection schemes. EU Directive 93/13/EEC Annex paragraph (d) prohibits terms allowing the trader to retain sums paid where the trader terminates."
+  },
+  {
+    "id": "a1b2c3d4-2002-4a00-9000-000000000007",
+    "clausePattern": "Landlord may deduct from the security deposit any amounts deemed necessary for cleaning, repairs, repainting, carpet replacement, or other work required to restore the Premises to their original condition, at Landlord's sole discretion.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "The phrase 'at Landlord's sole discretion' means the landlord alone decides how much to deduct, with no accountability. Combined with 'restore to original condition,' this ignores the legal concept of 'normal wear and tear' -- the gradual deterioration that happens through everyday living (faded paint, minor scuffs, worn carpet). You cannot be charged for normal aging of the property. This clause tries to make you pay for things that are the landlord's responsibility.",
+    "saferAlternative": "Landlord may deduct from the security deposit only the actual, documented cost of repairing damage caused by Tenant beyond normal wear and tear. Normal wear and tear includes minor scuffs, nail holes, faded paint, and gradual carpet wear from ordinary use. Within 21 days of lease termination, Landlord shall provide Tenant with an itemized list of deductions, accompanied by copies of receipts or invoices for all work performed.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5(b) limits deductions to actual damages beyond normal wear and tear, with itemized statement required. New York GOL Section 7-108(1-a) requires reasonable, itemized deductions. UK Tenant Fees Act 2019 restricts deposit deductions to actual loss suffered. Restatement (Second) of Contracts Section 208 renders unconscionable terms unenforceable."
+  },
+  {
+    "id": "a1b2c3d4-2003-4a00-a000-000000000008",
+    "clausePattern": "Landlord shall not be required to provide Tenant with any accounting, itemization, or documentation of deductions from the security deposit. Tenant waives any right to dispute the amount returned or retained.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This tries to strip away your legal right to know what your deposit was spent on and to challenge unfair deductions. In virtually every jurisdiction, landlords are legally required to give you an itemized list of exactly what they deducted and why. Waiving your right to dispute deductions means the landlord can pocket your entire deposit and you would have no recourse.",
+    "saferAlternative": "Within 21 days of Tenant vacating the Premises, Landlord shall provide Tenant with an itemized written statement listing each deduction from the security deposit, the amount of each deduction, and the reason for each deduction, together with copies of receipts or estimates. Any remaining balance shall be returned concurrently. Tenant retains the right to dispute any deduction.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5(g) requires itemized statement within 21 days; non-compliance entitles tenant to full refund. Massachusetts GL c. 186 Section 15B requires 30-day itemized return with treble damages for non-compliance. UK Housing Act 2004 Sections 213-215 require deposit protection and prescribed information. EU Directive 93/13/EEC Annex paragraph (q) prohibits terms excluding or restricting the consumer's right to take legal action."
+  },
+  {
+    "id": "a1b2c3d4-2004-4a00-8000-000000000009",
+    "clausePattern": "Tenant shall pay a security deposit equal to three months' rent upon execution of this Lease. An additional deposit of one month's rent shall be required for each pet, and a further supplemental deposit may be required at Landlord's discretion during the term.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "An upfront deposit of three months' rent plus open-ended additional deposits is excessive and creates a major financial barrier. Many jurisdictions cap security deposits at one to two months' rent precisely to prevent landlords from demanding unreasonable amounts. The clause also allows the landlord to demand more money during the lease at their discretion, which is a one-sided power that could be used coercively.",
+    "saferAlternative": "Tenant shall pay a security deposit equal to one month's rent upon execution of this Lease. If Tenant keeps a pet on the Premises with Landlord's written consent, an additional pet deposit not exceeding one-half month's rent may be required. No additional deposits shall be required during the lease term.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5(c) limits deposits to two months' rent (unfurnished) or three months' (furnished). New York RPL Section 7-108(1-a)(a) limits deposits to one month's rent. UK Tenant Fees Act 2019 caps deposits at five weeks' rent (annual rent under 50,000 GBP) or six weeks' rent. EU Directive 93/13/EEC Article 3(1) targets terms causing significant imbalance."
+  },
+  {
+    "id": "a1b2c3d4-2005-4a00-9a00-000000000010",
+    "clausePattern": "Landlord shall hold the security deposit without obligation to pay interest thereon. The deposit may be commingled with Landlord's personal or business funds at Landlord's discretion.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "When a landlord mixes your deposit with their own money (called 'commingling'), your deposit is no longer protected if the landlord goes bankrupt or has financial problems -- creditors could seize it. Many jurisdictions require landlords to keep deposits in separate accounts specifically to prevent this. Not paying interest may also violate local laws, though this varies widely.",
+    "saferAlternative": "Landlord shall hold the security deposit in a separate, federally insured interest-bearing account at a banking institution located in the state where the Premises are situated. Landlord shall not commingle the deposit with personal or business funds. Interest earned shall belong to Tenant and shall be paid or credited annually.",
+    "jurisdictionNotes": "New York GOL Section 7-103 requires deposits held in trust, separate from landlord's assets, in interest-bearing accounts. Massachusetts GL c. 186 Section 15B(3) requires separate interest-bearing account with annual interest payment to tenant. UK Housing Act 2004 Sections 213-214 require deposit protection in government-approved schemes within 30 days."
+  },
+  {
+    "id": "a1b2c3d4-2006-4a00-b000-000000000011",
+    "clausePattern": "In the event of early termination by Tenant for any reason, the entire security deposit shall be forfeited to Landlord as liquidated damages, in addition to any remaining rent owed for the balance of the lease term.",
+    "category": "security_deposit",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This is a double penalty: you lose your entire deposit AND still owe rent for the rest of the lease. Liquidated damages clauses (pre-set penalties) are only enforceable when they reasonably estimate actual harm. Forfeiting the full deposit on top of remaining rent obligations is punitive, not compensatory, and courts routinely strike down penalty clauses that exceed actual losses. The landlord also has a legal duty to mitigate -- meaning they must try to re-rent the unit, not just collect rent from you on an empty apartment.",
+    "saferAlternative": "In the event of early termination by Tenant, Tenant shall provide 60 days' written notice. Tenant shall be responsible for rent until the earlier of (a) the end of the notice period, or (b) the date a replacement tenant begins a new lease. Landlord shall make reasonable efforts to re-let the Premises. The security deposit shall be returned in accordance with standard deposit return procedures, less any legitimate deductions.",
+    "jurisdictionNotes": "Restatement (Second) of Contracts Section 356 renders penalty clauses unenforceable where they are disproportionate to actual loss. California Civil Code Section 1951.2 requires landlord to mitigate damages. UK Consumer Rights Act 2015 Schedule 2 paragraph 6 targets terms requiring disproportionately high compensation. EU Directive 93/13/EEC Annex paragraph (e) prohibits terms requiring disproportionately high compensation from the consumer."
+  },
+  {
+    "id": "a1b2c3d4-3001-4a00-9000-000000000012",
+    "clausePattern": "Landlord reserves the right to increase the monthly rent at any time during the lease term by any amount, upon providing Tenant with 7 days' written notice.",
+    "category": "rent_increase",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "A fixed-term lease is supposed to lock in your rent for the lease period -- that is one of the main benefits of signing a lease. This clause destroys that protection by allowing unlimited rent increases with only one week's notice. You could sign a lease at a price you can afford, only to have rent doubled the next month. In rent-controlled areas, this is flatly illegal. Even without rent control, mid-lease increases without a cap violate the implied covenant of good faith and fair dealing.",
+    "saferAlternative": "The monthly rent shall remain fixed at the amount stated herein for the entire initial lease term. Any rent increase shall take effect only upon renewal of the Lease and shall not exceed 5% of the then-current rent or the applicable Consumer Price Index increase, whichever is lower. Landlord shall provide Tenant with at least 90 days' written notice of any proposed increase.",
+    "jurisdictionNotes": "California Civil Code Section 1947.12 (Tenant Protection Act) caps annual increases at 5% plus CPI or 10%, whichever is lower. New York City Rent Stabilization Law limits increases to percentages set by the Rent Guidelines Board. Oregon ORS 90.323 caps increases at 7% plus CPI. UK Housing Act 1988 Section 13 requires formal notice and allows tribunal challenge. EU Directive 93/13/EEC Annex paragraph (l) prohibits terms allowing the supplier to increase price without the consumer having the right to cancel."
+  },
+  {
+    "id": "a1b2c3d4-3002-4a00-a000-000000000013",
+    "clausePattern": "Upon renewal or extension of this Lease, the monthly rent shall automatically increase by the greater of (a) 10% of the prior year's rent or (b) the percentage increase in the Consumer Price Index, compounding annually.",
+    "category": "rent_increase",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "A guaranteed minimum 10% annual increase is aggressive and compounds quickly -- after 5 years your rent would be at least 61% higher than when you started. While rent escalation clauses are not inherently unfair, a 10% floor with compounding means your rent rises far faster than wages and inflation. The 'greater of' structure means you always get the worse outcome. In jurisdictions with rent caps, this likely exceeds legal limits.",
+    "saferAlternative": "Upon renewal of this Lease, rent may be adjusted by the lesser of (a) 3% or (b) the percentage increase in the Consumer Price Index for the preceding 12-month period. Any increase shall be communicated to Tenant in writing at least 90 days before the renewal date. Tenant shall have the right to decline the renewal and vacate without penalty.",
+    "jurisdictionNotes": "California Tenant Protection Act (AB 1482) caps annual increases at 5% plus local CPI or 10% total. Oregon ORS 90.323 caps at 7% plus CPI. Many EU member states impose rent increase caps; Germany's Mietpreisbremse limits increases to 10% above local reference rent. UK Housing Act 1988 Section 13(2) allows tenants to challenge unreasonable increases via a tribunal."
+  },
+  {
+    "id": "a1b2c3d4-3003-4a00-8000-000000000014",
+    "clausePattern": "Landlord may impose additional monthly charges at any time during the lease term for services including but not limited to trash collection, parking, pest control, landscaping, snow removal, and building amenity access, without amendment to this Lease.",
+    "category": "rent_increase",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "This is a disguised rent increase. By adding uncapped 'service charges' without needing to amend the lease, the landlord can effectively raise your total monthly cost at will while technically keeping 'rent' the same. This could also be used to circumvent rent control laws. You agreed to a specific monthly cost when you signed the lease, and this clause allows the landlord to unilaterally change that deal.",
+    "saferAlternative": "All services and amenities included in the monthly rent are listed in Schedule A of this Lease. No additional charges for services shall be imposed during the lease term unless (a) the service is genuinely new and was not available at lease signing, (b) Tenant is given 60 days' written notice, and (c) Tenant may opt out of the new service without penalty.",
+    "jurisdictionNotes": "UK Tenant Fees Act 2019 prohibits most fees beyond rent and a capped deposit. EU Directive 93/13/EEC Annex paragraph (l) prohibits unilateral price increases. Restatement (Second) of Contracts Section 205 imposes a duty of good faith and fair dealing that prohibits circumventing agreed terms."
+  },
+  {
+    "id": "a1b2c3d4-3004-4a00-9a00-000000000015",
+    "clausePattern": "Rent shall be payable in advance on the first day of each month. If Tenant fails to pay rent by the first day, a late fee of $150 or 15% of the monthly rent (whichever is greater) shall be immediately due. An additional $50 per day shall accrue for each day rent remains unpaid.",
+    "category": "late_fees",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "There is no grace period at all -- you owe a penalty the instant the calendar turns to the 1st. The 15% fee is far above what most jurisdictions allow (typically 4-6%). The $50/day compounding penalty means that being two weeks late adds $700 on top of the base late fee and your rent. Courts treat excessive late fees as unenforceable penalties because they do not reflect the landlord's actual loss from a late payment.",
+    "saferAlternative": "Rent shall be due on the first day of each month. A grace period of 5 business days shall apply. If rent is not received by the 5th business day, a one-time late fee of 4% of the monthly rent shall be assessed. No additional daily or compounding charges shall apply. Landlord shall provide written notice of any outstanding balance before imposing the late fee.",
+    "jurisdictionNotes": "California Civil Code Section 1671 requires late fees to be a reasonable estimate of actual damages. Texas Property Code Section 92.019 requires a grace period of at least 2 days and caps late fees at reasonable amounts. New York courts routinely strike down late fees exceeding 4-5% as penalties. UK Consumer Rights Act 2015 Schedule 2 paragraph 6 prohibits disproportionately high compensation. EU Directive 93/13/EEC Annex paragraph (e) flags disproportionate penalties."
+  },
+  {
+    "id": "a1b2c3d4-3005-4a00-b000-000000000016",
+    "clausePattern": "In the event of late payment, Landlord shall be entitled to charge a non-refundable administrative processing fee of $250 per occurrence in addition to any late fees, and Tenant's credit report may be updated to reflect the delinquency.",
+    "category": "late_fees",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Stacking a $250 'administrative fee' on top of late fees is a penalty disguised as a cost. Processing a late payment does not cost $250. The credit reporting threat adds coercive pressure -- a single late rent payment reported to credit bureaus can damage your credit score for years, affecting your ability to rent, borrow, or even get a job. Many jurisdictions require specific procedures before reporting to credit agencies.",
+    "saferAlternative": "Late payment charges shall consist solely of the late fee specified in this Lease. No additional administrative, processing, or service fees shall be imposed for late payment. Landlord shall not report a payment as delinquent to any credit reporting agency unless payment remains outstanding for more than 30 days and Landlord has first provided Tenant with written notice and a 10-day cure period.",
+    "jurisdictionNotes": "US Fair Credit Reporting Act (15 U.S.C. Section 1681s-2) imposes accuracy obligations on furnishers of credit information. California Civil Code Section 1785.25 requires reasonable procedures to ensure accuracy. UK Consumer Rights Act 2015 Schedule 2 paragraph 6 prohibits disproportionate charges. EU Directive 93/13/EEC Annex paragraph (e) addresses disproportionate penalties."
+  },
+  {
+    "id": "a1b2c3d4-3006-4a00-9000-000000000017",
+    "clausePattern": "If rent remains unpaid for more than five (5) days past the due date, Landlord shall have the immediate right to deduct any amounts owed, including rent, late fees, and administrative charges, directly from Tenant's security deposit without notice.",
+    "category": "late_fees",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "Your security deposit is not a rent account the landlord can dip into whenever they choose. The deposit exists to cover damage at the end of the lease. If the landlord drains your deposit mid-lease for late rent, you have no protection at move-out and may be forced to pay a new deposit. Most jurisdictions strictly limit when and how deposits can be applied, and raiding it for late fees (which may themselves be unenforceable) compounds the problem.",
+    "saferAlternative": "The security deposit shall not be applied to rent, late fees, or any other charges during the lease term. The deposit shall be held solely as security against damage to the Premises and unpaid obligations at lease termination, in accordance with applicable law. If Tenant is in arrears, Landlord shall follow the notice and cure procedures set forth in this Lease before pursuing any remedies.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5 limits deposit deductions to end-of-tenancy damages. New York GOL Section 7-108 prohibits using deposits as rent during the tenancy. UK Tenant Fees Act 2019 restricts deposit use to specified end-of-tenancy purposes. EU Directive 93/13/EEC Annex paragraph (d) restricts forfeiture of sums paid by the consumer."
+  },
+  {
+    "id": "a1b2c3d4-4001-4a00-a000-000000000018",
+    "clausePattern": "Landlord may terminate this Lease at any time, for any reason or for no reason, upon providing Tenant with 14 days' written notice to vacate. Tenant shall have no right to contest such termination.",
+    "category": "termination",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "A lease is supposed to guarantee you housing for a fixed period. This clause lets the landlord kick you out with only two weeks' notice for no reason at all, which defeats the entire purpose of a lease. In many jurisdictions, landlords can only terminate mid-lease for specific causes (like non-payment of rent or serious lease violations). No-cause termination with 14 days' notice is illegal in many places, especially during a fixed term.",
+    "saferAlternative": "This Lease may be terminated by Landlord during the fixed term only for material breach by Tenant, including non-payment of rent, substantial damage to the Premises, or illegal activity on the Premises. Landlord shall provide Tenant with written notice specifying the breach and allowing a 30-day cure period before commencing any termination proceedings. Tenant shall have the right to contest termination through applicable legal channels.",
+    "jurisdictionNotes": "California Civil Code Section 1946.2 (AB 1482) requires just cause for eviction. Oregon ORS 90.427 requires 90 days' notice for no-cause termination in the first year, and just cause after. New York Real Property Law Section 226-c requires 30-90 days' notice depending on tenancy length. UK Housing Act 1988 Section 21 (being reformed) requires minimum 2 months' notice. EU Directive 93/13/EEC Annex paragraph (f) prohibits terms authorizing the supplier to dissolve the contract on a discretionary basis."
+  },
+  {
+    "id": "a1b2c3d4-4002-4a00-8000-000000000019",
+    "clausePattern": "This Lease shall automatically renew for successive one-year terms unless Tenant provides written notice of non-renewal at least 120 days prior to the expiration of the then-current term. Failure to provide timely notice shall constitute Tenant's irrevocable agreement to the renewal term and any associated rent increase.",
+    "category": "termination",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "A 120-day (four-month) opt-out window is unusually long and easy to miss. Most people are not thinking about lease renewal four months in advance. If you miss the deadline by even one day, you are locked into another full year at whatever the new rent is, with no ability to change your mind. The word 'irrevocable' means once the deadline passes, you cannot negotiate or exit even if your circumstances change dramatically.",
+    "saferAlternative": "This Lease shall automatically renew on a month-to-month basis at the expiration of the initial term, unless either party provides written notice of non-renewal at least 60 days prior to the end of the current term. Landlord shall send Tenant a written reminder of the renewal date and any proposed changes at least 90 days before the term expires.",
+    "jurisdictionNotes": "New York GOL Section 5-905 requires landlords to give 15-30 day notice of auto-renewal terms for leases over one month. California Civil Code Section 1945 converts to month-to-month at expiration if no new agreement is signed. UK Consumer Rights Act 2015 Schedule 2 paragraph 10 targets terms enabling automatic extension where the deadline for opting out is unreasonably early."
+  },
+  {
+    "id": "a1b2c3d4-4003-4a00-9a00-000000000020",
+    "clausePattern": "Tenant agrees that any termination by Tenant prior to the natural expiration of the Lease term shall constitute a default, and Tenant shall be liable for the total remaining rent due through the end of the Lease term, accelerated and payable immediately upon vacating.",
+    "category": "termination",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "Rent acceleration means if you leave early, you owe ALL remaining rent at once -- not just month by month. If you have 8 months left on a $2,000/month lease, you would owe $16,000 immediately. This ignores the landlord's legal duty to mitigate damages by trying to find a new tenant. If a new tenant moves in the next month, the landlord would collect double rent -- yours and the new tenant's. Courts routinely strike down acceleration clauses in residential leases as unconscionable penalties.",
+    "saferAlternative": "If Tenant terminates prior to the Lease expiration, Tenant shall provide at least 60 days' written notice and shall pay an early termination fee equal to two months' rent. Landlord shall make commercially reasonable efforts to re-let the Premises. Tenant's liability for remaining rent shall be reduced by any rent received from a replacement tenant. No rent acceleration shall apply.",
+    "jurisdictionNotes": "Restatement (Second) of Contracts Section 356 renders penalty clauses unenforceable. California Civil Code Section 1951.2 requires landlord mitigation of damages. Austin Apartments v. Keough (Tex. App. 2004) held acceleration clauses in residential leases unenforceable. EU Directive 93/13/EEC Annex paragraph (e) prohibits disproportionate compensation clauses."
+  },
+  {
+    "id": "a1b2c3d4-4004-4a00-b000-000000000021",
+    "clausePattern": "Landlord may terminate this Lease immediately and without notice if Landlord determines, in Landlord's sole judgment, that Tenant has violated any term or condition of this Lease, any house rules, or any instructions provided by Landlord or Landlord's agents.",
+    "category": "termination",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This lets the landlord evict you instantly for any alleged violation, no matter how minor, with no notice and no chance to fix the problem. 'Sole judgment' means the landlord is both accuser and judge. Minor issues like leaving a bike in the hallway or having a guest stay overnight could technically trigger immediate eviction. Every jurisdiction requires formal eviction procedures with notice, right to cure, and judicial oversight -- you cannot be thrown out by one person's unilateral decision.",
+    "saferAlternative": "In the event of a lease violation, Landlord shall provide Tenant with written notice specifying the nature of the violation and a reasonable cure period of no less than 14 days (or 3 days for non-payment of rent). If Tenant fails to cure within the notice period, Landlord may initiate termination proceedings in accordance with applicable law. Tenant shall have the right to contest any termination.",
+    "jurisdictionNotes": "US Uniform Residential Landlord and Tenant Act Section 4.201 requires written notice and cure period before termination. California CCP Section 1161 requires 3-day notice for non-payment and 3-day notice to cure or quit for other violations. UK Housing Act 1988 Section 8 requires notice periods of 2 weeks to 2 months depending on grounds. EU Directive 93/13/EEC Annex paragraph (f) targets unilateral dissolution rights."
+  },
+  {
+    "id": "a1b2c3d4-4005-4a00-9000-000000000022",
+    "clausePattern": "This Lease may be terminated by Landlord upon sale or transfer of the Property to a new owner. Upon such sale, Tenant shall vacate the Premises within 30 days of written notice, and Landlord shall have no further obligations to Tenant, including return of the security deposit.",
+    "category": "termination",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "In most jurisdictions, a sale does not terminate an existing lease -- the new owner inherits the lease and must honor it. This clause tries to circumvent that rule and also eliminates your right to get your deposit back. The landlord is essentially saying they can sell the building and leave you homeless with no deposit, which is illegal in most places under the doctrine that leases 'run with the land.'",
+    "saferAlternative": "In the event of sale or transfer of the Property, this Lease shall remain in full force and effect, and the new owner shall assume all of Landlord's obligations hereunder, including responsibility for the security deposit. Landlord shall transfer the security deposit to the new owner and provide Tenant with written notice of the transfer, including the new owner's contact information.",
+    "jurisdictionNotes": "California Civil Code Section 1950.5(h) requires transfer of deposit to new owner on sale. New York GOL Section 7-105 requires lease obligations to transfer with the property. UK Landlord and Tenant Act 1985 Section 3 transfers landlord covenants to the assignee. Common law doctrine of privity of estate means leases run with the land."
+  },
+  {
+    "id": "a1b2c3d4-5001-4a00-a000-000000000023",
+    "clausePattern": "Tenant shall be solely responsible for all repairs, maintenance, and upkeep of the Premises, including but not limited to plumbing, electrical systems, HVAC, structural components, the roof, and all appliances provided by Landlord, regardless of the cause of damage or deterioration.",
+    "category": "maintenance",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "Making you responsible for the roof, plumbing, electrical, HVAC, and structural elements is shifting the landlord's core legal obligations onto you. These are the building's major systems that can cost thousands to repair. The implied warranty of habitability -- a fundamental principle in landlord-tenant law -- requires landlords to maintain the property in livable condition, including working plumbing, heating, and a weatherproof structure. You cannot legally waive this in most jurisdictions.",
+    "saferAlternative": "Landlord shall be responsible for maintaining the structural integrity of the Premises, including the roof, foundation, exterior walls, plumbing, electrical systems, and HVAC. Landlord shall maintain all appliances provided at lease commencement in working order. Tenant shall be responsible for routine minor upkeep, including changing light bulbs, maintaining cleanliness, and promptly reporting any maintenance issues to Landlord.",
+    "jurisdictionNotes": "Javins v. First National Realty Corp., 428 F.2d 1071 (D.C. Cir. 1970) established the implied warranty of habitability. Green v. Superior Court, 10 Cal.3d 616 (1974) held warranty cannot be waived. UK Landlord and Tenant Act 1985 Sections 11-14 impose repairing obligations on landlords for short leases. EU Directive 93/13/EEC Annex paragraph (b) prohibits terms inappropriately excluding consumer legal rights."
+  },
+  {
+    "id": "a1b2c3d4-5002-4a00-8000-000000000024",
+    "clausePattern": "Landlord shall not be liable for any failure to maintain the Premises in a habitable condition. Tenant expressly waives any and all claims arising from conditions of the Premises, including but not limited to mold, pest infestation, lead paint, lack of heat or hot water, or any health or safety hazard.",
+    "category": "maintenance",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This asks you to waive your right to a safe, livable home. The implied warranty of habitability is a legal protection that exists specifically because housing is a basic necessity, not a luxury -- courts have ruled it cannot be waived by contract. Mold, lead paint, pest infestations, and lack of heat are serious health hazards. A clause that says 'live with toxic conditions and you cannot sue' is unconscionable and unenforceable in virtually every jurisdiction.",
+    "saferAlternative": "Landlord warrants that the Premises shall be maintained in a habitable condition in compliance with all applicable building, health, and safety codes. Landlord shall address any conditions affecting habitability, including mold, pest infestation, plumbing failures, or heating deficiencies, within 72 hours of receiving written notice from Tenant, or immediately in cases posing an imminent health or safety risk.",
+    "jurisdictionNotes": "Javins v. First National Realty Corp., 428 F.2d 1071 (D.C. Cir. 1970) and Green v. Superior Court, 10 Cal.3d 616 (1974) established that the warranty of habitability cannot be waived. New York Multiple Dwelling Law Section 78 requires habitability. UK Landlord and Tenant Act 1985 Section 11 imposes non-excludable repair obligations. UK Homes (Fitness for Human Habitation) Act 2018 provides tenants with remedies for unfit dwellings."
+  },
+  {
+    "id": "a1b2c3d4-5003-4a00-9a00-000000000025",
+    "clausePattern": "Tenant shall notify Landlord in writing of any needed repairs. Landlord shall have a reasonable time to complete repairs, which the parties agree shall be no less than 90 days from receipt of Tenant's written notice.",
+    "category": "maintenance",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Ninety days is an unreasonably long time to wait for repairs. If your heating breaks in December, this clause says the landlord has until March to fix it. While 'reasonable time' is the standard, pre-defining it as three months guts the meaning of 'reasonable.' Emergency repairs (burst pipes, no heat, electrical hazards) need to be addressed in hours or days, not months. This clause gives the landlord a shield against habitability complaints.",
+    "saferAlternative": "Tenant shall notify Landlord in writing of any needed repairs. Landlord shall respond to repair requests within the following timeframes: (a) emergency repairs affecting health, safety, or habitability within 24 hours; (b) urgent repairs affecting major systems within 7 days; (c) non-urgent repairs within 30 days. If Landlord fails to complete repairs within these timeframes, Tenant may arrange for repairs and deduct the reasonable cost from rent, upon providing 14 days' additional written notice.",
+    "jurisdictionNotes": "California Civil Code Section 1942 grants tenants repair and deduct remedies after 30 days of landlord inaction. Wisconsin Statutes Section 704.07(4) gives landlords a reasonable time but courts interpret this as days for health/safety issues. UK Landlord and Tenant Act 1985 Section 11 requires repairs within a reasonable period; Sheldon v. West Bromwich Corporation [1973] established that emergency repairs must be prompt."
+  },
+  {
+    "id": "a1b2c3d4-5004-4a00-b000-000000000026",
+    "clausePattern": "Tenant acknowledges that the Premises are accepted in 'as-is' condition and that Landlord makes no warranty or representation as to the fitness, condition, or suitability of the Premises for residential habitation.",
+    "category": "maintenance",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "An 'as-is' clause in a residential lease tries to make you accept whatever condition the property is in, including code violations and health hazards. Unlike buying a car, where 'as-is' may be valid, residential leases come with an implied warranty of habitability that cannot be disclaimed. This clause attempts to shift all risk to you from day one -- if the plumbing does not work when you move in, the landlord could argue you accepted it.",
+    "saferAlternative": "Prior to the commencement of the lease term, Landlord and Tenant shall conduct a joint walk-through inspection and document the condition of the Premises in a written move-in checklist signed by both parties. Landlord warrants that at commencement of the lease, the Premises shall comply with all applicable building and housing codes and shall be fit for residential habitation.",
+    "jurisdictionNotes": "Green v. Superior Court, 10 Cal.3d 616 (1974) held 'as-is' clauses cannot waive implied warranty of habitability in residential leases. Knight v. Hallsthammar, 29 Cal.3d 46 (1981) reinforced that waiver is void as against public policy. UK Landlord and Tenant Act 1985 Section 11 obligations are non-excludable for short residential leases. EU Directive 93/13/EEC Annex paragraph (b) prohibits limiting consumer's legal rights."
+  },
+  {
+    "id": "a1b2c3d4-5005-4a00-9000-000000000027",
+    "clausePattern": "Tenant shall be responsible for pest control, including treatment for rodents, insects, bed bugs, and any other vermin, at Tenant's sole expense, regardless of whether the infestation existed prior to Tenant's occupancy or originates from common areas or adjacent units.",
+    "category": "maintenance",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Bed bug and pest treatments can cost hundreds to thousands of dollars. Making you pay for infestations that existed before you moved in, or that come from other units or common areas you do not control, is unfair. If roaches are coming through shared walls from a neighboring apartment, that is a building-wide problem the landlord must address. Many cities have specific bed bug laws placing the burden on landlords for pre-existing and building-wide infestations.",
+    "saferAlternative": "Landlord shall be responsible for pest control in common areas and for addressing infestations that pre-date Tenant's occupancy or that originate from building common areas or adjacent units. Tenant shall promptly notify Landlord of any pest sightings. Tenant shall be responsible for pest control only where the infestation is demonstrably caused by Tenant's actions or negligence, as determined by a licensed pest control professional.",
+    "jurisdictionNotes": "New York City Housing Maintenance Code Section 27-2018 requires landlords to keep premises pest-free. Chicago RLTO Section 5-12-110 places bed bug treatment obligations on landlords. California Civil Code Section 1942.5 prohibits retaliation against tenants who report habitability issues including infestations. UK Housing Health and Safety Rating System (HHSRS) identifies pest infestation as a Category 1 hazard requiring landlord action."
+  },
+  {
+    "id": "a1b2c3d4-6001-4a00-a000-000000000028",
+    "clausePattern": "Tenant hereby waives any and all claims against Landlord for personal injury, property damage, or loss of personal property occurring in or about the Premises, including claims arising from Landlord's negligence, gross negligence, or willful misconduct.",
+    "category": "liability_waiver",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This clause tries to protect the landlord from ALL liability, even for injuries caused by the landlord's own gross negligence or intentional wrongdoing. If the landlord knows a staircase railing is broken and someone falls, this clause would shield them from any responsibility. Courts universally refuse to enforce waivers of liability for gross negligence and willful misconduct. Even waivers of ordinary negligence in residential leases are void in many jurisdictions because of the unequal bargaining power.",
+    "saferAlternative": "Landlord shall maintain the Premises and common areas in a reasonably safe condition. Landlord shall be liable for personal injury or property damage caused by Landlord's negligence in maintaining the Premises or common areas. Nothing in this Lease shall operate to exclude or limit Landlord's liability for death or personal injury caused by negligence, or for fraud or fraudulent misrepresentation.",
+    "jurisdictionNotes": "California Civil Code Section 1953 voids any lease provision waiving tenant's rights regarding habitability or landlord negligence. Illinois 765 ILCS 705/1 makes lease exculpatory clauses void and unenforceable. UK Consumer Rights Act 2015 Section 65 prevents excluding liability for death or personal injury from negligence. EU Directive 93/13/EEC Annex paragraph (a) prohibits terms excluding liability for death or personal injury due to the supplier's act or omission."
+  },
+  {
+    "id": "a1b2c3d4-6002-4a00-8000-000000000029",
+    "clausePattern": "Landlord shall have no duty of care with respect to the safety or security of Tenant, Tenant's family members, guests, or invitees, whether on the Premises or in common areas, and assumes no responsibility for any criminal acts of third parties.",
+    "category": "liability_waiver",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "While landlords are not guarantors of tenant safety against all crime, they do have a duty to maintain common areas safely and to take reasonable security measures, especially if they are aware of safety problems. If the landlord knows the building's front door lock has been broken for months and a break-in occurs, they should bear some responsibility. This clause attempts to eliminate that duty entirely, including responsibility for hazards the landlord could easily fix.",
+    "saferAlternative": "Landlord shall take reasonable measures to maintain the safety and security of common areas, including functioning locks on all exterior doors, adequate lighting in hallways and parking areas, and prompt repair of security features. While Landlord does not guarantee the safety of Tenant against criminal acts of third parties, Landlord shall not be relieved of liability for injuries resulting from Landlord's failure to maintain the Premises in a reasonably safe and secure condition.",
+    "jurisdictionNotes": "Kline v. 1500 Massachusetts Ave. Apartment Corp., 439 F.2d 477 (D.C. Cir. 1970) established landlord's duty to take reasonable security measures in common areas. California Civil Code Section 1714 establishes a general duty of care. UK Occupiers' Liability Act 1957 imposes a duty of care on occupiers (including landlords) toward visitors. Defective Premises Act 1972 Section 4 imposes a duty of care regarding maintenance."
+  },
+  {
+    "id": "a1b2c3d4-6003-4a00-9a00-000000000030",
+    "clausePattern": "Tenant agrees to indemnify, defend, and hold harmless Landlord from any and all claims, damages, losses, costs, and expenses (including attorney fees) arising from any cause whatsoever in connection with the Premises, regardless of fault.",
+    "category": "liability_waiver",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "An indemnification clause (meaning you agree to pay for someone else's losses) that says 'regardless of fault' means you must pay the landlord's legal bills and damages even when the landlord is at fault. If a guest slips on an icy staircase the landlord failed to maintain, this clause would make you -- not the landlord -- financially responsible. A 'regardless of fault' indemnification in a residential lease is unconscionable because tenants have no ability to control the landlord's behavior or building-wide conditions.",
+    "saferAlternative": "Tenant shall indemnify Landlord only against claims arising directly from Tenant's own negligent or willful acts within the Premises. This indemnification shall not apply to claims arising from Landlord's negligence, failure to maintain the Premises or common areas, or any condition that Landlord is obligated to repair under this Lease or applicable law.",
+    "jurisdictionNotes": "California Civil Code Section 1953 voids lease provisions that shift liability for landlord's negligence to tenant. Restatement (Second) of Contracts Section 208 provides that unconscionable terms are unenforceable. UK Unfair Contract Terms Act 1977 Section 2 restricts exclusion of negligence liability. EU Directive 93/13/EEC Article 3(1) targets terms that cause significant imbalance contrary to good faith."
+  },
+  {
+    "id": "a1b2c3d4-6004-4a00-b000-000000000031",
+    "clausePattern": "Landlord shall not be liable for any damage to Tenant's personal property caused by water leaks, flooding, burst pipes, sewage backup, fire, or any other occurrence in the Premises or building, regardless of cause.",
+    "category": "liability_waiver",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "While landlords are not insurers of your belongings, a blanket 'regardless of cause' waiver means the landlord has no liability even if they caused the problem -- for instance, by neglecting to repair a known leaking pipe that eventually floods your apartment and destroys your furniture. This removes any incentive for the landlord to fix known problems that could damage your property. Renter's insurance is advisable, but it should not be a substitute for the landlord maintaining the property.",
+    "saferAlternative": "Landlord shall not be liable for damage to Tenant's personal property caused by events beyond Landlord's reasonable control, provided Landlord has maintained all building systems in good working order. Landlord shall be liable for damage to Tenant's personal property caused by Landlord's negligence in maintaining the Premises, including failure to repair known defects. Tenant is encouraged to obtain renter's insurance for additional protection.",
+    "jurisdictionNotes": "Restatement (Second) of Torts Section 357 establishes landlord liability for defects landlord is obligated to repair. California Civil Code Section 1714 imposes general duty of reasonable care. UK Landlord and Tenant Act 1985 Section 11 makes landlord responsible for keeping installations in repair; breach creating liability for consequential damage. EU Directive 93/13/EEC Annex paragraph (b) prohibits inappropriately limiting consumer legal rights."
+  },
+  {
+    "id": "a1b2c3d4-7001-4a00-9000-000000000032",
+    "clausePattern": "Tenant hereby waives the covenant of quiet enjoyment and acknowledges that Landlord, Landlord's agents, and other tenants may cause noise, disturbances, or disruptions at any time, including during construction, renovation, or building improvement projects, without liability to Tenant.",
+    "category": "quiet_enjoyment",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "The covenant of quiet enjoyment is a fundamental tenant right that means you can use your home without unreasonable interference from the landlord. Waiving it means the landlord could jackhammer the apartment next door at 3 AM, let construction crews block your entrance, or allow other tenants to create constant disturbances, and you would have no legal recourse. This right is so fundamental that courts in most jurisdictions will not allow it to be waived.",
+    "saferAlternative": "Landlord covenants that Tenant shall have quiet and peaceful enjoyment of the Premises throughout the lease term. If renovation or construction work is necessary, Landlord shall provide Tenant with at least 14 days' advance written notice, limit disruptive work to the hours of 8:00 AM to 6:00 PM Monday through Friday, and offer a reasonable rent reduction for any period during which Tenant's use of the Premises is materially impaired.",
+    "jurisdictionNotes": "The implied covenant of quiet enjoyment is recognized in virtually all US jurisdictions. Reste Realty Corp. v. Cooper, 53 N.J. 444 (1969) established that substantial interference with quiet enjoyment constitutes constructive eviction. UK Landlord and Tenant Act 1985 implies a covenant of quiet enjoyment. Southwark LBC v Mills [2001] 1 AC 1 confirmed the scope of the covenant. EU Directive 93/13/EEC Annex paragraph (b) prohibits limiting the consumer's legal rights."
+  },
+  {
+    "id": "a1b2c3d4-7002-4a00-a000-000000000033",
+    "clausePattern": "Landlord reserves the right to relocate Tenant to a comparable unit within the building or an affiliated property at any time during the lease term, at Landlord's sole discretion, and Tenant agrees to cooperate with any such relocation within 14 days of notice.",
+    "category": "quiet_enjoyment",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "You signed a lease for a specific apartment, not a random unit the landlord chooses. Forced relocation disrupts your life, may change your commute, neighborhood, or school district, and 'comparable' is subjective -- the landlord decides what counts as comparable. This is effectively an eviction disguised as a relocation, and it strips away the certainty that a lease is supposed to provide. Fourteen days is insufficient time to organize a move.",
+    "saferAlternative": "Tenant shall not be required to relocate to a different unit during the lease term. If relocation becomes necessary due to emergency repairs or safety concerns, Landlord shall (a) obtain Tenant's written consent, (b) provide a unit of equal or greater size and quality at the same rent, (c) pay all moving costs, and (d) provide at least 30 days' notice. Tenant may alternatively terminate the Lease without penalty.",
+    "jurisdictionNotes": "Most US jurisdictions recognize that a lease creates a property interest in a specific unit; unilateral relocation violates this interest. California Civil Code Section 789.3 prohibits landlord actions intended to influence a tenant to vacate. UK Protection from Eviction Act 1977 Section 1 makes it an offence to unlawfully deprive a residential occupier of their occupation. EU Directive 93/13/EEC Annex paragraph (f) targets unilateral contract modification rights."
+  },
+  {
+    "id": "a1b2c3d4-7003-4a00-8000-000000000034",
+    "clausePattern": "Tenant acknowledges that noise from neighboring units, common areas, mechanical systems, and building operations is inherent to apartment living and shall not constitute a breach of the Lease or grounds for rent reduction. Tenant waives any claims for constructive eviction based on noise or disturbance.",
+    "category": "quiet_enjoyment",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "While some noise is normal in apartment buildings, this clause tries to preemptively excuse ALL noise, no matter how extreme, including from building operations the landlord controls. The waiver of constructive eviction claims (which is when conditions become so bad you are effectively forced out) means you cannot legally break the lease even if the noise makes the apartment uninhabitable. A landlord who decides to renovate the unit above you with round-the-clock jackhammering would be shielded from liability.",
+    "saferAlternative": "Tenant acknowledges that reasonable ambient noise is inherent to multi-unit residential living. However, Landlord shall take reasonable steps to address excessive noise from building operations, construction, or mechanical systems. Landlord shall enforce noise provisions of all tenant leases. Tenant retains the right to seek rent reduction if building-caused noise materially impairs use of the Premises for a continuous period exceeding 48 hours.",
+    "jurisdictionNotes": "Reste Realty Corp. v. Cooper, 53 N.J. 444 (1969) established constructive eviction doctrine for conditions rendering premises substantially unsuitable. Barash v. Pennsylvania Terminal Real Estate Corp., 26 N.Y.2d 77 (1970) recognized noise as potential constructive eviction. UK Environmental Protection Act 1990 Sections 79-82 provide statutory nuisance remedies. EU Directive 93/13/EEC Annex paragraph (b) prohibits terms inappropriately excluding consumer legal rights."
+  },
+  {
+    "id": "a1b2c3d4-8001-4a00-9a00-000000000035",
+    "clausePattern": "Subletting, assignment, or transfer of this Lease, or permitting any person other than Tenant and persons listed on this Lease to occupy the Premises for any duration, is strictly prohibited under all circumstances. Any violation shall be grounds for immediate termination.",
+    "category": "subletting",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "An absolute ban on subletting with no exceptions locks you into the lease with no flexibility. If you need to relocate for a job, family emergency, or military service, you cannot find someone to take over your lease -- you either stay and pay or leave and pay. Many jurisdictions require landlords to allow reasonable subletting and not unreasonably withhold consent. The 'any person... any duration' language could even penalize you for having an overnight guest.",
+    "saferAlternative": "Tenant shall not sublet the Premises or assign this Lease without Landlord's prior written consent, which shall not be unreasonably withheld, conditioned, or delayed. Landlord shall respond to any subletting request within 14 days. If Landlord rejects a proposed subtenant, Landlord shall provide specific, reasonable grounds for rejection in writing. Short-term guests (stays under 14 consecutive days) do not require Landlord's approval.",
+    "jurisdictionNotes": "New York Real Property Law Section 226-b requires landlords to not unreasonably withhold consent to sublet. California Civil Code Section 1995.310 codifies the rule against unreasonable withholding. San Francisco Rent Ordinance Section 6.15 permits roommate replacement in rent-controlled units. UK Landlord and Tenant Act 1927 Section 19 implies reasonableness into consent-to-assign clauses."
+  },
+  {
+    "id": "a1b2c3d4-8002-4a00-b000-000000000036",
+    "clausePattern": "If Landlord grants consent to subletting, Tenant shall pay Landlord a non-refundable subletting fee equal to one month's rent plus 50% of any excess rent collected from the subtenant above Tenant's current monthly rent.",
+    "category": "subletting",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "A full month's rent as a subletting fee is excessive -- processing a sublet does not cost the landlord a month's rent. Taking 50% of any 'profit' from the sublet is even more unusual and acts as a financial disincentive against subletting. In some jurisdictions, landlords can charge a reasonable fee to cover actual administrative costs, but a month's rent plus a profit share goes well beyond that. This effectively makes subletting economically unviable.",
+    "saferAlternative": "If Landlord consents to subletting, Landlord may charge a reasonable administrative fee not to exceed $150 to cover the cost of processing the subletting application, including background and credit checks of the proposed subtenant. No additional fees, profit-sharing, or rent premiums shall be charged in connection with the sublet.",
+    "jurisdictionNotes": "New York Real Property Law Section 226-b limits subletting fees to the landlord's reasonable actual costs. San Francisco Administrative Code Section 6.15 limits sublet fees. UK Tenant Fees Act 2019 prohibits fees for consent to assign or sublet exceeding reasonable costs. EU Directive 93/13/EEC Annex paragraph (e) targets disproportionate compensation requirements."
+  },
+  {
+    "id": "a1b2c3d4-9001-4a00-9000-000000000037",
+    "clausePattern": "Tenant shall be responsible for payment of all utilities, including water, sewer, gas, electricity, trash removal, internet, and cable, as well as a proportionate share of common area utility costs, building-wide HVAC, hallway lighting, elevator operation, and landscaping irrigation, as determined by Landlord.",
+    "category": "utilities",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Paying your own apartment's utilities is standard. But paying a 'proportionate share' of common area costs -- hallways, elevators, parking lot lights, landscaping -- is essentially paying for the landlord's building operating costs with no cap and no transparency. Since the landlord determines your 'proportionate share,' there is no accountability. These costs can be substantial in large buildings and effectively become a hidden rent increase that is hard to verify or dispute.",
+    "saferAlternative": "Tenant shall be responsible for utilities individually metered to the Premises, including electricity, gas, and internet. Landlord shall be responsible for water, sewer, trash removal, and all common area utility costs, which are included in the monthly rent. If any common area charges are to be passed through to tenants, the amount shall be specified in Schedule B of this Lease, subject to an annual cap of 3% increase, and Landlord shall provide annual documentation of actual costs.",
+    "jurisdictionNotes": "California Civil Code Section 1940.9 requires separate utility meters and prohibits landlords from charging tenants for other tenants' utility usage. New York Multiple Dwelling Law Section 75-a regulates utility submetering. UK Landlord and Tenant Act 1985 Section 18-30 regulates service charges and requires consultation for large expenditures. EU Directive 93/13/EEC Annex paragraph (l) targets unilateral price changes."
+  },
+  {
+    "id": "a1b2c3d4-9002-4a00-a000-000000000038",
+    "clausePattern": "Landlord may, at its sole discretion, change utility providers, submetering arrangements, or billing methods at any time during the lease term. Any increased costs resulting from such changes shall be borne exclusively by Tenant. Tenant shall pay utility charges billed by Landlord within 5 days of invoice without right to dispute the amount.",
+    "category": "utilities",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Giving the landlord unilateral control over utility billing with no right to dispute is a recipe for overcharging. If the landlord switches to a more expensive provider or adds a markup to utility pass-through charges, you pay the difference with no recourse. Removing your right to dispute charges means you cannot challenge billing errors or inflated amounts. Five days is also an unreasonably short payment window.",
+    "saferAlternative": "Utility providers and metering arrangements in effect at lease commencement shall not be materially changed without 60 days' written notice to Tenant. If Landlord bills Tenant for utilities, Landlord shall provide detailed billing statements reflecting actual usage and actual provider costs without markup. Tenant shall have 30 days to pay utility invoices and may dispute any charge by providing written notice to Landlord within that period.",
+    "jurisdictionNotes": "New York Public Service Law Section 52 regulates utility resale and submetering. California PUC Section 739.5 regulates master-metered properties. UK Gas Act 1986 and Electricity Act 1989 regulate maximum resale prices for utilities. EU Directive 93/13/EEC Annex paragraphs (j) and (l) prohibit unilateral contract changes and price increases without consumer right to cancel."
+  },
+  {
+    "id": "a1b2c3d4-a001-4a00-8000-000000000039",
+    "clausePattern": "Tenant agrees to maintain renters' insurance with minimum coverage of $500,000 in personal liability and $100,000 in personal property coverage, naming Landlord as primary beneficiary and additional insured. Tenant shall not make any insurance claim without Landlord's prior written approval.",
+    "category": "insurance",
+    "contractType": ["lease"],
+    "riskLevel": "yellow",
+    "whyRisky": "Requiring renter's insurance is reasonable, but $500,000 in liability coverage is excessive for most residential tenants -- typical policies are $100,000-$300,000. Naming the landlord as 'primary beneficiary' of your renter's insurance means the landlord gets paid before you do from your own policy. Requiring the landlord's approval before filing a claim effectively prevents you from using the insurance you are paying for. Your renter's insurance should protect you, not the landlord.",
+    "saferAlternative": "Tenant shall maintain renters' insurance with minimum coverage of $100,000 in personal liability and personal property coverage sufficient to protect Tenant's belongings. Landlord may be named as an 'interested party' for notification purposes, but not as a beneficiary or additional insured. Tenant shall have the unrestricted right to file claims on Tenant's own policy.",
+    "jurisdictionNotes": "While most US states allow landlords to require renter's insurance, naming landlord as primary beneficiary is not standard and may conflict with insurance contract terms. California Insurance Code Section 533.5 and public policy limit insurance restrictions. UK Financial Conduct Authority guidelines protect consumer insurance rights. EU Directive 93/13/EEC Annex paragraph (b) prohibits terms inappropriately excluding or limiting consumer legal rights."
+  },
+  {
+    "id": "a1b2c3d4-a002-4a00-9a00-000000000040",
+    "clausePattern": "Tenant hereby agrees that in the event of any dispute arising out of or related to this Lease, Tenant shall submit such dispute to binding arbitration administered by an arbitration service selected by Landlord. Tenant waives all rights to a jury trial, to participate in class action proceedings, and to appeal any arbitration award. Tenant shall bear all costs of arbitration regardless of the outcome.",
+    "category": "liability_waiver",
+    "contractType": ["lease"],
+    "riskLevel": "red",
+    "whyRisky": "This clause stacks the deck against you in every possible way. The landlord chooses the arbitrator (who may favor repeat clients like landlords). You lose your right to a jury trial, cannot join with other tenants in a class action, cannot appeal even a clearly wrong decision, and must pay all costs even if you win. Mandatory arbitration with all these restrictions makes it financially impossible for most tenants to pursue legitimate claims and effectively places the landlord above the law.",
+    "saferAlternative": "In the event of any dispute arising under this Lease, the parties agree to attempt good-faith mediation before a mutually agreed-upon mediator. If mediation does not resolve the dispute within 30 days, either party may pursue resolution through the courts. Each party shall bear its own costs of mediation. Nothing in this Lease shall be construed as waiving either party's right to a jury trial, to participate in class action proceedings, or to seek remedies available under applicable law.",
+    "jurisdictionNotes": "US Federal Arbitration Act Section 2 permits arbitration clauses but courts scrutinize unconscionable terms. AT&T Mobility v. Concepcion, 563 U.S. 333 (2011) addressed enforceability limits. California Code of Civil Procedure Section 1281.97 requires arbitration fees to be paid timely or clause is waived. UK Consumer Rights Act 2015 Section 62 subjects arbitration clauses in consumer contracts to the unfairness test; Arbitration Act 1996 Section 91 limits compulsory consumer arbitration. EU Directive 93/13/EEC Annex paragraph (q) prohibits terms excluding or hindering the consumer's right to take legal action."
+  }
+]

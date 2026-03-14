@@ -1,0 +1,302 @@
+[
+  {
+    "id": "d4a1b2c3-4d5e-4f6a-8b9c-0d1e2f3a4b5c",
+    "clausePattern": "The Employee agrees that during the term of employment and for a period of twenty-four (24) months following termination for any reason, the Employee shall not, directly or indirectly, engage in, be employed by, consult for, or have any ownership interest in any business that competes with, or is substantially similar to, the business of the Company, anywhere in the world.",
+    "category": "non_compete",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause bans you from working in your entire industry, anywhere on the planet, for two full years after leaving. A non-compete this broad is essentially a professional death sentence -- you cannot earn a living in your field. Courts in California, North Dakota, and Oklahoma refuse to enforce non-competes entirely. The FTC's 2024 rule (currently enjoined) signaled federal intent to ban most non-competes. Even in states that allow them, courts routinely strike down clauses with no geographic limit and excessive duration.",
+    "saferAlternative": "The Employee agrees that for a period of six (6) months following the termination of employment, the Employee shall not be employed by or provide services to the specific companies listed in Schedule A (to be updated by mutual agreement no more than annually), within a fifty (50) mile radius of the Employee's primary office location. The Company shall pay the Employee their base salary during the restricted period as garden leave compensation.",
+    "jurisdictionNotes": "California Business & Professions Code section 16600 voids non-competes entirely. The FTC's 2024 Non-Compete Clause Rule (16 CFR Part 910) attempted a near-total ban; currently enjoined by Ryan LLC v. FTC (N.D. Tex. 2024). Restatement (Second) of Contracts section 188 requires restraints be reasonable in time, geography, and scope. UK law treats unreasonable restraints as void under common law restraint of trade doctrine. EU Directive 2019/1152 Article 9 limits non-competes to cases where justified and requires compensation."
+  },
+  {
+    "id": "d4b2c3d4-5e6f-4a7b-9c0d-1e2f3a4b5c6d",
+    "clausePattern": "During employment and for a period of twelve (12) months thereafter, the Employee shall not, without the prior written consent of the Company, directly or indirectly solicit, canvass, or approach any person who at any time during the final twenty-four (24) months of employment was a client, customer, or prospective customer of the Company, whether or not the Employee had direct dealings with such person.",
+    "category": "non_compete",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This non-solicitation clause covers every client of the entire company for the past two years, even clients you never worked with and may never have heard of. The phrase 'prospective customer' is especially dangerous because it could include anyone the company ever pitched to. You could unknowingly violate this simply by taking a job where one of your new employer's clients happens to overlap with your former company's prospect list.",
+    "saferAlternative": "For a period of six (6) months following the termination of employment, the Employee shall not directly solicit any client or customer of the Company with whom the Employee had material personal dealings during the final twelve (12) months of employment. This restriction does not apply to prospective customers, general advertising, or inbound inquiries initiated by the client.",
+    "jurisdictionNotes": "UK courts enforce non-solicitation clauses only where limited to clients with whom the employee had personal dealings (Patsystems Holdings Ltd v Neilly [2012] EWHC 2609). Restatement (Second) of Contracts section 188 requires the restraint be no broader than needed to protect legitimate business interests. US courts in Reliable Fire Equipment Co. v. Arredondo (2011, Illinois) applied a three-factor test requiring the restriction be reasonable in scope."
+  },
+  {
+    "id": "d4c3d4e5-6f7a-4b8c-8d1e-2f3a4b5c6d7e",
+    "clausePattern": "The Employee acknowledges and agrees that during the period of employment and for eighteen (18) months following the date of termination, the Employee shall not, directly or indirectly, engage in any business activity that is competitive with any product or service offered, under development, or planned by the Company or any of its affiliates, subsidiaries, or parent companies.",
+    "category": "non_compete",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause extends the non-compete to cover not just the company itself but all of its affiliates, subsidiaries, and parent companies. If you work for a subsidiary of a large conglomerate, you could be locked out of dozens of industries. The inclusion of products 'under development or planned' is especially problematic because it covers things that may never launch and that you may know nothing about. This makes it nearly impossible to know whether a future job would violate the restriction.",
+    "saferAlternative": "For a period of six (6) months following the date of termination, the Employee shall not accept employment in a role substantially similar to the Employee's role at the Company with any business entity identified on the Company's direct competitor list (Schedule B), which shall be limited to no more than ten (10) named entities and updated no more than once per year by mutual written agreement. This restriction applies only to products and services the Employee worked on directly.",
+    "jurisdictionNotes": "California Business & Professions Code section 16600 prohibits non-competes regardless of scope. Under Restatement (Second) of Contracts section 188, extending restrictions to affiliates and planned products is likely unreasonable as it exceeds legitimate protectable interests. The UK Supreme Court in Egon Zehnder Ltd v Tillman [2019] UKSC 32 held that non-competes must be no wider than reasonably necessary. FTC 2024 Non-Compete Rule commentary specifically criticized affiliate-extension clauses."
+  },
+  {
+    "id": "d4d4e5f6-7a8b-4c9d-9e2f-3a4b5c6d7e8f",
+    "clausePattern": "The Employee agrees that, during the Restricted Period, the Employee shall not, without the written consent of the Company, directly or indirectly contact, communicate with, or maintain any professional or social relationship with any person who is or was employed by, or engaged as a contractor by, the Company at any time during the two (2) years preceding the Employee's termination.",
+    "category": "non_compete",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause prevents you from maintaining any contact, including social relationships, with every current or former colleague from the past two years. This goes far beyond protecting trade secrets -- it isolates you from your professional network and even personal friendships formed at work. Courts increasingly view restrictions on social contact as an unreasonable restraint on personal liberty, and the NLRA protects workers' rights to communicate with each other about working conditions.",
+    "saferAlternative": "For a period of six (6) months following termination, the Employee shall not directly recruit or solicit for employment any employee of the Company who holds a senior or managerial position and with whom the Employee worked directly during the final twelve (12) months of employment. This restriction does not limit personal or social contact or communications regarding working conditions.",
+    "jurisdictionNotes": "US National Labor Relations Act section 7 protects employees' rights to engage in concerted activity, including communicating with former colleagues about workplace conditions. UK courts in TFS Derivatives Ltd v Morgan [2004] EWHC 3181 (QB) held that non-solicitation of employees must be limited to those the employee actually worked with. Restatement (Second) of Contracts section 188 would likely find a blanket social contact ban unreasonable."
+  },
+  {
+    "id": "d4e5f6a7-8b9c-4d0e-af3a-4b5c6d7e8f9a",
+    "clausePattern": "The Company shall not be required to provide any compensation, payment, or other consideration to the Employee during the non-competition period following termination. The Employee acknowledges that the consideration received during the term of employment, including salary and access to confidential information, constitutes sufficient consideration for the post-employment restrictions set forth herein.",
+    "category": "non_compete",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause says you get zero pay while being banned from working in your field after leaving. You are expected to survive with no income while honoring the non-compete. Many jurisdictions now require employers to pay employees during a non-compete restriction period (called 'garden leave'). Without compensation, courts are far more likely to void the non-compete as unconscionable -- meaning grossly unfair and one-sided.",
+    "saferAlternative": "During the non-competition period following termination, the Company shall pay the Employee a monthly sum equal to one hundred percent (100%) of the Employee's base monthly salary at the time of termination ('Garden Leave Payment'). The Employee may terminate the non-competition obligations at any time upon thirty (30) days' written notice if the Company fails to make a Garden Leave Payment when due.",
+    "jurisdictionNotes": "EU Directive 2019/1152 Article 9(2) requires adequate compensation for post-employment non-compete periods. Germany requires at least 50% of the employee's last compensation (section 74 HGB). Italy's Civil Code Article 2125 requires adequate consideration proportional to the restriction. Massachusetts Noncompetition Agreement Act (2018) requires garden leave pay of at least 50% of base salary. Restatement (Second) of Contracts section 208 treats clauses imposing obligations without corresponding consideration as potentially unconscionable."
+  },
+  {
+    "id": "d4f6a7b8-9c0d-4e1f-ba4b-5c6d7e8f9a0b",
+    "clausePattern": "The Employee hereby assigns, and agrees to assign, to the Company the Employee's entire right, title, and interest in and to any and all inventions, discoveries, designs, developments, improvements, copyrightable works, trade secrets, and other intellectual property, whether or not patentable or registrable, that the Employee may solely or jointly conceive, develop, or reduce to practice during the period of employment, regardless of whether (a) such intellectual property is related to the Company's current or anticipated business, (b) such intellectual property was created during working hours or using Company resources, or (c) such intellectual property was created at the Employee's personal residence using the Employee's personal equipment.",
+    "category": "ip_assignment",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause claims ownership of everything you create while employed -- including personal side projects, open-source contributions, a novel you write on weekends, or an app you build on your own laptop at home that has nothing to do with the company's business. It explicitly covers work done on your own time with your own equipment. Several US states have laws specifically banning this kind of overreach, recognizing that employers should only own work related to their business.",
+    "saferAlternative": "The Employee hereby assigns to the Company all right, title, and interest in inventions, discoveries, designs, and copyrightable works that (a) are made within the scope of the Employee's employment duties, (b) relate to the Company's current business or demonstrably anticipated research and development, and (c) are created using Company time, equipment, supplies, or proprietary information. This assignment does not apply to inventions that the Employee develops entirely on their own time without using Company resources and that do not relate to the Company's business. The Employee may list pre-existing inventions on Schedule C.",
+    "jurisdictionNotes": "California Labor Code section 2870 prohibits employers from claiming inventions developed entirely on the employee's own time without company resources that don't relate to the employer's business. Similar statutes exist in Delaware (19 Del. C. section 805), Illinois (765 ILCS 1060/2), Minnesota (Minn. Stat. section 181.78), and Washington (RCW 49.44.140). UK Copyright, Designs and Patents Act 1988 section 11(2) limits employer ownership to works created in the course of employment."
+  },
+  {
+    "id": "d4a7b8c9-0d1e-4f2a-8b5c-6d7e8f9a0b1c",
+    "clausePattern": "The Employee acknowledges and agrees that any intellectual property conceived, created, or developed by the Employee during the six (6) month period immediately following the termination of employment shall be presumed to have been conceived during the term of employment and shall be the sole and exclusive property of the Company. The burden shall be on the Employee to demonstrate otherwise.",
+    "category": "ip_assignment",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause claims ownership of your inventions for six months after you leave the company, and puts the burden on you to prove the work was not conceived during your employment. This is an IP 'trailer clause' that effectively extends your obligations well beyond your actual employment. It means anything you create at a new job or as a personal project could be claimed by your former employer unless you can prove it was entirely new -- which is extremely difficult to do.",
+    "saferAlternative": "The Employee agrees to promptly disclose to the Company any invention or work of authorship that relates to the Company's business and that the Employee conceives within sixty (60) days of termination, to the extent such invention or work is based on or derived from the Company's confidential information. The Company shall have thirty (30) days to review the disclosure and assert a good-faith claim of ownership; otherwise all rights vest in the Employee.",
+    "jurisdictionNotes": "California Labor Code section 2870 limits IP assignment to work related to the employer's business and created using company resources; post-employment extensions are viewed skeptically by California courts. UK Patents Act 1977 section 39 limits employer ownership to inventions made in the course of normal duties or specifically assigned duties. Restatement (Second) of Contracts section 188 applies reasonableness analysis to post-employment IP restrictions."
+  },
+  {
+    "id": "d4b8c9d0-1e2f-4a3b-9c6d-7e8f9a0b1c2d",
+    "clausePattern": "To the maximum extent permitted by applicable law, the Employee hereby irrevocably waives all moral rights (including the right of attribution, the right of integrity, and the right to object to derogatory treatment) in any works created in the course of employment, whether now known or hereafter recognized, in all media and jurisdictions throughout the world.",
+    "category": "ip_assignment",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Moral rights are your right to be credited as the creator of your work and to prevent it from being distorted or mutilated. This clause waives those rights globally and permanently. While some countries allow waiver of moral rights (like the UK for employee-created works), others consider them inalienable -- meaning they cannot be given away regardless of what you sign. If you are a designer, writer, or other creative professional, this means the company could strip your name from your work or alter it in ways you find objectionable.",
+    "saferAlternative": "To the extent permitted by applicable law, the Employee consents to the Company's reasonable use and modification of works created in the course of employment for legitimate business purposes. The Company shall use reasonable efforts to provide attribution to the Employee where practicable. Nothing in this clause shall require the Employee to waive moral rights in jurisdictions where such waiver is prohibited by law.",
+    "jurisdictionNotes": "UK Copyright, Designs and Patents Act 1988 section 87 allows waiver of moral rights, but section 79(3) provides that the right of attribution does not apply to employee works by default. French Intellectual Property Code Article L121-1 treats moral rights as inalienable and perpetual. German Copyright Act (UrhG) section 12-14 treats moral rights as non-transferable. US has limited moral rights under the Visual Artists Rights Act (VARA, 17 USC section 106A) for visual art only."
+  },
+  {
+    "id": "d4c9d0e1-2f3a-4b4c-ad7e-8f9a0b1c2d3e",
+    "clausePattern": "The Employee shall disclose to the Company a complete list of all inventions, original works of authorship, developments, improvements, and trade secrets, whether or not patentable or registrable, that the Employee has, alone or jointly with others, conceived, developed, or reduced to practice prior to the commencement of employment ('Prior Inventions'). Any intellectual property not disclosed on the Prior Inventions list shall be presumed to have been created during the term of employment and shall be the property of the Company.",
+    "category": "ip_assignment",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause requires you to list every idea and creation you have ever had before starting the job. Anything you forget to list is automatically claimed by the company. Most people cannot produce a comprehensive inventory of every project, code repository, design, or idea they have ever worked on. The presumption of company ownership for unlisted work creates a trap: if you later develop something based on a pre-existing idea you forgot to list, the company can claim it was created during your employment.",
+    "saferAlternative": "The Employee may, but is not required to, identify prior inventions on Schedule C at or before the commencement of employment. Failure to list a prior invention on Schedule C shall not create any presumption of Company ownership. The Company's rights under this Agreement extend only to intellectual property meeting the criteria set forth in the IP Assignment clause above. Any dispute over whether an invention is a Prior Invention shall be resolved by reference to objective evidence of the date of conception.",
+    "jurisdictionNotes": "California Labor Code section 2870 protects employee inventions made on their own time and unrelated to the employer's business regardless of disclosure. Delaware Code Title 19 section 805 similarly limits employer claims. Under UK common law, the burden of proving an invention was created in the course of employment falls on the employer (LIFFE Administration and Management v Pinkava [2007] EWCA Civ 217)."
+  },
+  {
+    "id": "d4d0e1f2-3a4b-4c5d-be8f-9a0b1c2d3e4f",
+    "clausePattern": "The Employee agrees that any use of the Employee's personal computer, mobile device, home internet connection, or other personal equipment or resources for any work-related purpose shall constitute use of 'Company Resources' for purposes of the intellectual property assignment provisions of this Agreement, and all works created using such resources shall be the sole property of the Company.",
+    "category": "ip_assignment",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause redefines your personal laptop, phone, and home internet as 'Company Resources' the moment you check a work email or join a video call from home. Since nearly everyone uses personal devices for some work activity, this effectively converts all your personal equipment into company equipment for IP purposes. Anything you create on your personal computer could be claimed by the company. This is especially dangerous for remote and hybrid workers who routinely use personal devices.",
+    "saferAlternative": "'Company Resources' means equipment, software, networks, and supplies provided and owned by the Company. The Employee's personal computers, devices, internet connections, and other personal property shall not constitute Company Resources regardless of whether they are incidentally used for work-related purposes. The IP assignment provisions of this Agreement apply only to works created using Company Resources as defined herein or during the Employee's scheduled working hours.",
+    "jurisdictionNotes": "California Labor Code section 2870 protects inventions made on the employee's own time without company equipment, and redefining personal equipment as company equipment would likely be viewed as an attempt to circumvent this protection. Similar protections exist in Illinois (765 ILCS 1060/2), Minnesota (Minn. Stat. section 181.78), and Washington (RCW 49.44.140). UK Employment Rights Act 1996 does not permit employers to unilaterally redefine the nature of employees' personal property."
+  },
+  {
+    "id": "d4e1f2a3-4b5c-4d6e-8f9a-0b1c2d3e4f5a",
+    "clausePattern": "The Company may terminate the Employee's employment at any time, with or without cause and with or without notice. Upon any termination of employment by the Company, any unvested equity awards, accrued but unused paid time off, earned but unpaid bonuses, and deferred compensation shall be immediately and irrevocably forfeited, regardless of the reason for termination.",
+    "category": "termination",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "While at-will employment (where either side can end the job at any time) is legal in most US states, coupling it with forfeiture of earned compensation is a different matter entirely. This clause means the company can fire you the day before your bonus is paid or your equity vests, and you lose everything you have already earned. Accrued paid time off is considered earned wages in many states, so requiring its forfeiture on termination may violate wage payment laws.",
+    "saferAlternative": "Either party may terminate this employment relationship upon thirty (30) days' written notice, or immediately for Cause as defined in Section X. Upon termination for any reason, the Employee shall receive (a) all accrued but unused paid time off, paid out at the Employee's then-current base rate, (b) any bonus earned for a completed performance period, payable on the normal bonus payment date, and (c) pro-rata vesting of equity awards through the termination date.",
+    "jurisdictionNotes": "California Labor Code section 227.3 requires payout of accrued vacation upon termination. Illinois Wage Payment and Collection Act (820 ILCS 115) requires payment of all earned compensation upon separation. UK Employment Rights Act 1996 sections 86-91 require statutory minimum notice periods (1 week per year of service, up to 12 weeks). EU Directive 2019/1152 Article 8 requires reasonable notice periods. Forfeiture of earned wages may violate state wage theft laws in New York, Massachusetts, Colorado, and others."
+  },
+  {
+    "id": "d4f2a3b4-5c6d-4e7f-9a0b-1c2d3e4f5a6b",
+    "clausePattern": "In the event the Employee voluntarily resigns within twenty-four (24) months of the Employee's start date, the Employee shall repay the Company the full gross amount of any sign-on bonus, relocation assistance, and any other special payments made in connection with the commencement of employment, without proration, within thirty (30) days of the Employee's last day of employment.",
+    "category": "termination",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This requires full repayment of all sign-on money if you leave within two years, with no reduction based on how long you actually stayed. If you received a $20,000 sign-on bonus and quit after 23 months, you owe back the full $20,000. This can trap you in a bad job because you cannot afford to leave. Increasingly, regulators are scrutinizing these 'stay-or-pay' provisions. Note that repayment is based on the gross (pre-tax) amount, meaning you may owe more than you actually received after taxes.",
+    "saferAlternative": "In the event the Employee voluntarily resigns within twelve (12) months of the Employee's start date, the Employee shall repay the Company a pro-rated portion of the net (after-tax) sign-on bonus, calculated as the remaining months of the twelve-month period divided by twelve. No repayment shall be required if the Employee resigns due to a material breach by the Company, a reduction in base salary, a relocation of more than thirty (30) miles, or a material diminution of duties. Relocation assistance shall not be subject to clawback.",
+    "jurisdictionNotes": "The CFPB and FTC have signaled increased scrutiny of 'stay-or-pay' provisions, including training repayment agreement provisions (TRAPs). California courts in In re Acknowledgment Cases (2015) limited enforceability of repayment clauses that function as penalties rather than reasonable liquidated damages. UK law treats such clauses as restraint of trade if the repayment amount is disproportionate to the employer's actual loss. Restatement (Second) of Contracts section 356 distinguishes enforceable liquidated damages from unenforceable penalties."
+  },
+  {
+    "id": "d4a3b4c5-6d7e-4f8a-8b1c-2d3e4f5a6b7c",
+    "clausePattern": "The Company reserves the right, at its sole and absolute discretion, to change the Employee's job title, duties, responsibilities, reporting structure, compensation, benefits, work location, or work schedule at any time without the Employee's consent and without prior notice. The Employee agrees that no such change shall constitute a breach of this Agreement or give rise to any claim for constructive dismissal or constructive termination.",
+    "category": "termination",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause gives the company unlimited power to change every aspect of your job -- your role, pay, location, and hours -- without your agreement or even advance notice, and then says you cannot claim this amounts to being forced out (known as 'constructive dismissal'). In practice, this could mean you are demoted, relocated across the country, or have your salary cut, and you would have no legal recourse. This attempts to waive a fundamental employment right that most jurisdictions consider non-waivable.",
+    "saferAlternative": "The Company may propose reasonable changes to the Employee's duties, work location, or reporting structure to meet legitimate business needs. Any change to the Employee's base salary, job title, or primary work location (beyond thirty miles from the current location) shall require the Employee's prior written consent. If the Employee does not consent to a material change, either party may terminate the employment upon thirty (30) days' notice, and the Employee shall be entitled to severance as set forth in Section X.",
+    "jurisdictionNotes": "UK Employment Rights Act 1996 sections 94-98 protect against unfair dismissal, including constructive dismissal where the employer fundamentally breaches the employment contract. The implied duty of mutual trust and confidence (Malik v BCCI [1998] AC 20) prevents employers from unilaterally making fundamental changes. EU Directive 2019/1152 Article 6 requires written notice of changes to working conditions. Attempting to waive constructive dismissal rights prospectively is unenforceable in the UK (Autoclenz Ltd v Belcher [2011] UKSC 41) and most EU member states."
+  },
+  {
+    "id": "d4b4c5d6-7e8f-4a9b-9c2d-3e4f5a6b7c8d",
+    "clausePattern": "In the event of termination by the Company for Cause, the Employee shall not be entitled to any severance payment, accrued bonus, or unvested equity. For purposes of this Agreement, 'Cause' shall include, without limitation, any act or omission that the Company, in its sole discretion, determines to be detrimental to the Company's interests, reputation, or business relationships.",
+    "category": "termination",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "The definition of 'Cause' here is so broad that virtually any action or inaction could qualify. The phrase 'without limitation' means the listed reasons are just examples -- the company can add any reason it wants. Worse, the company is the sole judge of what is 'detrimental to its interests.' This means the company can label almost any termination as 'for Cause' to avoid paying severance and benefits you have earned, turning the for-cause definition into an empty formality.",
+    "saferAlternative": "For purposes of this Agreement, 'Cause' shall mean: (a) a material breach of this Agreement that remains uncured for thirty (30) days after written notice specifying the breach; (b) conviction of, or plea of guilty or nolo contendere to, a felony; (c) willful misconduct or gross negligence in the performance of duties that results in material harm to the Company; or (d) fraud or embezzlement involving Company assets. The determination of Cause shall require approval by the Board of Directors and the Employee shall have the opportunity to be heard before such determination is final.",
+    "jurisdictionNotes": "UK Employment Rights Act 1996 section 98 requires that dismissal be for a fair reason and follow a fair procedure; an unlimited 'sole discretion' standard would not satisfy this test. US courts in Russ v. TeleCom Semiconductor Inc. (1999) and similar cases have found vague for-cause definitions unconscionable when they give one party unfettered discretion. Restatement (Second) of Contracts section 205 imposes a duty of good faith that constrains discretionary termination provisions."
+  },
+  {
+    "id": "d4c5d6e7-8f9a-4b0c-ad3e-4f5a6b7c8d9e",
+    "clausePattern": "During the Restricted Period and for a period of twelve (12) months following the termination of employment for any reason, the Employee shall not directly or indirectly solicit, entice, or persuade, or attempt to solicit, entice, or persuade, any person who is, or was during the preceding twenty-four (24) months, a supplier, contractor, referral source, or business partner of the Company to reduce or cease doing business with the Company.",
+    "category": "restrictive_covenants",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This 'non-dealing' clause prevents you from interacting with a huge range of the company's business relationships for a year after leaving -- not just clients, but suppliers, contractors, and anyone who referred business. The 24-month lookback period means it covers relationships that may have already ended. If you start your own business or join a competitor, you could inadvertently violate this by working with a supplier who also works with your former employer.",
+    "saferAlternative": "For a period of six (6) months following termination, the Employee shall not directly solicit any supplier or business partner of the Company with whom the Employee had direct and substantial dealings during the final twelve (12) months of employment for the specific purpose of diverting that business relationship away from the Company. General business dealings, competitive bidding, and responding to inbound inquiries from such parties shall not constitute a breach of this clause.",
+    "jurisdictionNotes": "UK courts in Townsend v Malmros (2020) upheld non-dealing clauses only where limited in scope and connected to the employee's actual role. Restatement (Second) of Contracts section 188 requires post-employment restraints be narrowly tailored to protect legitimate business interests. US courts generally require non-solicitation clauses to be limited to relationships the employee actually influenced (Boulanger v Dunkin' Donuts Inc., 442 Mass. 635 (2004))."
+  },
+  {
+    "id": "d4e7f8a9-0b1c-4d2e-bf5a-6b7c8d9e0f1a",
+    "clausePattern": "The Employee shall not, during or after employment, directly or indirectly, make any disparaging or derogatory statements, whether oral, written, or electronic, concerning the Company, its officers, directors, employees, shareholders, products, services, business practices, or financial condition, to any person, entity, media outlet, or on any social media platform, whether publicly or privately.",
+    "category": "restrictive_covenants",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This non-disparagement clause is permanent (lasting forever after you leave) and incredibly broad. It covers private conversations, social media posts, and even truthful statements. You could not leave a negative Glassdoor review, warn a friend about workplace problems, or discuss your experience with a journalist. It also potentially conflicts with your right to report workplace safety violations, discrimination, or other illegal conduct to government agencies -- protections that cannot be waived by contract.",
+    "saferAlternative": "During and after employment, both the Company and the Employee agree not to make public statements that are knowingly false and materially damaging about the other party. This clause does not restrict (a) truthful statements made in the course of legal proceedings, regulatory filings, or government investigations, (b) communications protected by the National Labor Relations Act or equivalent legislation, (c) good-faith reports of workplace safety, discrimination, harassment, or other legal violations, or (d) reviews or commentary on employment experience platforms.",
+    "jurisdictionNotes": "US National Labor Relations Act section 7 protects employees' rights to discuss working conditions; overly broad non-disparagement clauses violate NLRA section 8(a)(1) per NLRB General Counsel Memo GC 23-02 (2023). The Defend Trade Secrets Act 18 USC section 1833(b) provides whistleblower immunity. UK Employment Rights Act 1996 section 43B protects whistleblower disclosures. EU Directive 2019/1937 (Whistleblower Protection Directive) prohibits contractual waivers of reporting rights."
+  },
+  {
+    "id": "d4f8a9b0-1c2d-4e3f-8a6b-7c8d9e0f1a2b",
+    "clausePattern": "Following the termination of employment, the Employee shall, for a period of twelve (12) months, be available to provide reasonable transition assistance to the Company as requested, including but not limited to answering questions from the Employee's successor, participating in client meetings, and providing consultation on ongoing projects, at no additional compensation beyond the Employee's final paycheck.",
+    "category": "restrictive_covenants",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause requires you to keep working for your former employer for up to a year after leaving -- for free. The word 'reasonable' is subjective and undefined, meaning the company decides how much of your time they can claim. This could interfere with your new job and amounts to unpaid labor. It also gives the company leverage to claim you breached the agreement if you are not responsive enough, potentially triggering forfeiture or clawback provisions elsewhere in the contract.",
+    "saferAlternative": "For a period of thirty (30) days following the Employee's last day of employment, the Employee agrees to respond to reasonable written questions regarding the transition of the Employee's duties, limited to no more than five (5) hours total. The Company shall compensate the Employee at a rate of 150% of the Employee's final hourly equivalent base salary for all transition assistance time. Any transition assistance beyond the 30-day period shall require a separate written consulting agreement.",
+    "jurisdictionNotes": "Under FLSA, requiring work without compensation may violate minimum wage and overtime provisions. UK Employment Rights Act 1996 and the National Minimum Wage Act 1998 require compensation for all work performed. EU Working Time Directive 2003/88/EC regulates working hours and requires compensation. Restatement (Second) of Contracts section 79 requires consideration for contractual obligations; post-termination work without pay lacks adequate consideration."
+  },
+  {
+    "id": "d4a9b0c1-2d3e-4f4a-9b7c-8d9e0f1a2b3c",
+    "clausePattern": "The Employee's base salary shall be reviewed annually but the Company reserves the right, in its sole discretion, to reduce the Employee's base salary by up to twenty percent (20%) at any time based on individual performance, changes in market conditions, Company financial performance, or restructuring needs. The Employee's continued employment following any salary reduction shall constitute acceptance of the revised compensation.",
+    "category": "compensation",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause allows the company to cut your pay by up to 20% at any time, for vague reasons like 'market conditions,' and deems your continued employment as acceptance. In practice, this means you face a choice between taking a massive pay cut or quitting -- and if you quit, you may trigger repayment obligations or lose unvested benefits. This one-sided discretion to reduce compensation is considered a fundamental breach of contract in many jurisdictions and can constitute constructive dismissal.",
+    "saferAlternative": "The Employee's base salary shall not be reduced below the amount stated in this Agreement without the Employee's prior written consent. If the Company proposes a salary reduction exceeding five percent (5%) due to a company-wide restructuring affecting all similarly situated employees, the Employee shall have thirty (30) days to accept or reject the proposal. If the Employee rejects the reduction, either party may terminate the agreement on sixty (60) days' notice with full severance as set forth in Section X.",
+    "jurisdictionNotes": "UK Employment Rights Act 1996 treats unilateral pay reductions as a fundamental breach entitling the employee to claim constructive dismissal. In Cantor Fitzgerald v Callaghan [1999] ICR 639, the UK Court of Appeal held that discretionary pay clauses must still be exercised in good faith. US courts in cases like Torosyan v Boehringer Ingelheim Pharmaceuticals (1999, Connecticut) found unilateral pay reductions may breach implied contract terms. EU Directive 2019/1152 requires clear, predictable working conditions including compensation."
+  },
+  {
+    "id": "d4b0c1d2-3e4f-4a5b-ac8d-9e0f1a2b3c4d",
+    "clausePattern": "The Employee acknowledges that their position is classified as exempt from overtime under the Fair Labor Standards Act and applicable state law. The Employee agrees to work such hours as are necessary to fulfill the duties and responsibilities of the position, which may regularly exceed forty (40) hours per week, without additional compensation, overtime pay, or compensatory time off.",
+    "category": "compensation",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Whether you are actually 'exempt' from overtime depends on your specific job duties and salary level, not on what the contract says. Many employers misclassify workers as exempt to avoid paying overtime. If your actual duties do not meet the legal tests for exemption (executive, administrative, professional, or outside sales), this clause is void and the company owes you overtime. The clause also tries to make you agree to unlimited hours with no extra pay, which could violate working time regulations.",
+    "saferAlternative": "The Employee's position is classified as [exempt/non-exempt] under the Fair Labor Standards Act based on the duties described in Schedule A. If the Employee's duties materially change such that the exemption classification may no longer apply, the Company shall promptly review the classification. The Employee's standard working hours are forty (40) hours per week. Any hours worked in excess of forty-five (45) hours per week on a sustained basis shall be reviewed by Human Resources, and the Company shall provide additional compensatory time off or supplemental compensation as appropriate.",
+    "jurisdictionNotes": "FLSA section 13(a)(1) exemptions require meeting specific salary and duties tests; misclassification exposes employers to back-pay liability. US Department of Labor 2024 final rule raised the salary threshold for FLSA white-collar exemptions. EU Working Time Directive 2003/88/EC Article 6 caps average working hours at 48 per week. UK Working Time Regulations 1998 implement the EU directive and require opt-in for hours exceeding 48 per week. Misclassification cases: Encino Motorcars LLC v. Navarro (2018) (Supreme Court on exemption interpretation)."
+  },
+  {
+    "id": "d4c1d2e3-4f5a-4b6c-8d9e-0f1a2b3c4d5e",
+    "clausePattern": "Any bonus payment is entirely discretionary and shall be determined by the Company in its sole discretion based on such factors as the Company deems relevant. To be eligible to receive any bonus, the Employee must remain continuously employed by the Company through the date on which the bonus is actually paid. The Employee acknowledges that no bonus shall be considered 'earned' until it has been paid. In the event the Employee's employment terminates for any reason prior to the bonus payment date, no bonus or pro-rated portion thereof shall be payable.",
+    "category": "compensation",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause ensures you only get a bonus if you are still employed on the payment date, not when you actually did the work to earn it. Companies often pay annual bonuses in March for the previous year's performance, meaning if you leave in January, you lose an entire year's bonus that you already earned. The 'not earned until paid' language tries to redefine when compensation is earned, allowing the company to fire you right before the payout and owe you nothing.",
+    "saferAlternative": "The Employee shall be eligible for an annual performance bonus with a target of [X]% of base salary, based on achievement of performance objectives established in writing at the beginning of each fiscal year. A bonus shall be considered earned upon the completion of the applicable performance period. If the Employee's employment terminates after the end of a completed performance period but before the bonus payment date, the earned bonus shall be paid on the regular bonus payment date. If employment terminates during a performance period, the Employee shall receive a pro-rated bonus based on actual performance to the termination date.",
+    "jurisdictionNotes": "UK case law in Commerzbank AG v Keen [2007] ICR 623 addressed when discretionary bonuses become contractual entitlements. The UK Equality Act 2010 prohibits discriminatory exercise of bonus discretion. Several US states, including New York (NY Labor Law section 191) and Illinois (820 ILCS 115), require payment of earned compensation upon termination regardless of continued employment requirements. Restatement (Second) of Contracts section 205 duty of good faith constrains discretionary bonus decisions."
+  },
+  {
+    "id": "d4d2e3f4-5a6b-4c7d-9e0f-1a2b3c4d5e6f",
+    "clausePattern": "Any and all disputes, claims, or controversies arising out of or relating to this Agreement, the Employee's employment, or the termination thereof, including but not limited to claims of discrimination, harassment, retaliation, wrongful termination, or wage and hour violations, shall be resolved exclusively by final and binding arbitration administered by a neutral arbitration service selected by the Company. The arbitration shall be conducted on an individual basis only; the Employee waives any right to participate in a class action, collective action, or representative proceeding of any kind.",
+    "category": "arbitration",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause forces all disputes into private arbitration chosen by the company and eliminates your right to join a class action. Arbitration is conducted behind closed doors, meaning systemic problems like widespread wage theft or discrimination can be hidden. The company picks the arbitration service, creating a structural advantage. Waiving class actions means each employee must fight individually, which is often economically impractical for small claims, effectively giving the company immunity from accountability.",
+    "saferAlternative": "The parties agree to attempt good-faith mediation of any dispute arising under this Agreement before initiating arbitration or litigation. If mediation is unsuccessful, either party may submit the dispute to binding arbitration administered by a mutually agreed-upon arbitration service, with the arbitrator selected jointly from a panel. The Company shall bear all arbitration fees and costs exceeding what the Employee would have paid in court filing fees. Nothing in this clause prevents the Employee from filing a charge with the Equal Employment Opportunity Commission, a state labor agency, or other government body, or from participating in a class, collective, or representative action regarding wage and hour claims.",
+    "jurisdictionNotes": "US Supreme Court in Epic Systems Corp. v. Lewis (2018) upheld class action waivers in arbitration agreements under the Federal Arbitration Act, but states are pushing back. California's PAGA (Private Attorneys General Act) claims cannot be waived per Iskanian v. CLS Transportation (2014), partially limited by Viking River Cruises v. Moriana (2022). NLRA section 7 protects concerted activity, and the NLRB has challenged overbroad arbitration clauses. UK Employment Rights Act 1996 section 203 prohibits contracting out of statutory employment rights, including the right to bring tribunal claims."
+  },
+  {
+    "id": "d4e3f4a5-6b7c-4d8e-bf1a-2b3c4d5e6f7a",
+    "clausePattern": "The arbitration proceedings, including the existence of the arbitration, all documents and materials submitted, all testimony given, and the arbitrator's award, shall be strictly confidential. Neither party shall disclose any information regarding the arbitration to any third party, except as required by law or to enforce the arbitrator's award. The Employee agrees that any breach of this confidentiality provision shall result in liquidated damages of fifty thousand dollars ($50,000) payable to the Company.",
+    "category": "arbitration",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This confidentiality clause hides the very existence of the arbitration and imposes a $50,000 penalty for talking about it. If the company is engaging in widespread discrimination or wage theft, this prevents employees from discovering a pattern of similar claims. It also prevents you from warning others about predatory practices or discussing your experience with journalists or advocacy groups. The steep financial penalty further discourages anyone from speaking up, even when they have every right to do so.",
+    "saferAlternative": "The parties agree to maintain reasonable confidentiality regarding the specific details of arbitration proceedings. This confidentiality obligation does not restrict either party from (a) disclosing the existence and general nature of the dispute, (b) communicating with government agencies, legal counsel, or tax advisors, (c) making disclosures protected by the National Labor Relations Act, whistleblower statutes, or anti-discrimination laws, or (d) discussing workplace conditions with other employees or former employees. No liquidated damages shall apply to any disclosure.",
+    "jurisdictionNotes": "NLRA section 7 protects employees' right to discuss terms and conditions of employment, including dispute outcomes. The Defend Trade Secrets Act 18 USC section 1833(b) provides immunity for whistleblower disclosures. NLRB has found that confidentiality provisions in arbitration agreements violate NLRA section 8(a)(1) when they chill protected concerted activity (NLRB General Counsel Memo GC 23-02). UK Employment Rights Act 1996 section 43B whistleblower protections cannot be waived. EU Whistleblower Protection Directive 2019/1937 prohibits contractual restrictions on reporting."
+  },
+  {
+    "id": "d4f4a5b6-7c8d-4e9f-8a2b-3c4d5e6f7a8b",
+    "clausePattern": "In the event of any dispute subject to arbitration under this Agreement, each party shall bear its own attorneys' fees and costs, regardless of the outcome. The Employee acknowledges that the Company shall have the right to select the arbitration forum, and the arbitration shall take place in the county and state where the Company's principal offices are located.",
+    "category": "arbitration",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause stacks the deck in two ways. First, the company picks both the arbitration forum and the location, meaning you might have to travel across the country to arbitrate. Second, each side pays their own legal fees regardless of who wins, which removes the fee-shifting that employment laws like Title VII normally provide to successful discrimination claimants. This makes it economically impossible for most employees to bring valid claims, since the cost of an attorney and travel could exceed the potential recovery.",
+    "saferAlternative": "Arbitration shall be conducted by a mutually agreed-upon arbitration service. If the parties cannot agree, the arbitration service shall be selected by alternating strikes from a list provided by the American Arbitration Association. The arbitration shall take place in the metropolitan area where the Employee was primarily employed. The Company shall bear all filing fees and arbitrator costs. The arbitrator shall have authority to award attorneys' fees and costs to the prevailing party consistent with applicable statutory fee-shifting provisions.",
+    "jurisdictionNotes": "US Supreme Court in Green Tree Financial Corp. v. Randolph (2000) held that arbitration agreements may be unenforceable if prohibitively expensive for the employee. The EEOC has stated that employer-selected arbitration forums create an appearance of bias. Title VII (42 USC section 2000e-5(k)) provides for fee-shifting to prevailing plaintiffs in discrimination cases; clauses that eliminate statutory fee-shifting may be unenforceable. California Code of Civil Procedure section 1284.3 limits employee arbitration costs."
+  },
+  {
+    "id": "d4a5b6c7-8d9e-4f0a-9b3c-4d5e6f7a8b9c",
+    "clausePattern": "In the event the Employee voluntarily resigns or is terminated for Cause within thirty-six (36) months of completing any training program, professional development course, certification, or educational program funded or subsidized in whole or in part by the Company, the Employee shall repay the Company the full cost of such training, including tuition, fees, materials, travel expenses, and the Employee's salary during training periods, within sixty (60) days of the Employee's last day of employment.",
+    "category": "benefits_clawback",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This is a Training Repayment Agreement Provision (TRAP). It requires full repayment of all training costs -- including your own salary during training -- for three years, with no reduction over time. This can amount to tens of thousands of dollars and effectively traps you in your job because you cannot afford to leave. Including your salary as a 'training cost' means you are repaying the company for paying you to work. Regulators and courts increasingly view TRAPs as a form of debt bondage that suppresses worker mobility and wages.",
+    "saferAlternative": "If the Employee voluntarily resigns within twelve (12) months of completing an external certification program costing more than five thousand dollars ($5,000) funded by the Company, the Employee shall repay a pro-rated portion of the direct tuition and certification fees (excluding salary, travel, and internal training costs), calculated as the remaining months of the twelve-month period divided by twelve. No repayment shall be required if the Employee is terminated by the Company for any reason, resigns due to a material adverse change in working conditions, or if the training is required by the Company for the Employee's current role.",
+    "jurisdictionNotes": "The CFPB issued a report in 2023 identifying TRAPs as a form of employer-driven debt that may violate consumer financial protection laws. Several state attorneys general have challenged TRAPs. California Labor Code section 2802 requires employers to bear the cost of necessary training. The FTC's 2024 Non-Compete Rule commentary identified TRAPs as de facto non-competes. UK law treats penalty clauses as unenforceable if disproportionate to the employer's legitimate interest (Cavendish Square Holding BV v Talal El Makdessi [2015] UKSC 67). Restatement (Second) of Contracts section 356 prohibits penalties disguised as liquidated damages."
+  },
+  {
+    "id": "d4b6c7d8-9e0f-4a1b-ac4d-5e6f7a8b9c0d",
+    "clausePattern": "In the event the Employee voluntarily terminates employment or is terminated for Cause within twelve (12) months of the Employee's relocation date, the Employee shall repay the Company one hundred percent (100%) of all relocation benefits provided, including moving costs, temporary housing, travel, real estate transaction costs, and any relocation bonus or allowance. The Company shall be entitled to deduct such amounts from the Employee's final paycheck, accrued paid time off payout, or any other amounts owed to the Employee.",
+    "category": "benefits_clawback",
+    "contractType": [
+      "employment"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clawback provision requires full repayment of all relocation costs if you leave within a year, with no proration. The company can also deduct these amounts directly from your final paycheck and PTO payout, which in many states is illegal without your written authorization at the time of deduction. If you relocated your family across the country for this job and it does not work out, you could owe tens of thousands of dollars while also needing to fund another move -- and you may not even receive your final pay.",
+    "saferAlternative": "If the Employee voluntarily resigns (other than for Good Reason) within twelve (12) months of the relocation date, the Employee shall repay a pro-rated portion of the direct moving and temporary housing costs (excluding real estate transaction costs, which shall not be subject to repayment) based on the number of full months remaining in the twelve-month period. No repayment shall be required if the Company terminates the Employee for any reason or if the Employee resigns due to a material change in role, compensation, or work location. Repayment shall be made in equal monthly installments over six (6) months and shall not be deducted from the Employee's final paycheck without separate written authorization.",
+    "jurisdictionNotes": "Many US states restrict deductions from final paychecks. California Labor Code section 221 prohibits deduction of wages already earned. New York Labor Law section 193 limits permissible wage deductions. Illinois Wage Payment and Collection Act (820 ILCS 115/9) restricts deductions to those authorized in writing at the time. UK Employment Rights Act 1996 section 13 prohibits unauthorized deductions from wages. Restatement (Second) of Contracts section 356 applies reasonableness test to repayment obligations."
+  }
+]

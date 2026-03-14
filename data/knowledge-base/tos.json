@@ -1,0 +1,302 @@
+[
+  {
+    "id": "e5a1b2c3-d4e5-4f6a-b7c8-d9e0f1a2b3c4",
+    "clausePattern": "By using our Services, you grant us a non-exclusive, worldwide, royalty-free, perpetual, irrevocable, sublicensable, and transferable license to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, perform, and display any content you post, upload, or otherwise make available through the Services, in any media formats and through any media channels, whether now known or hereafter developed, without any obligation of compensation, attribution, or prior notice to you.",
+    "category": "content_ownership",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This gives the company permanent, unlimited rights to everything you post, including the right to sell or sublicense your content to anyone else. Even if you delete your account, they keep these rights forever. They can modify your content and use it however they want with zero credit or payment to you.",
+    "saferAlternative": "By using our Services, you grant us a non-exclusive, worldwide, royalty-free license to use, reproduce, and display your content solely for the purpose of operating, promoting, and improving the Services. This license terminates when you delete your content or your account, except where your content has been shared with others and they have not deleted it. You retain all ownership rights in your content.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive (93/13/EEC) Annex 1(b) considers terms that inappropriately restrict consumer rights as potentially unfair. CJEU case law (C-415/11 Aziz) holds that significant imbalances contrary to good faith are unfair. UK CRA 2015 Schedule 2 para 14 flags terms giving the trader discretion to change what is provided as grey-listed."
+  },
+  {
+    "id": "e5b2c3d4-e5f6-4a7b-88d9-e0f1a2b3c4d5",
+    "clausePattern": "We may collect, use, store, and process information about you, including personal data, usage data, device information, location data, browsing history, and content data. We may share this information with our affiliates, subsidiaries, business partners, advertisers, analytics providers, and other third parties as we determine in our sole discretion to be necessary or appropriate for our business purposes.",
+    "category": "data_usage",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause lets the company collect almost every type of personal information and share it with an unlimited, unnamed group of companies. 'Sole discretion' and 'business purposes' are so vague they place no real limit on what the company can do with your data. You have no say in who gets your information.",
+    "saferAlternative": "We collect personal data as described in our Privacy Policy, limited to what is necessary to provide, maintain, and improve the Services. We share personal data only with specifically identified service providers who are bound by data processing agreements, and only for the purposes described in our Privacy Policy. We will not sell your personal data to third parties. You may request a list of all third parties with whom your data has been shared.",
+    "jurisdictionNotes": "GDPR Article 6 requires a lawful basis for processing; 'business purposes' alone is insufficient. GDPR Article 13(1)(e) requires identifying specific recipients or categories of recipients. GDPR Article 5(1)(b) mandates purpose limitation. CCPA/CPRA gives California consumers the right to know which third parties receive their data and to opt out of data sales."
+  },
+  {
+    "id": "e5c3d4e5-f6a7-4b8c-99e0-f1a2b3c4d5e6",
+    "clausePattern": "TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE COMPANY, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (I) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE SERVICES; (II) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE SERVICES; (III) ANY UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT; OR (IV) ANY OTHER MATTER RELATING TO THE SERVICES, REGARDLESS OF WHETHER WE HAVE BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGE, AND EVEN IF A REMEDY SET FORTH HEREIN IS FOUND TO HAVE FAILED OF ITS ESSENTIAL PURPOSE.",
+    "category": "liability_waiver",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This tries to eliminate the company's responsibility for essentially all harm, including when their own security failures expose your data. The all-caps format and sweeping language are designed to discourage reading. Point (iii) is especially alarming: they disclaim liability even if hackers steal your data through their negligence.",
+    "saferAlternative": "Our liability for indirect, incidental, or consequential damages is limited to the amount you have paid us in the 12 months preceding the claim, except that this limitation does not apply to damages arising from our gross negligence, willful misconduct, or breach of data protection obligations. Nothing in these Terms limits our liability for death or personal injury caused by our negligence, fraud, or any liability that cannot be excluded by law.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Article 3 and Annex 1(a) flags terms excluding liability for death or personal injury caused by negligence. UK CRA 2015 Section 65 prohibits excluding liability for death or personal injury from negligence. US courts may find blanket liability waivers unconscionable under Restatement (Second) of Contracts Section 208."
+  },
+  {
+    "id": "e5d4e5f6-a7b8-4c9d-a0f1-a2b3c4d5e6f7",
+    "clausePattern": "Any dispute, claim, or controversy arising out of or relating to these Terms or the breach, termination, enforcement, interpretation, or validity thereof, including the determination of the scope or applicability of this agreement to arbitrate, shall be determined exclusively by binding arbitration administered by a private arbitration service selected by the Company. The arbitration shall be conducted in San Francisco, California. The arbitrator's decision shall be final and binding and may be entered as a judgment in any court of competent jurisdiction. YOU AGREE THAT YOU MAY BRING CLAIMS AGAINST THE COMPANY ONLY IN YOUR INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING.",
+    "category": "arbitration",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This forces you to settle disputes through private arbitration (a process where a private judge decides instead of a court) in San Francisco, which is expensive and impractical for most users. The company chooses the arbitration service, creating a built-in bias. The class action waiver means even if the company harms millions of users, each must fight alone, making small claims economically impossible to pursue.",
+    "saferAlternative": "We encourage resolution of disputes through our customer support team. If informal resolution fails, either party may initiate arbitration through a mutually agreed-upon, nationally recognized arbitration service. Arbitration may be conducted remotely or in the claimant's home jurisdiction. For claims under $10,000, the Company will bear all arbitration costs. Nothing in this clause prevents you from bringing claims in small claims court or limits your right to seek injunctive relief in any court of competent jurisdiction.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(q) flags terms requiring disputes to be taken exclusively to arbitration not covered by legal provisions. CJEU case Océano Grupo (C-240/98) held jurisdiction clauses requiring consumers to litigate far from home are unfair. US Supreme Court in AT&T Mobility v. Concepcion (2011) upheld class action waivers in arbitration, but state laws vary. UK CRA 2015 Schedule 2 para 20 grey-lists terms requiring arbitration."
+  },
+  {
+    "id": "e5e5f6a7-b8c9-4d0e-b1a2-b3c4d5e6f7a8",
+    "clausePattern": "Your subscription will automatically renew for successive renewal periods of the same duration as the initial subscription period at the then-current rate, which may be higher than your initial rate, unless you cancel at least thirty (30) days before the end of the current billing period. You may cancel your subscription by contacting our support team via registered mail or by visiting the account management page (where available). Cancellation will take effect at the end of the current billing period; no refunds or credits will be issued for partial billing periods, unused time, or any fees already charged.",
+    "category": "auto_renewal",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "The subscription auto-renews at potentially higher prices without guaranteed advance notice of the increase. The 30-day cancellation window is easy to miss, and requiring 'registered mail' makes cancellation deliberately difficult. No partial refunds means you could pay for a full year and lose access after one month if you miss the window.",
+    "saferAlternative": "Your subscription will automatically renew at the same rate unless we notify you of any price change at least 30 days in advance, giving you the option to cancel before the new rate applies. You may cancel your subscription at any time through your account settings. If you cancel, you will retain access until the end of your current billing period. For annual plans, you may request a pro-rated refund for unused months within 30 days of renewal.",
+    "jurisdictionNotes": "EU Consumer Rights Directive (2011/83/EU) Article 8(2) requires clear disclosure of auto-renewal terms before purchase. FTC guidelines on negative option marketing require clear disclosure and simple cancellation mechanisms. California ARL (Business & Professions Code Section 17600-17606) requires clear auto-renewal disclosure and easy online cancellation. UK CRA 2015 Section 62 requires fair and transparent terms."
+  },
+  {
+    "id": "e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9",
+    "clausePattern": "We reserve the right, at our sole discretion, to modify, suspend, or discontinue, temporarily or permanently, the Services (or any part thereof) at any time and for any reason, with or without notice. You agree that we shall not be liable to you or to any third party for any modification, suspension, or discontinuation of the Services. We further reserve the right to modify these Terms at any time. Your continued use of the Services following the posting of revised Terms constitutes your acceptance of and agreement to the revised Terms.",
+    "category": "unilateral_changes",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This gives the company total power to change the deal at any time without telling you. They can shut down the service you're paying for, change the terms to be less favorable, or remove features, all with zero accountability. 'Continued use equals acceptance' means you could be bound by new terms you never read just by logging in.",
+    "saferAlternative": "We may update these Terms from time to time. We will notify you of material changes at least 30 days before they take effect, via email or prominent notice within the Services. If you do not agree with the updated Terms, you may terminate your account and receive a pro-rated refund for any prepaid fees. Continued use of the Services after the effective date constitutes acceptance of the updated Terms. We will maintain an archived history of prior versions of these Terms.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(j) flags terms enabling unilateral changes without valid reason specified in the contract. CJEU case RWE Vertrieb (C-92/11) held that unilateral variation clauses must provide a right of withdrawal. UK CRA 2015 Schedule 2 para 11 grey-lists terms allowing the trader to alter the contract unilaterally. FTC Act Section 5 may consider undisclosed material changes deceptive."
+  },
+  {
+    "id": "e5a7b8c9-d0e1-4f2a-b3c4-d5e6f7a8b9c0",
+    "clausePattern": "We may terminate or suspend your access to the Services immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Services will immediately cease. All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity provisions, and limitations of liability. Any data associated with your account may be deleted within thirty (30) days of termination, and we shall have no obligation to provide you with access to, or copies of, your data.",
+    "category": "termination",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "The company can lock you out instantly, for any reason, with no warning and no way to appeal. You lose access to all your data within 30 days and they have no obligation to let you export it first. Meanwhile, all the clauses that benefit the company (like owning your content and not being liable) survive forever after termination.",
+    "saferAlternative": "We may terminate your account for material breach of these Terms after providing you with 14 days' written notice and an opportunity to cure the breach. Upon termination for any reason, we will provide you with a 30-day period to export your data. You may request a machine-readable copy of all data associated with your account. Prepaid fees will be refunded on a pro-rated basis for the unused portion of service.",
+    "jurisdictionNotes": "GDPR Article 20 guarantees data portability rights that cannot be contractually waived. EU Unfair Contract Terms Directive Annex 1(f) flags terms permitting the seller to dissolve the contract on a discretionary basis without giving the same right to the consumer. UK CRA 2015 Schedule 2 para 7 grey-lists terms allowing disproportionate termination. EU Digital Services Act Article 17(3) requires platforms to provide a statement of reasons for account restrictions."
+  },
+  {
+    "id": "e5b8c9d0-e1f2-4a3b-84d5-e6f7a8b9c0d1",
+    "clausePattern": "You acknowledge and agree that we may use, process, and analyze data derived from your use of the Services, including but not limited to usage patterns, search queries, interaction data, and content preferences, for the purpose of developing, training, improving, and enhancing our artificial intelligence and machine learning models and systems. Such derived data and any models trained thereon shall be our exclusive property. This right shall survive termination of your account.",
+    "category": "data_usage",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This lets the company feed your personal activity, including search queries and content you interact with, into AI training. The company claims permanent ownership of anything their AI learns from your behavior. This continues even after you delete your account, meaning your data effectively becomes permanently embedded in their commercial products with no way to remove it.",
+    "saferAlternative": "We may use anonymized, aggregated usage data to improve our Services. We will not use your personal data or content to train machine learning models without your explicit, informed consent, which you may withdraw at any time. If you withdraw consent, we will make commercially reasonable efforts to remove your data's influence from models not yet deployed. This use of anonymized data is described in detail in our Privacy Policy.",
+    "jurisdictionNotes": "GDPR Article 6 requires lawful basis for processing; Article 7 requires freely given, specific, informed consent, which must be withdrawable. GDPR Article 22 gives rights regarding automated decision-making and profiling. EU AI Act may impose additional requirements on training data governance. CCPA/CPRA Section 1798.120 gives consumers the right to opt out of the sale or sharing of personal information."
+  },
+  {
+    "id": "e5c9d0e1-f2a3-4b4c-95e6-f7a8b9c0d1e2",
+    "clausePattern": "You agree to indemnify, defend, and hold harmless the Company, its affiliates, officers, directors, employees, agents, licensors, and suppliers from and against all claims, losses, expenses, damages, and costs, including reasonable attorneys' fees, arising out of or relating to your use of the Services, your violation of these Terms, or your violation of any rights of a third party. The Company reserves the right to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, and you agree to cooperate with the Company's defense of such claims.",
+    "category": "liability_waiver",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Indemnification means you promise to pay the company's legal costs if someone sues them because of something you did. While reasonable in some cases, this version is extremely broad: it covers anything 'relating to your use of the Services,' which could include situations caused by the company's own defects. The company also gets to take over your legal defense, meaning they control the strategy and you just pay.",
+    "saferAlternative": "You agree to indemnify the Company against claims arising directly from (a) your willful violation of these Terms, or (b) your infringement of a third party's intellectual property rights through content you upload. This indemnification does not apply to claims arising from the Company's negligence, defects in the Services, or the Company's violation of applicable law. Each party shall bear its own legal costs unless a court orders otherwise.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(b) flags terms inappropriately excluding or limiting consumer rights. UK CRA 2015 Section 62 requires terms to be fair; one-sided indemnification clauses may fail the fairness test. Under US law, broad consumer indemnification clauses may be unconscionable per Restatement (Second) of Contracts Section 208."
+  },
+  {
+    "id": "e5d0e1f2-a3b4-4c5d-a6f7-a8b9c0d1e2f3",
+    "clausePattern": "These Terms and any action related thereto shall be governed by and construed in accordance with the laws of the State of Delaware, United States, without regard to its conflict of laws provisions. You irrevocably consent to the exclusive jurisdiction and venue of the state and federal courts located in Wilmington, Delaware, for the adjudication of any dispute arising out of or relating to these Terms. You hereby waive any objection to such jurisdiction or venue, including any objection based on inconvenient forum.",
+    "category": "governing_law",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This forces you to travel to Delaware to resolve any dispute, regardless of where you live. For most consumers, the cost and inconvenience of litigating in a distant state makes it effectively impossible to challenge the company. The clause also tries to override consumer protection laws in your home country or state, which may offer you stronger rights.",
+    "saferAlternative": "These Terms shall be governed by the laws of the jurisdiction in which you reside, to the extent required by applicable consumer protection law. For disputes that cannot be resolved informally, you may bring a claim in the courts of your home jurisdiction. Nothing in these Terms deprives you of mandatory consumer protections available under the laws of your country of residence.",
+    "jurisdictionNotes": "CJEU case Océano Grupo Editorial (C-240/98) held that jurisdiction clauses requiring consumers to litigate far from home are unfair under Directive 93/13/EEC. EU Brussels I Regulation (1215/2012) Article 18 allows consumers to sue in their home courts. UK CRA 2015 Section 74 preserves mandatory rules of the consumer's habitual residence. Rome I Regulation Article 6(2) prevents choice of law from depriving consumers of home-country protections."
+  },
+  {
+    "id": "e5e1f2a3-b4c5-4d6e-b7a8-b9c0d1e2f3a4",
+    "clausePattern": "You acknowledge that the Services are provided on an 'AS IS' and 'AS AVAILABLE' basis. The Company expressly disclaims all warranties of any kind, whether express, implied, or statutory, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement. The Company makes no warranty that the Services will meet your requirements, be available on an uninterrupted, timely, secure, or error-free basis, or that any defects will be corrected. No advice or information, whether oral or written, obtained by you from the Company shall create any warranty not expressly stated herein.",
+    "category": "liability_waiver",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This disclaims every possible warranty, meaning the company promises absolutely nothing about the quality, security, or reliability of what you're paying for. Even if the service is riddled with security holes that expose your data, they've disclaimed all responsibility. For a paid service, providing zero guarantees about basic functionality is heavily one-sided.",
+    "saferAlternative": "The Services are provided 'as is' with respect to features not yet generally available (e.g., beta features). For generally available Services, we warrant that we will provide the Services with reasonable skill and care and in accordance with the applicable service description. We warrant that the Services will perform substantially in accordance with the documentation. This does not affect your statutory rights as a consumer.",
+    "jurisdictionNotes": "EU Consumer Sales Directive (1999/44/EC) and its successor (Directive 2019/771) impose conformity requirements that cannot be waived. UK CRA 2015 Sections 49-52 imply terms of satisfactory quality and fitness for purpose into service contracts. US UCC Article 2 implied warranties may apply to digital services in some states. FTC Act Section 5 may consider total warranty disclaimers on paid services deceptive."
+  },
+  {
+    "id": "e5f2a3b4-c5d6-4e7f-a8b9-c0d1e2f3a4b5",
+    "clausePattern": "We may share your personal data with third-party advertising networks, data brokers, analytics providers, and business partners for the purpose of delivering targeted advertising, conducting market research, and other commercial purposes. By using the Services, you consent to the sale of your personal information as described in this section. You may opt out of the sale of your personal information by submitting a written request to our privacy team, which will be processed within ninety (90) business days.",
+    "category": "data_usage",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This explicitly authorizes selling your personal data to data brokers and advertisers. Burying consent to data sales in the Terms of Service means most users agree without realizing it. The 90-business-day opt-out window (roughly 4.5 months) is unreasonably long, and requiring a written request adds friction that discourages people from exercising their rights.",
+    "saferAlternative": "We do not sell your personal information to third parties. We share data with third-party service providers only as necessary to operate the Services, as detailed in our Privacy Policy. You may opt out of personalized advertising at any time through your account settings. Opt-out requests are processed within 15 business days.",
+    "jurisdictionNotes": "GDPR Article 7(2) requires consent to be clearly distinguishable and not bundled with other terms. CCPA Section 1798.120 gives consumers the right to opt out of sale of personal information with a clear 'Do Not Sell' link, and CPRA requires opt-out to be processed within 15 business days. FTC has taken enforcement action against companies with deceptive data-sharing practices."
+  },
+  {
+    "id": "e5a3b4c5-d6e7-4f8a-b9c0-d1e2f3a4b5c6",
+    "clausePattern": "You agree that any cause of action or claim arising out of or related to your use of the Services must be commenced within one (1) year after the cause of action accrues. Otherwise, such cause of action or claim is permanently barred. You acknowledge that this limitation period may be shorter than the statute of limitations that would otherwise apply under applicable law, and you knowingly and voluntarily waive any longer limitations period.",
+    "category": "arbitration",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This cuts the time you have to file a lawsuit from the normal legal deadline (often 2-6 years depending on the claim) to just one year. Many people don't discover they've been harmed until well after a year, especially with data breaches or billing disputes. By the time you realize something is wrong, your right to take action may already be gone.",
+    "saferAlternative": "Any claim arising under these Terms must be commenced within the statute of limitations applicable under the governing law. We will not enforce a contractual limitations period shorter than two (2) years or shorter than the applicable statutory limitation, whichever is longer.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(q) flags terms unduly restricting evidence or imposing burden of proof. UK Limitation Act 1980 sets statutory limitation periods that consumer contracts cannot shorten below the statutory minimum. Some US states (e.g., California Civil Code Section 2468) prohibit contractual shortening of statutes of limitations for consumer contracts."
+  },
+  {
+    "id": "e5b4c5d6-e7f8-4a9b-80d1-e2f3a4b5c6d7",
+    "clausePattern": "By submitting feedback, suggestions, ideas, enhancement requests, recommendations, or other communications regarding the Services ('Feedback'), you assign to the Company all right, title, and interest in and to the Feedback, including all intellectual property rights therein. You agree that the Company shall own such Feedback and is entitled to use and disseminate the Feedback for any purpose, commercial or otherwise, without acknowledgment, compensation, or other obligation to you.",
+    "category": "content_ownership",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This transfers ownership of any idea or suggestion you share with the company. If you suggest a feature that becomes worth millions, you get nothing. The broad definition of 'Feedback' could include casual comments in support tickets or forum posts. You permanently lose all rights to your ideas the moment you share them.",
+    "saferAlternative": "By submitting Feedback, you grant the Company a non-exclusive, royalty-free license to use, incorporate, and modify the Feedback to improve the Services. You retain ownership of your Feedback. If we incorporate your Feedback in a way that generates significant commercial value, we will make reasonable efforts to attribute and acknowledge your contribution.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(b) flags terms inappropriately restricting consumer rights. Assignment of IP rights in consumer contracts may be challenged under UK CRA 2015 Section 62 fairness test. Under US copyright law (17 USC Section 201), assignments must be in writing, but clicking 'I agree' to ToS may satisfy this requirement."
+  },
+  {
+    "id": "e5c5d6e7-f8a9-4b0c-91e2-f3a4b5c6d7e8",
+    "clausePattern": "You agree that we may communicate with you electronically regarding your account, the Services, and any legal or regulatory matters. You consent to receive all agreements, notices, disclosures, and other communications electronically, including via email to your registered address, in-app notifications, or by posting to our website. You agree that all such electronic communications satisfy any legal requirement that communications be in writing. It is your sole responsibility to ensure your email address is current and to monitor for communications from us.",
+    "category": "unilateral_changes",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "While electronic communication is standard, this clause shifts all responsibility for staying informed onto you. If the company sends a critical notice to an old email or buries a terms change in a website post, they've fulfilled their obligation. Combined with 'continued use equals acceptance,' you could unknowingly agree to dramatically worse terms because you missed an in-app banner.",
+    "saferAlternative": "We will send important notices regarding material changes to the Terms, account status, or legal matters via email to your registered address. Material changes to the Terms will also be communicated via prominent in-app notification at least 30 days before taking effect. You may request to receive notices via postal mail in addition to electronic delivery.",
+    "jurisdictionNotes": "EU Consumer Rights Directive (2011/83/EU) Article 8 requires durable medium for contractual information. CJEU case Content Services (C-49/11) clarified that merely providing a website link does not satisfy the durable medium requirement. UK CRA 2015 Section 64(5) requires terms to be transparent and prominent. US E-SIGN Act (15 USC Section 7001) requires affirmative consent to electronic records."
+  },
+  {
+    "id": "e5d6e7f8-a9b0-4c1d-a2f3-a4b5c6d7e8f9",
+    "clausePattern": "IN NO EVENT SHALL THE COMPANY'S TOTAL AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THESE TERMS OR YOUR USE OF THE SERVICES EXCEED THE GREATER OF (A) THE AMOUNTS PAID BY YOU TO THE COMPANY IN THE THREE (3) MONTHS PRECEDING THE CLAIM, OR (B) ONE DOLLAR ($1.00 USD). THIS LIMITATION APPLIES TO ALL CLAIMS, WHETHER BASED ON WARRANTY, CONTRACT, TORT, STRICT LIABILITY, OR ANY OTHER LEGAL THEORY, AND WHETHER OR NOT THE COMPANY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.",
+    "category": "liability_waiver",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This caps the company's total liability at 3 months of fees or one dollar, whichever is more. If they cause thousands of dollars in damages through a data breach or service failure, you can recover at most a few dollars. For free-tier users, the cap is literally one dollar. This makes it economically impossible to hold the company accountable for any harm.",
+    "saferAlternative": "Our total aggregate liability for claims arising under these Terms shall not exceed the greater of (a) the amounts paid by you in the twelve (12) months preceding the claim, or (b) five hundred dollars ($500.00 USD). This limitation does not apply to claims arising from our breach of data protection obligations, gross negligence, or willful misconduct. Nothing in these Terms limits liability that cannot be excluded by law.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(a) flags terms excluding or limiting liability for consumer harm. UK CRA 2015 Section 57 prevents excluding liability for breach of terms implied by Sections 49-52. Extremely low liability caps may be unconscionable under US Restatement (Second) of Contracts Section 208. German BGB Section 309(7) prohibits exclusion of liability for gross negligence."
+  },
+  {
+    "id": "e5e7f8a9-b0c1-4d2e-b3a4-b5c6d7e8f9a0",
+    "clausePattern": "The Company retains the right to remove, disable, or restrict access to any content that it determines, in its sole discretion, violates these Terms, is objectionable, or is otherwise harmful to the Services or other users. The Company may take such action without prior notice and without liability. The Company is not obligated to provide any explanation for such decisions and may, in its sole discretion, refuse to restore removed content or reinstate suspended accounts.",
+    "category": "termination",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This gives the company unlimited power to delete your content or suspend your account based on vague criteria like 'objectionable,' with no warning, no explanation, and no appeals process. For users who depend on the service for business or store important content, this is extremely risky. The lack of any due process means decisions can be arbitrary.",
+    "saferAlternative": "We may remove content that materially violates these Terms or applicable law. Before removing content or restricting your account, we will provide notice and a clear explanation of the reason, except where immediate removal is required to comply with a legal obligation or prevent imminent harm. You may appeal content removal or account restrictions through our appeals process, and we will review your appeal within 14 business days.",
+    "jurisdictionNotes": "EU Digital Services Act (DSA) Articles 17 and 20 require platforms to provide statements of reasons for content moderation decisions and an internal complaint-handling system. UK Online Safety Act 2023 imposes duties regarding freedom of expression. First Amendment considerations in the US limit government mandates on content moderation but do not apply to private companies directly."
+  },
+  {
+    "id": "e5f8a9b0-c1d2-4e3f-a4b5-c6d7e8f9a0b1",
+    "clausePattern": "You grant us the right to use your name, likeness, company name, logo, and trademarks in our marketing materials, customer lists, case studies, and promotional content, including on our website and social media channels. You may revoke this right by providing written notice, but such revocation shall only apply to future use and shall not require us to remove or alter materials already published or in production.",
+    "category": "content_ownership",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "By agreeing to the Terms, you unknowingly consent to the company using your name and brand as a marketing endorsement. Most users never notice this buried in ToS text. The revocation provision is weak because anything already published stays forever, potentially implying endorsement you never intended.",
+    "saferAlternative": "We will not use your name, likeness, or trademarks for marketing purposes without obtaining your separate, explicit written consent for each specific use. You may withdraw consent at any time, and we will remove such materials within 30 days of receiving your request.",
+    "jurisdictionNotes": "GDPR Article 6(1)(a) requires freely given, specific consent for processing, which bundling marketing rights into ToS undermines. Many US states have publicity rights statutes (e.g., California Civil Code Section 3344). UK GDPR similarly requires explicit consent for marketing use of personal data."
+  },
+  {
+    "id": "e5a9b0c1-d2e3-4f4a-b5c6-d7e8f9a0b1c2",
+    "clausePattern": "You agree that we may collect information from your device, including but not limited to device identifiers, operating system, browser type, IP address, GPS location data, Wi-Fi connection information, accelerometer data, and information from cookies, pixels, web beacons, and similar technologies. We may combine this information with data obtained from third-party sources, including data brokers, advertising partners, and publicly available databases, to create enhanced profiles for the purposes of service personalization and targeted advertising.",
+    "category": "data_usage",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This authorizes invasive device surveillance including GPS tracking, Wi-Fi monitoring, and even motion sensor data. Combining this with data bought from third-party brokers creates a detailed profile of your movements, habits, and identity far beyond what any reasonable user would expect. This goes well beyond what's needed to provide the service.",
+    "saferAlternative": "We collect device information necessary for security and service functionality, such as device type and operating system version. We collect location data only when you explicitly enable location features, and you may disable this at any time. We do not purchase personal data from third-party data brokers. Our Privacy Policy describes exactly what data we collect and how it is used.",
+    "jurisdictionNotes": "GDPR Article 5(1)(c) mandates data minimization: only collecting data adequate, relevant, and limited to what is necessary. ePrivacy Directive (2002/58/EC) Article 5(3) requires informed consent for storing or accessing device information (cookies, tracking). CCPA/CPRA gives consumers the right to know and opt out of cross-context behavioral advertising. EU DMA Article 5(2) restricts gatekeepers from combining personal data across services without consent."
+  },
+  {
+    "id": "e5b0c1d2-e3f4-4a5b-86d7-e8f9a0b1c2d3",
+    "clausePattern": "All disputes arising out of or relating to these Terms shall be resolved through confidential binding arbitration. The parties agree not to disclose the existence, content, or outcome of any arbitration proceeding to any third party, except as required by law or to enforce the arbitration award. The arbitration proceedings shall be governed by rules selected by the Company, and the arbitrator shall be chosen from a panel maintained by the Company's preferred arbitration provider.",
+    "category": "arbitration",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "Confidential arbitration prevents consumers from learning about patterns of company misconduct. If the company loses an arbitration case, no one else ever finds out, so they can keep engaging in the same harmful practices. The company also controls which arbitration service is used and which arbitrator is selected, creating structural bias in its favor.",
+    "saferAlternative": "Disputes may be resolved through arbitration administered by a recognized, independent arbitration institution. The arbitrator shall be selected jointly by both parties from the institution's panel. Either party may disclose the existence and outcome of arbitration proceedings. Nothing in this clause prevents either party from pursuing claims in small claims court.",
+    "jurisdictionNotes": "EU Unfair Contract Terms Directive Annex 1(q) flags terms requiring arbitration not covered by legal provisions. EU Directive 2013/11 on consumer ADR requires accessible, independent dispute resolution. US courts have occasionally struck down arbitration clauses as unconscionable where the company controls arbitrator selection (Armendariz v. Foundation Health Psychcare, Cal. 2000). UK Arbitration Act 1996 Section 89-91 provides consumer protections."
+  },
+  {
+    "id": "e5c1d2e3-f4a5-4b6c-97e8-f9a0b1c2d3e4",
+    "clausePattern": "We may offer a free trial period for certain subscription plans. If you do not cancel before the free trial ends, you will be automatically enrolled in the paid subscription and your payment method on file will be charged at the full subscription rate. You acknowledge that the Company is not required to provide a reminder or notification before the trial period ends and your paid subscription begins. The initial charge may include the full annual subscription amount if you selected an annual plan.",
+    "category": "auto_renewal",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Free trials that silently convert to paid subscriptions without a reminder are a classic dark pattern. Many users forget they signed up. Charging a full annual fee with no warning is especially aggressive: you could be hit with hundreds of dollars because you forgot about a trial. The explicit disclaimer that they don't need to remind you shows they know this catches people off guard.",
+    "saferAlternative": "At the end of your free trial, we will send you a reminder at least 7 days before the trial expires, informing you of the upcoming charge and the subscription rate. Your paid subscription will begin only after you confirm your intent to continue. If you do not confirm, your trial will end and no charges will be applied to your payment method.",
+    "jurisdictionNotes": "FTC has brought enforcement actions under Section 5 against free-to-paid subscription traps (e.g., FTC v. ABCmouse). EU Consumer Rights Directive (2011/83/EU) Article 8(2) requires clear disclosure of total costs before consumer is bound. California ARL requires clear disclosure of automatic renewal offer terms and affirmative consent. UK CRA 2015 Sections 62-64 require transparency in consumer contract terms."
+  },
+  {
+    "id": "e5d2e3f4-a5b6-4c7d-a8f9-a0b1c2d3e4f5",
+    "clausePattern": "You grant the Company a non-exclusive, royalty-free license to reproduce and display your content for the purpose of operating the Services. Additionally, you grant the Company the right to sublicense your content to third-party platforms, services, and media outlets for distribution, syndication, and promotional purposes. The Company shall not be required to notify you of or obtain additional consent for specific sublicensing arrangements.",
+    "category": "content_ownership",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "While the opening sounds reasonable, the sublicensing clause is a hidden trap. It allows the company to license your photos, posts, or other content to any third party (including competitors, media outlets, or advertisers) without telling you. Your personal content could appear in places you never intended and never agreed to.",
+    "saferAlternative": "You grant the Company a non-exclusive, royalty-free license to reproduce and display your content solely for the purpose of operating, maintaining, and promoting the Services. We will not sublicense your content to third parties without your explicit consent for each specific sublicensing arrangement. You may withdraw this license by deleting your content.",
+    "jurisdictionNotes": "GDPR Article 6(1)(a) requires specific consent for each purpose of processing. EU Unfair Contract Terms Directive Annex 1(b) flags terms limiting consumer rights. UK CRA 2015 Section 62 fairness test would likely find undisclosed sublicensing unfair. Under US copyright law, sublicensing rights should be clearly and conspicuously disclosed."
+  },
+  {
+    "id": "e5e3f4a5-b6c7-4d8e-b9a0-b1c2d3e4f5a6",
+    "clausePattern": "The Company reserves the right to introduce, modify, or increase fees for use of the Services or any features thereof at any time. Any fee changes will be effective immediately upon posting to the Company's website. Your continued use of the Services following any fee change constitutes your acceptance of the new fee structure. The Company is under no obligation to notify you individually of fee changes.",
+    "category": "unilateral_changes",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This lets the company raise prices at any time without notifying you personally. By simply posting a fee change somewhere on their website, they claim you've agreed. You could discover a doubled subscription fee on your credit card statement with no prior warning and no ability to object.",
+    "saferAlternative": "We may change our fees with at least 30 days' advance notice sent directly to your registered email address. Fee increases will not apply to your current billing period. If you do not agree with a fee change, you may cancel your subscription before the new fee takes effect and receive a pro-rated refund for any prepaid period.",
+    "jurisdictionNotes": "EU Consumer Rights Directive (2011/83/EU) requires clear information about total costs. EU Unfair Contract Terms Directive Annex 1(d) flags terms permitting the seller to alter the contract unilaterally without a valid reason. UK CRA 2015 Schedule 2 para 12 grey-lists terms permitting price increases after conclusion of contract without right to cancel. FTC Act Section 5 considers failure to disclose material fee changes a deceptive practice."
+  },
+  {
+    "id": "e5f4a5b6-c7d8-4e9f-a0b1-c2d3e4f5a6b7",
+    "clausePattern": "You agree that we may retain your personal data for as long as we deem necessary for our business purposes, even after you have terminated your account. We may retain and use your information as necessary to comply with our legal obligations, resolve disputes, and enforce our agreements. You acknowledge that deletion of your account does not guarantee deletion of all data we hold about you.",
+    "category": "data_usage",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This claims the right to keep your personal data indefinitely, even after you leave the service. 'As long as we deem necessary for business purposes' is completely open-ended. This directly conflicts with your right to have data deleted (the 'right to be forgotten'). The final sentence effectively says that deleting your account may be meaningless for your privacy.",
+    "saferAlternative": "Upon termination of your account, we will delete your personal data within 90 days, except where retention is required by specific legal obligations (e.g., tax records for the statutory period). We will inform you of any data we are legally required to retain, the reason for retention, and the expected deletion date. You may exercise your right to erasure at any time by contacting us.",
+    "jurisdictionNotes": "GDPR Article 17 establishes the right to erasure ('right to be forgotten'). GDPR Article 5(1)(e) requires storage limitation: data kept only as long as necessary for the purpose. CCPA Section 1798.105 gives consumers the right to request deletion of personal information. UK GDPR mirrors the EU right to erasure provisions."
+  },
+  {
+    "id": "e5a5b6c7-d8e9-4f0a-b1c2-d3e4f5a6b7c8",
+    "clausePattern": "Any proceedings to resolve or litigate any dispute in any forum shall be conducted solely on an individual basis. Neither you nor the Company shall seek to have any dispute heard as a class action, private attorney general action, or in any other proceeding in which either party acts or proposes to act in a representative capacity. No arbitration or proceeding shall be combined with another without the prior written consent of all parties to all affected arbitrations or proceedings.",
+    "category": "arbitration",
+    "contractType": [
+      "tos"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "Class action waivers prevent consumers from banding together to challenge company misconduct. If a company overcharges 10 million users by $5 each, no individual will spend thousands on a lawyer for $5. Class actions are the only practical remedy for widespread small-dollar harm. This clause effectively grants the company immunity for small-scale but systemic abuse.",
+    "saferAlternative": "For individual claims under $10,000, either party may elect individual arbitration or small claims court. This clause does not waive your right to participate in a class action or representative proceeding for claims arising from data breaches, systematic billing errors, or violations of consumer protection statutes.",
+    "jurisdictionNotes": "US Supreme Court in AT&T Mobility v. Concepcion (2011) upheld class action waivers under the Federal Arbitration Act, but Epic Systems v. Lewis (2018) was more nuanced. EU Directive 2020/1828 on representative actions for consumer protection explicitly enables collective redress. UK Competition Appeal Tribunal allows opt-out class actions. CFPB attempted to ban class action waivers in financial contracts (later overturned by Congress)."
+  }
+]

@@ -1,0 +1,352 @@
+[
+  {
+    "id": "b2a1c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "clausePattern": "All Work Product, including but not limited to ideas, concepts, inventions, designs, code, documentation, and any other materials created, conceived, or developed by Contractor during the term of this Agreement, whether or not related to the Services, shall be the sole and exclusive property of Client. Contractor hereby irrevocably assigns to Client all right, title, and interest in and to such Work Product, including all intellectual property rights therein.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This assigns ALL intellectual property you create while the contract is active -- even personal projects, side work, or tools you build for other clients -- to this one client. The phrase 'whether or not related to the Services' is the trap. It means your weekend app, your blog post, your open source contribution could all legally belong to them.",
+    "saferAlternative": "All Work Product created by Contractor specifically in the performance of the Services described in the applicable Statement of Work shall be the property of Client. Contractor retains all right, title, and interest in pre-existing intellectual property, tools, methodologies, and any work created outside the scope of the Services.",
+    "jurisdictionNotes": "Under 17 U.S.C. Section 101, 'work made for hire' only applies to employees or to independent contractors in 9 narrow categories (and only with a signed written agreement). Overly broad IP assignment to contractors may be challenged as unconscionable under Restatement (Second) of Contracts Section 208. In the EU, Directive 93/13/EEC Article 3(1) may render such terms unfair if they cause a significant imbalance in the parties' rights."
+  },
+  {
+    "id": "b2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5e",
+    "clausePattern": "Contractor acknowledges and agrees that all pre-existing intellectual property, including frameworks, libraries, templates, code snippets, and methodologies that Contractor incorporates into the Work Product, shall become the exclusive property of Client upon delivery.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This takes ownership of tools and code you built BEFORE this contract even existed. If you use a reusable template or code library you've developed over years, the client would own it -- and you could no longer use it for other clients. This can destroy your ability to work efficiently on future projects.",
+    "saferAlternative": "Contractor grants Client a non-exclusive, perpetual, royalty-free license to use any pre-existing intellectual property incorporated into the Work Product solely as part of the delivered Work Product. Contractor retains all ownership of pre-existing intellectual property.",
+    "jurisdictionNotes": "Assignment of pre-existing IP not created under the contract raises unconscionability concerns under Restatement (Second) of Contracts Section 208. In the UK, the Unfair Contract Terms Act 1977 Section 3 may apply where one party deals on the other's written standard terms. IPSE (UK freelancer body) specifically warns against clauses that capture background IP."
+  },
+  {
+    "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+    "clausePattern": "To the fullest extent permitted by law, Contractor hereby irrevocably waives all moral rights in the Work Product, including the right to be identified as the author, the right to object to derogatory treatment, and the right to privacy of authorship, in all jurisdictions worldwide.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "Moral rights are your right to be credited as the creator and to prevent your work from being distorted or used in ways that damage your reputation. Waiving them means the client could, for example, modify your design work in a misleading way and you'd have no legal recourse. In many countries, moral rights cannot actually be waived by contract.",
+    "saferAlternative": "Contractor agrees not to assert moral rights against Client's reasonable use, modification, and adaptation of the Work Product for its intended business purposes. Contractor retains the right to be credited in portfolio presentations and professional references.",
+    "jurisdictionNotes": "Moral rights under UK Copyright, Designs and Patents Act 1988 Sections 77-89 can be waived but not assigned. In France and Germany, moral rights are inalienable under the Code de la propriete intellectuelle (Art. L121-1) and Urheberrechtsgesetz (Section 12-14) respectively. Under the US Copyright Act 17 U.S.C. Section 106A, moral rights (VARA) apply only to visual art but cannot be transferred. EU Directive 93/13/EEC Annex paragraph 1(q) flags terms that limit legal rights."
+  },
+  {
+    "id": "b2d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f",
+    "clausePattern": "Client shall have a perpetual, irrevocable, worldwide, royalty-free license to use, modify, sublicense, and create derivative works from any Work Product, concepts, designs, or deliverables produced by Contractor during the engagement, including work that is rejected, not approved, or not included in the final deliverables.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This gives the client a permanent free license to use even your rejected or unused work -- including drafts, alternative concepts, and ideas you pitched but they didn't pick. That unused work might be something you could repurpose for another client. The sublicense right means they could also let third parties use your rejected work.",
+    "saferAlternative": "Client shall have a perpetual, irrevocable, worldwide, royalty-free license to use, modify, and create derivative works from final approved Work Product only. All rejected, unused, or unapproved concepts and drafts remain the property of Contractor.",
+    "jurisdictionNotes": "Under EU Directive 93/13/EEC Article 3(1), a term not individually negotiated that creates a significant imbalance to the consumer's detriment may be regarded as unfair. Retaining license to rejected work may qualify under Annex paragraph 1(b) as inappropriately limiting the other party's rights. US courts have found overly broad license grants unconscionable under UCC Section 2-302."
+  },
+  {
+    "id": "b2e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f8a",
+    "clausePattern": "Contractor agrees that all tools, scripts, automation workflows, reusable components, and general-purpose methodologies developed in the course of performing the Services shall be assigned to Client and Contractor shall not use such tools, scripts, or methodologies for any other client or purpose.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This captures the general-purpose tools and processes you develop while working -- things like build scripts, automation workflows, or reusable components. These are part of your professional toolkit. Losing them means you'd have to rebuild your workflow from scratch for each new client, crippling your efficiency and earning potential.",
+    "saferAlternative": "Client acknowledges that Contractor may develop or use general-purpose tools, scripts, and methodologies in the performance of Services. Such tools remain the property of Contractor. Contractor grants Client a non-exclusive license to continue using any such tools incorporated into the final Work Product.",
+    "jurisdictionNotes": "Restatement (Second) of Contracts Section 208 addresses unconscionability where one party has no meaningful choice. UK Unfair Contract Terms Act 1977 Section 3 restricts unreasonable standard-form terms. Assignment of general-purpose tools exceeds the scope of what is typically considered 'work for hire' under 17 U.S.C. Section 101, which requires the work be specially ordered or commissioned."
+  },
+  {
+    "id": "b2f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8a9b",
+    "clausePattern": "Contractor further assigns to Client all future rights in any improvements, extensions, or derivative works based on the Work Product that Contractor may develop after the termination of this Agreement.",
+    "category": "ip_ownership",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This claims ownership over work you do AFTER the contract ends, as long as it's loosely based on work from this project. If you learn a technique or approach on this project and use it later, the client could argue they own your future work. This is an indefinite claim on your future creativity with no time limit.",
+    "saferAlternative": "Upon termination of this Agreement, Client's rights shall be limited to the Work Product delivered and accepted prior to termination. Contractor shall be free to use general skills, knowledge, and experience gained during the engagement for any purpose.",
+    "jurisdictionNotes": "Assignment of future rights in unspecified works is generally unenforceable. Under UK law, an assignment of future copyright requires specific identification of the work (Copyright, Designs and Patents Act 1988 Section 91). US courts applying Restatement (Second) of Contracts Section 188 have struck down unreasonable restraints on trade. EU Directive 93/13/EEC Annex paragraph 1(q) flags exclusion or limitation of the contractor's legal rights."
+  },
+  {
+    "id": "b2010203-0405-4607-8809-0a0b0c0d0e0f",
+    "clausePattern": "Payment for Services rendered shall be due within ninety (90) days following Client's receipt and approval of a correct and undisputed invoice. Client reserves the right to dispute any invoice within the 90-day period, in which case payment shall be suspended until the dispute is resolved to Client's satisfaction.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "Net-90 means you wait three months to get paid, and the client can delay indefinitely by 'disputing' the invoice on any grounds. The phrase 'resolved to Client's satisfaction' gives them total control -- there's no objective standard for what counts as resolved. You could complete work perfectly and still never get paid.",
+    "saferAlternative": "Payment for Services rendered shall be due within thirty (30) days following Contractor's submission of a correct invoice. Client may dispute specific line items in writing within fourteen (14) days of receipt, but shall pay all undisputed amounts by the original due date. Disputed amounts shall be resolved within thirty (30) days through good-faith negotiation.",
+    "jurisdictionNotes": "The UK Late Payment of Commercial Debts (Interest) Act 1998 sets a default payment term of 30 days and allows the creditor to charge statutory interest (8% + Bank of England base rate) on late payments. EU Late Payment Directive 2011/7/EU Article 3(5) provides that payment periods exceeding 60 days shall not be grossly unfair. The Freelancers Union reports that 71% of freelancers have trouble getting paid; net-90 with subjective dispute rights exacerbates this."
+  },
+  {
+    "id": "b2111213-1415-4617-8819-1a1b1c1d1e1f",
+    "clausePattern": "Contractor shall be compensated on a pay-when-paid basis. Client's obligation to pay Contractor is expressly contingent upon Client receiving payment from its end client for the project in which Contractor's Services are utilized. In the event Client does not receive payment from the end client, Client shall have no obligation to pay Contractor.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "You only get paid if the client gets paid by THEIR client. You've done the work, delivered value, but whether you see any money depends entirely on a business relationship you have no visibility into or control over. The client's cash flow problems or bad client relationships become your problem.",
+    "saferAlternative": "Payment for completed Services shall be due within thirty (30) days of invoice submission, regardless of Client's receipt of payment from any third party. Client's obligation to compensate Contractor for accepted deliverables is unconditional.",
+    "jurisdictionNotes": "Pay-when-paid clauses have been held unenforceable in many US jurisdictions in construction (e.g., New York Lien Law Section 34), and courts increasingly scrutinize them in service contracts. In the UK, such clauses may be challenged under the Unfair Contract Terms Act 1977 Section 3. EU Directive 93/13/EEC Article 3(1) and Annex paragraph 1(b) address terms that inappropriately exclude or limit the consumer's legal rights in the event of non-performance."
+  },
+  {
+    "id": "b2212223-2425-4627-8829-2a2b2c2d2e2f",
+    "clausePattern": "No interest, penalties, or late fees shall accrue on any overdue payments. Contractor's sole remedy for late payment shall be to submit a written request to Client's accounts payable department, and Contractor agrees to allow an additional sixty (60) day cure period before pursuing any other remedies.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This eliminates any financial consequence for paying you late. Without interest or penalties, the client has zero incentive to pay on time -- your invoice becomes an interest-free loan. The 60-day 'cure period' on top of already-late payment means you could wait months with no recourse.",
+    "saferAlternative": "Overdue payments shall accrue interest at the rate of 1.5% per month or the maximum rate permitted by law, whichever is lower, calculated from the original due date. Contractor may suspend performance of Services upon fifteen (15) days written notice of non-payment.",
+    "jurisdictionNotes": "The UK Late Payment of Commercial Debts (Interest) Act 1998 Section 1 gives an automatic statutory right to interest on late commercial payments that cannot be contracted out of (Section 9). EU Late Payment Directive 2011/7/EU Article 7 states that contractual terms excluding interest on late payment are grossly unfair and unenforceable. US Freelance Isn't Free Act (NYC Admin Code Section 20-928) requires timely payment to freelancers."
+  },
+  {
+    "id": "b2313233-3435-4637-8839-3a3b3c3d3e3f",
+    "clausePattern": "Payment for each milestone shall be contingent upon Client's written approval and acceptance of the deliverable in Client's sole and absolute discretion. Client shall have unlimited time to review and approve or reject each deliverable, and no payment shall be due until such approval is provided.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "The client can reject your work for any reason ('sole and absolute discretion') and has unlimited time to review. This means they could use your completed work while endlessly 'reviewing' it, never formally approving, and never paying you. There's no objective acceptance criteria you can point to.",
+    "saferAlternative": "Client shall review each deliverable within ten (10) business days of submission and provide written approval or specific, actionable feedback for revision. If Client does not respond within ten (10) business days, the deliverable shall be deemed accepted. Acceptance shall not be unreasonably withheld.",
+    "jurisdictionNotes": "Clauses granting sole discretion to one party violate the duty of good faith recognized in Restatement (Second) of Contracts Section 205. EU Directive 93/13/EEC Annex paragraph 1(c) flags terms allowing the seller to retain sums paid where the seller dissolves the contract. UK Consumer Rights Act 2015 Schedule 2 paragraph 14 addresses terms giving disproportionate discretion to one party."
+  },
+  {
+    "id": "b2414243-4445-4647-8849-4a4b4c4d4e4f",
+    "clausePattern": "In the event Client terminates this Agreement for any reason, Contractor shall not be entitled to any cancellation fee, kill fee, or compensation for work-in-progress. All partial deliverables shall become the property of Client at no additional cost.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "If the client cancels the project, you get nothing for work already completed -- and they still keep your partial deliverables. You could be weeks into a project, have turned down other work, and walk away with zero compensation while the client uses what you've built.",
+    "saferAlternative": "In the event of termination for convenience by Client, Contractor shall be compensated for all work completed through the date of termination at the agreed rate, plus a cancellation fee equal to 25% of the remaining contract value. Ownership of partial deliverables transfers to Client only upon payment in full for all completed work.",
+    "jurisdictionNotes": "Failure to pay for work performed may constitute unjust enrichment under Restatement (Third) of Restitution Section 1. NYC Freelance Isn't Free Act (Local Law 140 of 2016) requires payment for all work performed. EU Directive 93/13/EEC Annex paragraph 1(d) flags terms permitting the seller to retain sums where the seller cancels. UK Supply of Goods and Services Act 1982 Section 15 implies a duty to pay a reasonable price."
+  },
+  {
+    "id": "b2515253-5455-4657-8859-5a5b5c5d5e5f",
+    "clausePattern": "Client reserves the right to retroactively adjust the agreed rate for Services if Client determines, in its sole discretion, that the scope of work was less complex than originally anticipated, or that market rates for comparable services have decreased.",
+    "category": "payment_terms",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "The client can reduce your agreed rate AFTER you've done the work, claiming the work was simpler than expected or that 'market rates dropped.' This makes your income completely unpredictable. You agreed to a rate, did the work, and now the client can unilaterally decide to pay you less.",
+    "saferAlternative": "The rate for Services shall be as set forth in the applicable Statement of Work and may only be modified by mutual written agreement of both parties. Any rate changes shall apply prospectively to future work only.",
+    "jurisdictionNotes": "Unilateral modification of agreed consideration violates basic contract principles under Restatement (Second) of Contracts Section 73. EU Directive 93/13/EEC Annex paragraph 1(j) and (l) flag terms enabling the supplier to alter contract terms or price unilaterally. UK Consumer Rights Act 2015 Schedule 2 paragraph 11 addresses terms allowing unilateral variation."
+  },
+  {
+    "id": "b2616263-6465-4667-8869-6a6b6c6d6e6f",
+    "clausePattern": "Contractor agrees that for a period of twenty-four (24) months following the termination of this Agreement, Contractor shall not directly or indirectly provide services that are the same as or substantially similar to the Services to any person or entity within the industry in which Client operates, worldwide.",
+    "category": "non_compete",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This bans you from doing similar work for ANYONE in the client's entire industry, ANYWHERE in the world, for two years. If you're a web developer who built an e-commerce site, you couldn't build any e-commerce site for any company on Earth for 24 months. This effectively prevents you from earning a living using your skills.",
+    "saferAlternative": "Contractor agrees that for a period of six (6) months following the termination of this Agreement, Contractor shall not provide services directly to the specific clients of Client listed in Exhibit A who were introduced to Contractor through this engagement. This restriction does not prevent Contractor from providing services to other entities in Client's industry.",
+    "jurisdictionNotes": "California Business and Professions Code Section 16600 voids non-compete clauses for independent contractors almost entirely. Under Restatement (Second) of Contracts Section 188, a restraint on trade is unreasonable if broader than needed to protect the promisee's legitimate interest. UK courts apply a reasonableness test (Nordenfelt v Maxim Nordenfelt [1894]) and 24-month worldwide bans on contractors are almost certainly unenforceable. The FTC's 2024 Non-Compete Rule (if in effect) bans most non-competes."
+  },
+  {
+    "id": "b2717273-7475-4677-8879-7a7b7c7d7e7f",
+    "clausePattern": "During the term of this Agreement and for twelve (12) months thereafter, Contractor shall not provide services to any entity that competes with Client or any of Client's affiliates, subsidiaries, or parent companies in any market in which Client or its affiliates conduct business.",
+    "category": "non_compete",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This extends the non-compete to all of the client's parent companies, subsidiaries, and affiliates. If the client is part of a large corporate group, this could cover dozens of industries. The restriction applies to any market they operate in, which for a conglomerate could be virtually everything. A freelancer has no way to even know all the affiliates.",
+    "saferAlternative": "During the term of this Agreement, Contractor shall not provide services to entities listed in Exhibit B (Client's Direct Competitors), limited to no more than five (5) named entities. This restriction expires upon termination of this Agreement.",
+    "jurisdictionNotes": "Restatement (Second) of Contracts Section 188 requires that restraints protect only a 'legitimate interest' and be no broader than necessary. Courts in the UK (TFS Derivatives Ltd v Morgan [2005]) have found non-competes covering affiliates overly broad. EU Directive 93/13/EEC Article 3(1) tests for significant imbalance in obligations. California Business and Professions Code Section 16600 would void this entirely."
+  },
+  {
+    "id": "b2818283-8485-4687-8889-8a8b8c8d8e8f",
+    "clausePattern": "Contractor shall not, for a period of eighteen (18) months following termination, solicit, contact, or provide services to any client, customer, prospect, or lead of Client with whom Client has had any communication or business relationship during the preceding five (5) years.",
+    "category": "non_compete",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This prevents you from working with anyone the client has ever talked to in the last five years -- not just current clients, but old prospects and leads. 'Any communication' is incredibly broad: a single cold email from the client to a company five years ago could block you from working with that company. The scope is unknowable to you.",
+    "saferAlternative": "Contractor shall not, for a period of six (6) months following termination, directly solicit clients of Client whom Contractor personally served during this engagement. This restriction does not apply to inbound inquiries or to relationships that pre-date this Agreement.",
+    "jurisdictionNotes": "Non-solicitation clauses must be reasonable in scope and duration. UK courts in Patsystems Holdings Ltd v Neilly [2012] held that restrictions covering 'prospects' or 'leads' are harder to enforce than restrictions on actual clients. Restatement (Second) of Contracts Section 188(1)(a) requires that the restraint be no greater than needed. Five-year lookback periods are generally considered excessive."
+  },
+  {
+    "id": "b2919293-9495-4697-8899-9a9b9c9d9e9f",
+    "clausePattern": "Contractor acknowledges that the skills, techniques, and professional knowledge gained during the performance of Services are proprietary to Client. Contractor shall not use such skills, techniques, or knowledge in any subsequent engagement for a period of twelve (12) months.",
+    "category": "non_compete",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This claims your general professional skills and knowledge belong to the client. Skills you bring to a project -- and naturally develop further during it -- are yours. A clause preventing you from using your own skills for a year is an extreme restraint on your ability to earn a living. Courts almost universally reject this.",
+    "saferAlternative": "Contractor shall not use or disclose Client's specific trade secrets or proprietary business information in subsequent engagements. Contractor is free to use general skills, professional knowledge, and techniques in any future work.",
+    "jurisdictionNotes": "Courts consistently distinguish between protectable trade secrets and general skill/knowledge. In Faccenda Chicken Ltd v Fowler [1987] (UK), the Court of Appeal held that general skill and knowledge gained during employment cannot be restricted. Restatement (Second) of Contracts Section 188 comment d notes that restraints on use of general skill are unreasonable. California Business and Professions Code Section 16600 voids such restrictions."
+  },
+  {
+    "id": "b2b1b2b3-b4b5-46b7-88b9-babb0c0d0e0f",
+    "clausePattern": "Client may terminate this Agreement immediately upon written notice for any reason or no reason. Upon such termination, Contractor shall immediately cease all work and deliver all Work Product in its current state. Contractor shall have no claim for damages, lost profits, or any other compensation arising from such termination.",
+    "category": "termination",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "The client can fire you instantly with zero notice, zero compensation for work done, and zero kill fee -- while keeping everything you've built. You could quit other projects to take this one, block out your calendar, and get cancelled on day one with nothing to show for it. There's no symmetry -- the client takes zero risk.",
+    "saferAlternative": "Either party may terminate this Agreement for convenience upon fourteen (14) days written notice. Upon termination, Client shall pay for all Services rendered through the effective date of termination plus any pre-approved expenses. If Client terminates without cause, Client shall additionally pay a termination fee equal to two (2) weeks of the agreed rate.",
+    "jurisdictionNotes": "UK Supply of Goods and Services Act 1982 Section 15 implies an obligation to pay a reasonable charge for services performed. Restatement (Third) of Restitution Section 1 prevents unjust enrichment where work has been performed. EU Directive 93/13/EEC Annex paragraph 1(f) flags terms permitting the supplier to dissolve the contract on a discretionary basis where the consumer receives no compensation. NYC Freelance Isn't Free Act requires payment for all services performed."
+  },
+  {
+    "id": "b2c1c2c3-c4c5-46c7-88c9-cacb0c0d0e0f",
+    "clausePattern": "In the event of termination by either party for any reason, all intellectual property rights in the Work Product, including incomplete work, concepts, drafts, and preparatory materials, shall immediately and automatically revert to or vest in Client, regardless of whether payment for such work has been made.",
+    "category": "termination",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "If the contract ends -- even if the CLIENT breaks the terms -- they automatically get all your work, including unfinished drafts and concepts, without having to pay for any of it. This removes any leverage you have to get paid for completed work. The client could intentionally terminate to get free deliverables.",
+    "saferAlternative": "Upon termination, intellectual property rights in completed Work Product shall transfer to Client only upon receipt of full payment for all Services rendered through the termination date. Until such payment is received, Contractor retains all rights in the Work Product. Incomplete drafts and concepts remain the property of Contractor.",
+    "jurisdictionNotes": "Conditional IP transfer upon payment is a recognized and enforceable structure. UK Sale of Goods Act 1979 Section 19 allows retention of title until payment (Romalpa clause). Restatement (Third) of Restitution Section 39 allows restitution when the other party fails to perform. EU Directive 93/13/EEC Annex paragraph 1(o) flags terms binding the consumer where the supplier has not performed their obligation."
+  },
+  {
+    "id": "b2d1d2d3-d4d5-46d7-88d9-dadb0c0d0e0f",
+    "clausePattern": "Contractor may not terminate this Agreement without Client's prior written consent. In the event Contractor terminates without such consent, Contractor shall be liable to Client for all direct and consequential damages, including the cost of finding and engaging a replacement contractor, project delays, and lost business opportunities.",
+    "category": "termination",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "You can't quit without the client's permission, and if you do, you're liable for potentially enormous damages including their 'lost business opportunities' -- an open-ended sum that could dwarf the contract value. This is effectively indentured servitude: the client can terminate freely, but you're locked in and financially punished for leaving.",
+    "saferAlternative": "Either party may terminate this Agreement upon thirty (30) days written notice. Upon termination by Contractor, Contractor shall use reasonable efforts to complete work in progress or transition it to Client's designated replacement. Neither party shall be liable for consequential damages arising from a good-faith termination with proper notice.",
+    "jurisdictionNotes": "One-sided termination rights create an imbalance that may be unconscionable under Restatement (Second) of Contracts Section 208. EU Directive 93/13/EEC Annex paragraph 1(f) flags terms enabling the supplier to dissolve the contract while denying the same right to the consumer. UK Consumer Rights Act 2015 Schedule 2 paragraph 7 addresses asymmetric termination rights. Consequential damages for quitting with notice are rarely awarded by US or UK courts."
+  },
+  {
+    "id": "b2e1e2e3-e4e5-46e7-88e9-eaeb0c0d0e0f",
+    "clausePattern": "Upon termination, Contractor shall provide a minimum of sixty (60) days of transition assistance at no additional cost to Client, including knowledge transfer, documentation, and training of Client's replacement personnel.",
+    "category": "termination",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "After the contract ends, you must work for free for two months helping the client transition. This is unpaid labor disguised as a 'transition' obligation. If you've already started other projects, you'd need to juggle this free work alongside paid engagements.",
+    "saferAlternative": "Upon termination, Contractor shall provide up to ten (10) business days of transition assistance at Contractor's standard hourly rate, including reasonable knowledge transfer and documentation of the Work Product.",
+    "jurisdictionNotes": "Requiring extended unpaid services post-termination may violate UK National Minimum Wage Act 1998 if the relationship is deemed one of worker status. Under the IRS 20-factor test for independent contractor status, requiring unpaid transition work is an indicator of employment rather than independent contractor status, potentially triggering misclassification liability. EU Directive 93/13/EEC Annex paragraph 1(d) flags terms permitting retention of sums for services not yet supplied."
+  },
+  {
+    "id": "b2f1f2f3-f4f5-46f7-88f9-fafb0c0d0e0f",
+    "clausePattern": "Contractor shall indemnify, defend, and hold harmless Client, its officers, directors, employees, agents, affiliates, and assigns from and against any and all claims, losses, damages, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to the Services, the Work Product, or Contractor's performance under this Agreement, regardless of cause or fault.",
+    "category": "liability",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "You must pay for ALL legal claims against the client related to the project -- even if it's the client's fault ('regardless of cause or fault'). If the client uses your deliverable irresponsibly and gets sued, you pay their legal bills. If the client makes changes to your work that cause problems, you still pay. There's no limit on the amount and no requirement that you actually did anything wrong.",
+    "saferAlternative": "Contractor shall indemnify Client against third-party claims arising directly from Contractor's material breach of this Agreement or Contractor's gross negligence or willful misconduct. Client shall indemnify Contractor against claims arising from Client's use of the Work Product in a manner not contemplated by this Agreement. Each party's indemnification obligation shall not exceed the total fees paid under this Agreement.",
+    "jurisdictionNotes": "One-sided indemnity 'regardless of fault' may be unconscionable under Restatement (Second) of Contracts Section 208. UK Unfair Contract Terms Act 1977 Sections 2-3 restrict exclusion and limitation clauses including indemnities in standard-form contracts. EU Directive 93/13/EEC Annex paragraph 1(b) flags terms inappropriately excluding or limiting the consumer's legal rights."
+  },
+  {
+    "id": "b2020304-0506-4708-890a-0b0c0d0e0f10",
+    "clausePattern": "IN NO EVENT SHALL CLIENT BE LIABLE TO CONTRACTOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES. CLIENT'S TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE LESSER OF THE FEES PAID IN THE THREE (3) MONTHS PRECEDING THE CLAIM OR FIVE HUNDRED DOLLARS ($500).",
+    "category": "liability",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "The client caps their liability at $500 or three months of fees (whichever is LESS), while you have no corresponding protection. If the client causes you to lose other contracts, damages your reputation, or leaks your confidential information, the most you can recover is $500. Meanwhile, your liability to them is typically unlimited.",
+    "saferAlternative": "NEITHER PARTY SHALL BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES. EACH PARTY'S TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE TOTAL FEES PAID OR PAYABLE UNDER THIS AGREEMENT IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.",
+    "jurisdictionNotes": "Asymmetric liability caps may be challenged under Restatement (Second) of Contracts Section 208 (unconscionability). UK Unfair Contract Terms Act 1977 Section 3 restricts limitation of liability in standard-form contracts; the clause must satisfy the reasonableness test in Section 11. EU Directive 93/13/EEC Annex paragraph 1(b) targets terms inappropriately excluding or limiting the consumer's legal rights."
+  },
+  {
+    "id": "b2222324-2526-4728-892a-2b2c2d2e2f30",
+    "clausePattern": "Contractor agrees that Contractor is liable for any and all damages, including but not limited to consequential, incidental, and special damages, arising from defects, errors, or omissions in the Work Product, without limitation as to amount or time, even after Client has accepted and approved the Work Product.",
+    "category": "liability",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "You have unlimited financial liability forever -- even after the client has reviewed, approved, and accepted your work. If a website you built has a bug discovered three years later, you're on the hook for all damages with no cap. Acceptance by the client usually ends the defect liability period, but this clause overrides that protection.",
+    "saferAlternative": "Contractor warrants that the Work Product will substantially conform to the agreed specifications for a period of thirty (30) days following Client's acceptance. Contractor's liability for defects shall be limited to re-performing the defective Services at no additional cost, or, at Contractor's option, refunding the fees attributable to the defective Work Product. In no event shall Contractor's total liability exceed the total fees paid under this Agreement.",
+    "jurisdictionNotes": "Unlimited, perpetual liability is likely unconscionable under Restatement (Second) of Contracts Section 208. UK Supply of Goods and Services Act 1982 Section 13 implies a duty to perform with reasonable care and skill, but does not impose unlimited liability. Post-acceptance warranty periods in commercial contracts are typically 30-90 days. EU Directive 93/13/EEC Annex paragraph 1(b) addresses inappropriate exclusion or limitation of rights."
+  },
+  {
+    "id": "b2323334-3536-4738-893a-3b3c3d3e3f40",
+    "clausePattern": "Contractor shall make unlimited revisions to any deliverable until Client is fully satisfied, at no additional cost to Client. Client's request for revisions shall not be subject to any time limit, and Contractor shall commence each round of revisions within two (2) business days of receiving Client's feedback.",
+    "category": "scope_creep",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "Unlimited free revisions with no time limit means the client can keep requesting changes forever. 'Fully satisfied' is completely subjective -- if the client keeps changing their mind, you're trapped in an endless loop of unpaid work. Two business days to start each round means you can't even schedule other work reliably.",
+    "saferAlternative": "The agreed fee includes up to two (2) rounds of revisions per deliverable, with each round consisting of consolidated written feedback from Client. Additional revisions beyond two rounds shall be billed at Contractor's standard hourly rate. Client shall submit all revision requests within ten (10) business days of deliverable submission.",
+    "jurisdictionNotes": "Unlimited revisions without additional compensation may violate the implied duty of good faith under Restatement (Second) of Contracts Section 205. UK Supply of Goods and Services Act 1982 Section 15 implies a duty to pay a reasonable price for reasonable services. EU Directive 93/13/EEC Annex paragraph 1(c) flags terms allowing retention of sums for services not provided by the consumer."
+  },
+  {
+    "id": "b2424344-4546-4748-894a-4b4c4d4e4f50",
+    "clausePattern": "The scope of Services shall include, but not be limited to, the deliverables described in the Statement of Work, and shall encompass all tasks reasonably necessary to achieve Client's business objectives as determined by Client from time to time during the engagement.",
+    "category": "scope_creep",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "The phrase 'but not limited to' combined with 'all tasks reasonably necessary to achieve Client's business objectives' is a blank check. The client can add work by simply redefining their 'business objectives,' and you're expected to do it within the original price. This is the classic scope creep clause -- it makes the Statement of Work meaningless.",
+    "saferAlternative": "The scope of Services is limited exclusively to the deliverables described in the Statement of Work. Any work requested by Client that is not described in the Statement of Work shall be subject to a separate written change order specifying scope, timeline, and additional fees, signed by both parties before work begins.",
+    "jurisdictionNotes": "Open-ended scope terms undermine the certainty required for a valid contract under Restatement (Second) of Contracts Section 33 (certainty of terms). EU Directive 93/13/EEC Annex paragraph 1(j) flags terms enabling the supplier to unilaterally alter contract terms. UK Unfair Contract Terms Act 1977 Section 3 restricts claims to render performance substantially different from what was reasonably expected."
+  },
+  {
+    "id": "b2525354-5556-4758-895a-5b5c5d5e5f60",
+    "clausePattern": "Contractor shall be available to Client during normal business hours and shall respond to all communications within four (4) hours. Contractor shall also perform such other duties as may be reasonably assigned by Client from time to time, consistent with Contractor's skills and expertise.",
+    "category": "scope_creep",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "The 'other duties as assigned' language is an employment clause that has no place in a freelance contract. Combined with the 4-hour response requirement and business-hours availability, this looks like an employer-employee relationship, not an independent contractor engagement. It also allows unlimited scope expansion via 'reasonable' assignments.",
+    "saferAlternative": "Contractor shall perform the Services described in the Statement of Work and shall respond to Client communications within one (1) business day during the engagement period. Contractor maintains discretion over work hours and methods consistent with Contractor's independent contractor status.",
+    "jurisdictionNotes": "Requiring set hours and 'other duties as assigned' are strong indicators of employment status under the IRS 20-factor test and the ABC test used in California (AB5, Dynamex Operations West v Superior Court). UK IR35 off-payroll working rules (Chapter 10 of ITEPA 2003) look at control, substitution, and mutuality of obligation. HMRC's CEST tool would likely flag these requirements as indicators of disguised employment."
+  },
+  {
+    "id": "b2626364-6566-4768-896a-6b6c6d6e6f70",
+    "clausePattern": "In the event that any deliverable requires additional work beyond the original estimate, Contractor shall complete such additional work at no extra charge, provided the additional work arises from Client's clarification of the original requirements or change in Client's business priorities.",
+    "category": "scope_creep",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This forces you to absorb the cost of scope changes as long as the client frames them as 'clarifications' or 'priority changes.' In practice, most scope creep is presented exactly this way -- 'Oh, I thought this was included' or 'Our priorities have shifted slightly.' The line between a clarification and a new requirement is endlessly arguable, and the client controls the framing.",
+    "saferAlternative": "Work beyond the scope described in the Statement of Work, including changes arising from revised requirements, clarifications that materially alter deliverables, or shifts in business priorities, shall be documented in a written change order specifying the additional scope, timeline impact, and fees before work begins.",
+    "jurisdictionNotes": "Restatement (Second) of Contracts Section 89 provides that a modification is binding only if fair and equitable in view of circumstances not anticipated. EU Directive 93/13/EEC Annex paragraph 1(j) flags terms allowing unilateral alteration of contract terms. UK Unfair Contract Terms Act 1977 Section 3(2)(b) restricts claims to render substantially different performance."
+  },
+  {
+    "id": "b2727374-7576-4778-897a-7b7c7d7e7f80",
+    "clausePattern": "Contractor shall keep strictly confidential all information, whether written, oral, or electronic, disclosed by or on behalf of Client during the term of this Agreement and in perpetuity thereafter. Confidential Information shall include, without limitation, all business plans, client lists, financial data, technical information, processes, strategies, and any other information of any nature whatsoever.",
+    "category": "confidentiality",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This NDA has no expiration date ('in perpetuity'), no exceptions for publicly available information, and the definition of 'confidential' is so broad ('any information of any nature whatsoever') that it covers everything. Even information you already knew, or that becomes public, would technically be covered. This could prevent you from discussing your work experience.",
+    "saferAlternative": "Contractor shall keep confidential all proprietary information specifically designated as confidential by Client in writing for a period of two (2) years following termination. Confidential Information does not include information that: (a) is or becomes publicly available through no fault of Contractor; (b) was known to Contractor prior to disclosure; (c) is independently developed by Contractor; or (d) is disclosed pursuant to a legal obligation.",
+    "jurisdictionNotes": "Perpetual NDAs without exclusions may be unenforceable as unreasonable restraints on trade under Restatement (Second) of Contracts Section 188. UK courts have held that confidentiality clauses must be reasonable in scope and duration (Faccenda Chicken Ltd v Fowler [1987]). EU Directive 93/13/EEC Article 3(1) assesses significant imbalance; a perpetual blanket NDA creates such imbalance."
+  },
+  {
+    "id": "b2828384-8586-4788-898a-8b8c8d8e8f90",
+    "clausePattern": "Contractor shall not use any aspect of the Work Product, Client's name, Client's logo, or a description of the Services performed in any portfolio, case study, marketing material, website, or social media without the prior written consent of Client, which may be withheld in Client's sole discretion.",
+    "category": "confidentiality",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "This prevents you from showing your work in your portfolio or even mentioning you worked with the client -- unless they give permission, which they can refuse for any reason. For freelancers, a portfolio is essential for getting future work. Doing invisible work that you can never reference seriously limits your career growth.",
+    "saferAlternative": "Contractor may include a general description of the Services and non-confidential aspects of the Work Product in Contractor's portfolio and marketing materials after project completion. Use of Client's name and logo in portfolio materials requires Client's consent, which shall not be unreasonably withheld. Client shall respond to portfolio use requests within ten (10) business days.",
+    "jurisdictionNotes": "While portfolio restrictions are generally enforceable, unreasonable refusal may violate the duty of good faith under Restatement (Second) of Contracts Section 205. IPSE (UK) advises freelancers to negotiate portfolio rights as standard. In the creative industries, portfolio rights are considered a key term by the Association of Independent Professionals and the Self-Employed."
+  },
+  {
+    "id": "b2929394-9596-4798-899a-9b9c9d9e9fa0",
+    "clausePattern": "The Confidential Information obligations herein shall survive termination of this Agreement indefinitely. Contractor shall, upon termination or upon Client's request, immediately return or destroy all materials containing Confidential Information and provide a signed certification of destruction. Contractor further agrees not to retain any copies, summaries, notes, or extracts of Confidential Information in any form.",
+    "category": "confidentiality",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "The indefinite survival combined with the requirement to destroy all notes and extracts is excessive. You'd need to purge your own working notes, email records, and any learning you documented. The 'certification of destruction' creates legal liability if you miss any copy on a backup drive or cloud sync.",
+    "saferAlternative": "Confidential Information obligations shall survive for two (2) years following termination. Upon termination, Contractor shall return or destroy Client's proprietary materials and confirm in writing. Contractor may retain copies of correspondence and personal working notes, subject to the ongoing confidentiality obligations.",
+    "jurisdictionNotes": "Indefinite confidentiality obligations may be unreasonable restraints on trade under Restatement (Second) of Contracts Section 188. The EU Trade Secrets Directive 2016/943 Article 4 defines unlawful use but does not support indefinite obligations. UK courts assess reasonableness of duration in non-disclosure agreements (Vestergaard Frandsen v Bestnet Europe [2013])."
+  },
+  {
+    "id": "b2a2a3a4-a5a6-47a8-89aa-abac0d0e0f10",
+    "clausePattern": "Contractor acknowledges that all Work Product created under this Agreement shall be considered 'work made for hire' as defined by the United States Copyright Act. To the extent any Work Product is not deemed a work made for hire, Contractor hereby assigns all right, title, and interest in such Work Product to Client.",
+    "category": "work_for_hire",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "The US Copyright Act only allows 'work for hire' for independent contractors in 9 specific categories (like translations, tests, atlases, and contributions to collective works). Most freelance work -- custom software, standalone design, original content -- does NOT qualify. Calling it 'work for hire' when it legally isn't could cause IP ownership disputes later. The backup assignment clause helps, but the mislabeling creates confusion.",
+    "saferAlternative": "Upon receipt of full payment, Contractor assigns to Client all right, title, and interest in the final, approved Work Product created under the applicable Statement of Work. Contractor retains ownership of pre-existing intellectual property and general-purpose tools, granting Client a non-exclusive license to use them as incorporated in the Work Product.",
+    "jurisdictionNotes": "Under 17 U.S.C. Section 101, work for hire for independent contractors is limited to nine categories: (1) contribution to a collective work, (2) part of a motion picture, (3) translation, (4) supplementary work, (5) compilation, (6) instructional text, (7) test, (8) answer material for a test, (9) atlas. The Supreme Court in Community for Creative Non-Violence v Reid (1989) established that the common-law agency test determines employee vs. contractor status. Mislabeling work as 'work for hire' can also be an indicator of misclassification."
+  },
+  {
+    "id": "b2b2b3b4-b5b6-47b8-89ba-bbbc0d0e0f10",
+    "clausePattern": "Contractor retroactively assigns to Client all intellectual property rights in any work, materials, or deliverables created by Contractor prior to the Effective Date of this Agreement that relate to, are similar to, or could be useful in connection with the Services, including but not limited to prior research, prototypes, code, designs, and methodologies.",
+    "category": "work_for_hire",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This claims ownership of work you created BEFORE the contract even started -- anything that 'could be useful' for the project. If you did similar work for a previous client, built a personal project in the same space, or developed any relevant tools beforehand, this clause claims it all. It's retroactive IP seizure with no additional compensation.",
+    "saferAlternative": "This Agreement applies only to Work Product created after the Effective Date in performance of the Services. Contractor's pre-existing intellectual property is listed in Exhibit A and remains the sole property of Contractor. Contractor grants Client a non-exclusive license to use any pre-existing IP incorporated into the Work Product.",
+    "jurisdictionNotes": "Retroactive assignment of pre-existing IP without separate consideration may fail for lack of consideration under basic contract law (Restatement (Second) of Contracts Section 71). UK Copyright, Designs and Patents Act 1988 Section 91 requires that assignment of future copyright identify the specific work. EU Directive 93/13/EEC Annex paragraph 1(b) addresses inappropriate exclusion or limitation of the consumer's legal rights."
+  },
+  {
+    "id": "b2c2c3c4-c5c6-47c8-89ca-cbcc0d0e0f10",
+    "clausePattern": "Contractor represents and warrants that Contractor has not developed and will not develop any intellectual property similar to the Work Product for any other client. Contractor assigns to Client any intellectual property developed by Contractor that is substantially similar to the Work Product, regardless of when such intellectual property was created.",
+    "category": "work_for_hire",
+    "contractType": ["freelance"],
+    "riskLevel": "red",
+    "whyRisky": "This claims ownership of any similar work you do for anyone, past or future. Freelancers by nature do similar work across clients -- a developer who builds e-commerce sites can't avoid creating 'similar' work. This clause could give the client ownership of deliverables you created for other paying clients, both before and after this engagement.",
+    "saferAlternative": "Contractor warrants that the Work Product shall be original and shall not infringe the intellectual property rights of any third party. Contractor is free to perform similar services for other clients, provided that Contractor does not use Client's Confidential Information in such work.",
+    "jurisdictionNotes": "Prohibiting similar work for other clients functions as a non-compete and is subject to reasonableness analysis under Restatement (Second) of Contracts Section 188. California Business and Professions Code Section 16600 would void this restraint. Claiming IP created for other clients raises tortious interference with existing contracts. EU Directive 93/13/EEC Article 3(1) addresses significant imbalance."
+  },
+  {
+    "id": "b2d2d3d4-d5d6-47d8-89da-dbdc0d0e0f10",
+    "clausePattern": "Any dispute arising out of or relating to this Agreement shall be resolved exclusively by binding arbitration administered by the American Arbitration Association in the state of Client's principal office. The arbitrator's decision shall be final and binding, and judgment upon the award may be entered in any court of competent jurisdiction. Each party shall bear its own costs, except that the losing party shall reimburse the prevailing party's reasonable attorneys' fees and arbitration costs.",
+    "category": "dispute_resolution",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "You must travel to wherever the client is located for arbitration, which could be expensive and inconvenient. The 'loser pays' provision for attorneys' fees creates a massive financial risk that discourages you from pursuing legitimate claims -- if you lose, you pay both sides' legal bills. Mandatory arbitration also means you give up your right to a court trial and, typically, your right to appeal.",
+    "saferAlternative": "Any dispute arising out of this Agreement shall first be submitted to mediation. If mediation fails within thirty (30) days, the dispute shall be resolved by binding arbitration conducted virtually or in a mutually agreed location. Each party shall bear its own attorneys' fees and costs regardless of outcome. For disputes under $10,000, the parties agree to use small claims court in the jurisdiction where the defendant resides.",
+    "jurisdictionNotes": "The Federal Arbitration Act (9 U.S.C. Sections 1-16) generally enforces arbitration clauses, but courts can invalidate them if unconscionable (AT&T Mobility v Concepcion, 2011 -- though this case upheld arbitration). EU Directive 93/13/EEC Annex paragraph 1(q) flags terms requiring the consumer to take disputes exclusively to arbitration not covered by legal provisions. UK Arbitration Act 1996 Section 89 provides protections for consumers in arbitration."
+  },
+  {
+    "id": "b2e2e3e4-e5e6-47e8-89ea-ebec0d0e0f10",
+    "clausePattern": "Contractor acknowledges that any breach of the confidentiality, non-compete, or intellectual property provisions of this Agreement would cause irreparable harm to Client. Contractor consents to the entry of injunctive relief without the necessity of Client posting bond and without Client having to prove actual damages, in any court of competent jurisdiction.",
+    "category": "dispute_resolution",
+    "contractType": ["freelance"],
+    "riskLevel": "yellow",
+    "whyRisky": "You've pre-agreed that the client can get a court order to stop you from working (an injunction) without proving they were actually harmed and without posting a bond (a financial guarantee in case the injunction was wrongful). This gives the client an extremely cheap and powerful weapon to threaten you with -- they can halt your business without proving anything.",
+    "saferAlternative": "Both parties acknowledge that breach of confidentiality or intellectual property provisions may cause irreparable harm. Either party may seek injunctive relief in a court of competent jurisdiction, subject to the court's discretion regarding the posting of a reasonable bond and the demonstration of likely irreparable harm.",
+    "jurisdictionNotes": "US courts require a showing of irreparable harm for injunctive relief (eBay Inc. v MercExchange, 2006). Pre-agreed waiver of bond requirements may be unenforceable in some jurisdictions (e.g., California Code of Civil Procedure Section 529). UK courts grant injunctions based on the American Cyanamid test, requiring a serious question to be tried. EU Directive 93/13/EEC Annex paragraph 1(q) flags terms unduly restricting the consumer's access to legal remedies."
+  }
+]

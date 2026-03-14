@@ -1,0 +1,302 @@
+[
+  {
+    "id": "c3a1b2c3-d4e5-4f6a-8b9c-0d1e2f3a4b5c",
+    "clausePattern": "\"Confidential Information\" shall mean any and all information, whether written, oral, electronic, or otherwise, disclosed by or on behalf of the Disclosing Party to the Receiving Party, including but not limited to all business plans, financial data, customer lists, technical data, trade secrets, know-how, inventions, processes, techniques, algorithms, software, designs, drawings, engineering, marketing plans, and any other information relating to the Disclosing Party's business, regardless of whether such information is marked or designated as \"confidential.\"",
+    "category": "scope_breadth",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This definition covers literally everything the disclosing party ever shares with you, even casual conversations or publicly known facts. Because nothing needs to be marked \"confidential,\" you could accidentally breach the NDA by discussing something you learned from a Google search. Courts have struck down definitions this broad as unenforceable because they fail to give the receiving party fair notice of what they must protect.",
+    "saferAlternative": "\"Confidential Information\" shall mean information disclosed by the Disclosing Party to the Receiving Party that is (a) in written or electronic form and clearly marked \"Confidential\" at the time of disclosure, or (b) disclosed orally and identified as confidential at the time of disclosure and confirmed in writing within thirty (30) days thereafter.",
+    "jurisdictionNotes": "US: Overbroad definitions may fail under UTSA's requirement that trade secrets derive value from not being generally known. See nClosures Inc. v. Block and Veatch, Inc. (overbroad NDAs found unenforceable). Restatement (Second) of Contracts Section 208 (unconscionability). EU: Directive 2016/943 Article 2(1) requires information to be secret and have commercial value due to secrecy. UK: Trade Secrets Regulations 2018 mirror EU requirements."
+  },
+  {
+    "id": "c3b2c3d4-e5f6-4a7b-8c9d-1e2f3a4b5c6d",
+    "clausePattern": "Confidential Information shall include, without limitation, all information that the Receiving Party knew or should have known would be regarded as confidential by the Disclosing Party, including information that the Receiving Party may have independently developed or lawfully obtained from third-party sources prior to execution of this Agreement.",
+    "category": "scope_breadth",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause tries to lock away information you already had before signing the NDA, including things you figured out on your own or got from someone else entirely. That means your own pre-existing work could suddenly be treated as the other party's secret. This is fundamentally unfair and generally unenforceable because you can't agree to keep secret something that was never actually secret to you.",
+    "saferAlternative": "Confidential Information shall not include information that: (a) was already known to the Receiving Party at the time of disclosure, as demonstrated by written records predating such disclosure; (b) was independently developed by the Receiving Party without use of or reference to the Disclosing Party's Confidential Information; or (c) was lawfully obtained by the Receiving Party from a third party without restriction on disclosure.",
+    "jurisdictionNotes": "US: UTSA Section 1(4) defines trade secrets as information not generally known — information already possessed cannot be a trade secret. Restatement (Second) of Contracts Section 208. EU: Trade Secrets Directive 2016/943 Article 3(1)(b) recognizes independent discovery as lawful acquisition. UK: Trade Secrets Regulations 2018 reg. 3(1)(b) — independent discovery is a lawful means of acquisition."
+  },
+  {
+    "id": "c3c3d4e5-f6a7-4b8c-9d0e-2f3a4b5c6d7e",
+    "clausePattern": "The definition of Confidential Information hereunder shall encompass all information relating to the Disclosing Party's business operations, regardless of whether such information is publicly available, generally known in the industry, or ascertainable through publicly accessible sources.",
+    "category": "scope_breadth",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause claims that even publicly available information — things anyone can find on Google, in news articles, or in public filings — must be treated as confidential. That's absurd on its face: you can't be bound to secrecy about facts the whole world already knows. Courts consistently reject this because the entire point of a trade secret is that it's NOT publicly known.",
+    "saferAlternative": "Confidential Information shall not include information that: (a) is or becomes publicly available through no fault or action of the Receiving Party; (b) is generally known within the relevant industry or trade; or (c) is contained in publicly accessible filings, publications, or databases.",
+    "jurisdictionNotes": "US: UTSA Section 1(4)(i) explicitly requires trade secrets to 'derive independent economic value from not being generally known.' DTSA 18 U.S.C. Section 1839(3) mirrors this requirement. EU: Trade Secrets Directive 2016/943 Article 2(1)(a) — information must be 'not generally known among or readily accessible to persons within the circles that normally deal with the kind of information in question.' UK: Trade Secrets Regulations 2018 adopt the same test."
+  },
+  {
+    "id": "c3d4e5f6-a7b8-4c9d-8e1f-3a4b5c6d7e8f",
+    "clausePattern": "For purposes of this Agreement, Confidential Information shall include the existence of this Agreement, the identity of the parties hereto, the fact that discussions or negotiations are taking place, and any terms, conditions, or other facts with respect to any such discussions or negotiations, including the status thereof.",
+    "category": "scope_breadth",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause prevents you from telling anyone — including your own lawyer, accountant, or business advisor — that the NDA even exists or that you're in discussions with this company. While keeping negotiation details private can be reasonable, making the very existence of the agreement secret can prevent you from getting proper legal or financial advice about the deal itself.",
+    "saferAlternative": "The existence of this Agreement and the fact that discussions are taking place between the parties shall be treated as Confidential Information, provided that either party may disclose such facts to its legal counsel, accountants, financial advisors, and officers or directors with a need to know, each of whom shall be bound by obligations of confidentiality no less restrictive than those set forth herein.",
+    "jurisdictionNotes": "US: Generally enforceable but subject to unconscionability limits under Restatement (Second) of Contracts Section 208. May conflict with SEC disclosure requirements for public companies. EU: Unfair Contract Terms Directive 93/13/EEC Article 3(1) — a term causing significant imbalance may be unfair. UK: CRA 2015 Schedule 2 para. 12 — terms restricting the right to take legal action or exercise legal remedy may be unfair."
+  },
+  {
+    "id": "c3e5f6a7-b8c9-4d0e-9f2a-4b5c6d7e8f9a",
+    "clausePattern": "The Receiving Party's obligations of confidentiality and non-use hereunder shall continue in perpetuity and shall survive any termination or expiration of this Agreement without limitation as to time.",
+    "category": "duration",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause means you're bound to keep information secret forever — literally until you die and beyond. While perpetual protection may be reasonable for genuine trade secrets (like the Coca-Cola formula), applying it to ALL confidential information is extreme. Business information loses its value over time as markets change, products launch, and companies evolve. A perpetual obligation for non-trade-secret information is often struck down as an unreasonable restraint.",
+    "saferAlternative": "The Receiving Party's obligations of confidentiality and non-use hereunder shall continue for a period of three (3) years following the date of disclosure of each item of Confidential Information, except that obligations with respect to trade secrets shall continue for so long as such information remains a trade secret under applicable law.",
+    "jurisdictionNotes": "US: Perpetual NDAs for non-trade-secret info may be unenforceable as unreasonable restraint of trade under Restatement (Second) of Contracts Section 188. UTSA provides perpetual protection only for actual trade secrets. EU: Unfair Contract Terms Directive 93/13/EEC Annex para. 1(q) — terms that inappropriately exclude or limit rights may be unfair. UK: Common law restraint of trade doctrine requires restrictions to be reasonable in duration."
+  },
+  {
+    "id": "c3f6a7b8-c9d0-4e1f-aa3b-5c6d7e8f9a0b",
+    "clausePattern": "The obligations set forth herein shall remain in full force and effect for a period of fifteen (15) years from the Effective Date of this Agreement, regardless of whether the business relationship between the parties has terminated.",
+    "category": "duration",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Fifteen years is extraordinarily long for an NDA, especially for general business information that will likely be outdated in 2-3 years. While not perpetual, it far exceeds industry norms of 2-5 years for most commercial NDAs. The longer the duration, the harder it is for you to remember what was covered and the more likely you'll accidentally breach it years after the business relationship ended.",
+    "saferAlternative": "The obligations set forth herein shall remain in full force and effect for a period of three (3) years from the date of disclosure of the applicable Confidential Information, or two (2) years following the termination of this Agreement, whichever is later. Obligations regarding trade secrets shall survive for so long as such information qualifies as a trade secret under applicable law.",
+    "jurisdictionNotes": "US: While no statutory maximum exists, courts evaluate reasonableness under Restatement (Second) of Contracts Section 188. Industry standard is 2-5 years for non-trade-secret info. EU: Trade Secrets Directive 2016/943 does not prescribe duration but national courts apply proportionality. UK: Reasonableness assessed under restraint of trade doctrine — Thomas v. Farr plc (duration must be proportionate to legitimate interest)."
+  },
+  {
+    "id": "c3a7b8c9-d0e1-4f2a-bb4c-6d7e8f9a0b1c",
+    "clausePattern": "This Agreement shall have no fixed term and shall remain in effect unless terminated by the Disclosing Party upon written notice to the Receiving Party, provided that all obligations of confidentiality shall survive any such termination indefinitely.",
+    "category": "duration",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This is a double trap: only the disclosing party can end the agreement (you can't), AND even after they do end it, your secrecy obligations last forever. You're locked in with no way out and no end date. The disclosing party can terminate their own responsibilities whenever convenient while yours never expire. This one-sided structure is a hallmark of an unconscionable contract term.",
+    "saferAlternative": "This Agreement shall remain in effect for a period of two (2) years from the Effective Date, unless earlier terminated by either party upon thirty (30) days' written notice. Upon termination or expiration, the obligations of confidentiality shall continue for a period of three (3) years from the date of disclosure of the applicable Confidential Information.",
+    "jurisdictionNotes": "US: Restatement (Second) of Contracts Section 208 — unconscionability where one party has no meaningful choice. Unilateral termination rights create significant imbalance. EU: Unfair Contract Terms Directive 93/13/EEC Article 3(1) and Annex para. 1(f) — terms enabling the trader to terminate at will while binding the consumer are potentially unfair. UK: CRA 2015 Schedule 2 para. 7 — unfair if trader can terminate at will but not the consumer."
+  },
+  {
+    "id": "c3b8c9d0-e1f2-4a3b-8c5d-7e8f9a0b1c2d",
+    "clausePattern": "The obligations of this Agreement shall survive in perpetuity with respect to all Confidential Information, and no lapse of time or other circumstance, including the subsequent public availability of any Confidential Information, shall relieve the Receiving Party of its obligations hereunder.",
+    "category": "duration",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause says your obligations never end — and shockingly, they continue even if the information becomes public knowledge through no fault of yours. If the disclosing party publishes their own information, or it appears in a news article, you'd still technically be in breach for discussing it. This contradicts the fundamental legal principle that publicly available information cannot be a trade secret, and courts routinely refuse to enforce such provisions.",
+    "saferAlternative": "The obligations under this Agreement shall terminate with respect to any particular item of Confidential Information if and when such information (a) becomes publicly available through no act or omission of the Receiving Party, (b) ceases to qualify as a trade secret under applicable law, or (c) is disclosed by the Disclosing Party to third parties without restriction. All remaining obligations shall expire three (3) years from the date of disclosure.",
+    "jurisdictionNotes": "US: UTSA Section 1(4) and DTSA 18 U.S.C. Section 1839(3) — trade secret status is lost when information becomes generally known. Silvaco Data Systems v. Intel Corp. (information in public domain cannot be protected). EU: Trade Secrets Directive 2016/943 Article 2(1)(a) — secrecy is a constitutive element. UK: Trade Secrets Regulations 2018 — information must not be generally known or readily accessible."
+  },
+  {
+    "id": "c3c9d0e1-f2a3-4b4c-9d6e-8f9a0b1c2d3e",
+    "clausePattern": "The Receiving Party shall not disclose any Confidential Information to any third party for any reason whatsoever. The Receiving Party acknowledges that there are no exceptions to this obligation, and no disclosure shall be permitted under judicial, administrative, or legislative process, compulsion, or request.",
+    "category": "carve_outs",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause purports to override the legal system itself: it says you can't disclose information even if a court orders you to via a subpoena (a legal demand for information). You cannot contractually agree to defy a court order — that would put you in contempt of court, which can result in fines or jail time. Any NDA that tries to prevent legally compelled disclosure is unenforceable on that point and signals the drafter is either incompetent or deliberately overreaching.",
+    "saferAlternative": "The Receiving Party may disclose Confidential Information to the extent required by law, regulation, or valid court order or subpoena, provided that the Receiving Party (a) gives the Disclosing Party prompt written notice of such requirement (to the extent legally permitted), (b) cooperates with the Disclosing Party's reasonable efforts to obtain a protective order or other appropriate remedy, and (c) discloses only that portion of the Confidential Information that is legally required to be disclosed.",
+    "jurisdictionNotes": "US: Courts universally recognize that contractual provisions cannot override judicial compulsion. Federal Rules of Civil Procedure Rule 45 (subpoena power). DTSA 18 U.S.C. Section 1833(b) provides immunity for disclosures to government officials. EU: Trade Secrets Directive 2016/943 Article 5 explicitly permits disclosure required or allowed by EU or national law. UK: Trade Secrets Regulations 2018 reg. 5 — disclosure required by law is not unlawful."
+  },
+  {
+    "id": "c3d0e1f2-a3b4-4c5d-ae7f-9a0b1c2d3e4f",
+    "clausePattern": "Nothing in this Agreement shall be construed to create a right or obligation for the Receiving Party to disclose Confidential Information to any governmental, regulatory, or law enforcement authority, and the Receiving Party waives any right to report potential violations of law to such authorities using the Disclosing Party's Confidential Information.",
+    "category": "carve_outs",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This is an illegal gag clause. It tries to stop you from reporting crimes, fraud, or other illegal activity to law enforcement or regulators. US federal law (the Defend Trade Secrets Act) explicitly gives you immunity for disclosing trade secrets to the government for the purpose of reporting a suspected violation of law. This clause is not just unenforceable — it's actually illegal to include in an NDA without the required DTSA whistleblower notice.",
+    "saferAlternative": "Nothing in this Agreement shall prohibit or restrict the Receiving Party from (a) reporting possible violations of federal, state, or local law or regulation to any governmental agency or entity, (b) making disclosures protected under the whistleblower provisions of applicable law, or (c) cooperating with any governmental investigation. The Receiving Party is hereby notified that, pursuant to 18 U.S.C. Section 1833(b), an individual may not be held criminally or civilly liable under any federal or state trade secret law for disclosure of a trade secret made in confidence to a government official or attorney solely for the purpose of reporting or investigating a suspected violation of law.",
+    "jurisdictionNotes": "US: DTSA 18 U.S.C. Section 1833(b) — mandatory whistleblower immunity notice required in all NDAs. Employers who fail to include this notice cannot recover exemplary damages or attorney's fees in trade secret claims. Dodd-Frank Act Section 922 protects SEC whistleblowers. EU: Trade Secrets Directive 2016/943 Article 5(b) — disclosure for revealing misconduct is permitted. Directive (EU) 2019/1937 (Whistleblower Protection Directive). UK: Public Interest Disclosure Act 1998 — NDA terms cannot override statutory whistleblower protections."
+  },
+  {
+    "id": "c3e1f2a3-b4c5-4d6e-bf8a-0b1c2d3e4f5a",
+    "clausePattern": "The Receiving Party shall not be entitled to assert as a defense to any breach of this Agreement that the Confidential Information was independently developed by the Receiving Party or was already known to the Receiving Party prior to disclosure, unless such independent development or prior knowledge is evidenced by written records created and dated prior to the Effective Date and certified by a licensed notary public.",
+    "category": "carve_outs",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "While a prior knowledge defense is technically allowed here, the notarized written records requirement makes it nearly impossible to use in practice. Most people don't notarize their internal notes, emails, or work product. This effectively eliminates the standard NDA carve-out for independently developed or previously known information by setting an unrealistically high bar for proof.",
+    "saferAlternative": "Confidential Information shall not include information that the Receiving Party can demonstrate by reasonable evidence, including but not limited to written or electronic records, emails, documents, or witness testimony, was (a) already in the Receiving Party's possession prior to disclosure by the Disclosing Party, or (b) independently developed by the Receiving Party without use of or reference to the Disclosing Party's Confidential Information.",
+    "jurisdictionNotes": "US: Under UTSA and DTSA, independent development and prior knowledge are fundamental defenses. Imposing unreasonable evidentiary burdens may be unconscionable under Restatement (Second) of Contracts Section 208. EU: Trade Secrets Directive 2016/943 Article 3(1)(a)-(b) — independent discovery and observation are lawful acquisition methods without special evidentiary requirements. UK: Trade Secrets Regulations 2018 reg. 3 — no special evidentiary standard is required for these defenses."
+  },
+  {
+    "id": "c3f2a3b4-c5d6-4e7f-8a9b-1c2d3e4f5a6b",
+    "clausePattern": "The Receiving Party acknowledges and agrees that no public domain or general knowledge exception shall apply to Confidential Information that was compiled, organized, or aggregated by the Disclosing Party, even if the individual components of such Confidential Information are publicly available.",
+    "category": "carve_outs",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause claims that even if every individual piece of information is publicly available, the way the disclosing party organized or combined those pieces is still confidential. While there is some legal support for protecting unique compilations (like a curated customer database), this clause is so broadly written it could cover something as simple as a spreadsheet of publicly available data. It effectively eliminates the public domain exception for any information the discloser has assembled.",
+    "saferAlternative": "Confidential Information may include compilations of otherwise publicly available information, provided that the specific selection, arrangement, or coordination of such information constitutes a trade secret under applicable law and derives independent economic value from not being generally known in that particular compiled form.",
+    "jurisdictionNotes": "US: Compilations can qualify as trade secrets under UTSA if their specific arrangement adds value — but individual publicly known components remain unprotected. See Restatement (Third) of Unfair Competition Section 39 comment f. EU: Trade Secrets Directive 2016/943 Article 2(1) — the compilation itself must meet the trade secret definition. UK: Coco v. A.N. Clark (Engineers) Ltd — the compilation must have the necessary quality of confidence."
+  },
+  {
+    "id": "c3a3b4c5-d6e7-4f8a-9b0c-2d3e4f5a6b7c",
+    "clausePattern": "The Receiving Party acknowledges that any breach or threatened breach of this Agreement shall cause irreparable harm to the Disclosing Party for which monetary damages would be inadequate. Accordingly, the Disclosing Party shall be entitled to specific performance and injunctive relief as remedies for any such breach, without the necessity of proving actual damages, posting bond, or other security, and without need to demonstrate irreparable harm.",
+    "category": "remedies",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This clause pre-decides that any breach causes irreparable harm (harm that money can't fix), and waives the disclosing party's obligation to actually prove it. Normally, to get an injunction (a court order to stop someone from doing something), you must show the court that you'll suffer harm that money alone can't compensate for. This clause tries to skip that proof, AND waives the requirement to post a bond (a deposit that compensates you if the injunction turns out to be wrongful). While courts often grant injunctions in trade secret cases, many refuse to enforce blanket waivers of the bond requirement.",
+    "saferAlternative": "Each party acknowledges that a breach of the confidentiality obligations herein may cause irreparable harm for which monetary damages may be an insufficient remedy. Accordingly, the non-breaching party may seek equitable relief, including injunction and specific performance, as a remedy for any such breach, in addition to all other remedies available at law or in equity. The availability of equitable relief shall be determined by the applicable court based on the circumstances at the time relief is sought.",
+    "jurisdictionNotes": "US: Federal courts are split on enforceability of advance waivers of bond requirements under FRCP Rule 65(c). Many state courts require proof of irreparable harm regardless of contract language. Restatement (Second) of Contracts Section 208. EU: Directive 2004/48/EC on enforcement of IP rights — injunctions available but subject to proportionality. UK: American Cyanamid Co v. Ethicon Ltd — court retains discretion to assess balance of convenience regardless of contractual provisions."
+  },
+  {
+    "id": "c3b4c5d6-e7f8-4a9b-8c1d-3e4f5a6b7c8d",
+    "clausePattern": "In the event of any breach of this Agreement by the Receiving Party, the Receiving Party shall pay to the Disclosing Party, as liquidated damages and not as a penalty, the sum of Five Hundred Thousand Dollars ($500,000) per occurrence of breach, in addition to any actual damages suffered by the Disclosing Party.",
+    "category": "remedies",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause demands a $500,000 penalty for every single breach occurrence — AND actual damages on top of that. Liquidated damages (pre-agreed amounts) are only enforceable when they reasonably estimate the actual harm caused. A flat $500,000 that applies regardless of whether the breach caused $100 or $1 million of harm is almost certainly an unenforceable penalty. Adding actual damages on top makes it doubly punitive, since liquidated damages are supposed to substitute for actual damages, not stack on top.",
+    "saferAlternative": "In the event of a breach of this Agreement, the Disclosing Party shall be entitled to recover its actual, direct damages resulting from such breach, as proven with reasonable certainty. The Receiving Party shall not be liable for consequential, indirect, incidental, or punitive damages.",
+    "jurisdictionNotes": "US: Restatement (Second) of Contracts Section 356 — liquidated damages must be reasonable in light of anticipated or actual harm. A term fixing unreasonably large damages is unenforceable as a penalty. UCC Section 2-718(1) similarly requires reasonableness. EU: Unfair Contract Terms Directive 93/13/EEC Annex para. 1(e) — terms requiring disproportionately high compensation are potentially unfair. UK: Cavendish Square Holding BV v. Makdessi [2015] — liquidated damages must not be out of all proportion to the legitimate interest."
+  },
+  {
+    "id": "c3c5d6e7-f8a9-4b0c-9d2e-4f5a6b7c8d9e",
+    "clausePattern": "The Receiving Party hereby waives any right to challenge, contest, or dispute the validity, enforceability, or scope of this Agreement or any provision hereof in any judicial, arbitral, or administrative proceeding.",
+    "category": "remedies",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause tries to strip away your fundamental right to go to court and argue that the NDA (or parts of it) is unfair or unenforceable. This is like signing a contract that says 'you agree this contract is perfect and you can never challenge it.' Courts universally reject this kind of provision because the right to seek judicial review of a contract's validity is a fundamental legal right that cannot be waived in advance.",
+    "saferAlternative": "Any dispute arising out of or relating to this Agreement, including any question regarding its existence, validity, or termination, shall be resolved in accordance with the dispute resolution provisions set forth in Section [X] of this Agreement. Nothing herein shall limit either party's right to challenge the validity or enforceability of any provision of this Agreement.",
+    "jurisdictionNotes": "US: Restatement (Second) of Contracts Section 208 — unconscionable terms are unenforceable. Courts retain inherent authority to review contract enforceability regardless of waiver clauses. EU: Unfair Contract Terms Directive 93/13/EEC Article 6(1) — unfair terms shall not be binding. Annex para. 1(q) — excluding or hindering the right to take legal action is unfair. UK: CRA 2015 Section 62 — unfair terms are not binding on the consumer. Schedule 2 para. 20 — terms excluding rights to legal remedy."
+  },
+  {
+    "id": "c3e7f8a9-b0c1-4d2e-af4a-6b7c8d9e0f1a",
+    "clausePattern": "This Agreement constitutes a mutual non-disclosure agreement between the parties. Each party agrees to protect the other party's Confidential Information in accordance with the terms hereof. Notwithstanding the foregoing, the determination of what constitutes Confidential Information shall be made solely by the Disclosing Party in its absolute discretion, and Company A reserves the right to designate any information shared by either party as Confidential Information subject to the protections of this Agreement.",
+    "category": "unilateral_obligations",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This NDA calls itself 'mutual' — implying both sides have equal rights — but then gives one party (Company A) total control over what counts as confidential for BOTH parties. Company A can retroactively designate your own information as confidential under this agreement, effectively using your NDA against you. If someone controls the definition of what's protected, the agreement isn't mutual in any meaningful sense.",
+    "saferAlternative": "This Agreement constitutes a mutual non-disclosure agreement. Each party, as Disclosing Party, shall determine what information it discloses constitutes its own Confidential Information, subject to the definition and exclusions set forth in Section [X]. Neither party shall have any right or authority to designate the other party's information as Confidential Information.",
+    "jurisdictionNotes": "US: Restatement (Second) of Contracts Section 208 — unconscionable where one party has disproportionate control. Illusory promise doctrine — agreements where one party has sole discretion may lack consideration. EU: Unfair Contract Terms Directive 93/13/EEC Article 3(1) — significant imbalance in parties' rights and obligations. Annex para. 1(j) — enabling unilateral alteration of terms. UK: CRA 2015 Schedule 2 para. 11 — terms enabling trader to alter terms unilaterally are potentially unfair."
+  },
+  {
+    "id": "c3f8a9b0-c1d2-4e3f-ba5b-7c8d9e0f1a2b",
+    "clausePattern": "The Receiving Party shall protect the Confidential Information using the highest degree of care and security measures available, including but not limited to encryption, physical access controls, background checks on all personnel who may access Confidential Information, and annual third-party security audits, all at the Receiving Party's sole cost and expense.",
+    "category": "unilateral_obligations",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "Instead of the standard 'reasonable care' obligation, this demands the absolute highest security measures available — encryption, physical access controls, background checks, and annual third-party security audits — all at your expense. For a small business or startup, these measures could cost tens of thousands of dollars annually. The standard in NDA law is 'reasonable' care (often defined as the same care you use for your own confidential information), not the maximum theoretically possible.",
+    "saferAlternative": "The Receiving Party shall protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information of a similar nature, but in no event less than a reasonable degree of care. Such measures shall include appropriate administrative, technical, and physical safeguards proportionate to the sensitivity of the Confidential Information.",
+    "jurisdictionNotes": "US: UTSA requires 'reasonable measures' to maintain secrecy — not the highest possible measures. Restatement (Third) of Unfair Competition Section 39 comment g. EU: Trade Secrets Directive 2016/943 Article 2(1)(c) — the holder must take 'reasonable steps under the circumstances' to keep information secret. UK: Trade Secrets Regulations 2018 mirror the EU standard of reasonable steps."
+  },
+  {
+    "id": "c3a9b0c1-d2e3-4f4a-8b6c-8d9e0f1a2b3c",
+    "clausePattern": "The Receiving Party acknowledges and agrees that the obligations imposed upon it under this Agreement are one-way in nature, and that the Disclosing Party shall have no corresponding obligations of confidentiality with respect to any information disclosed by the Receiving Party to the Disclosing Party during the course of discussions or negotiations contemplated hereunder.",
+    "category": "unilateral_obligations",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This creates a completely one-sided arrangement: you must keep their secrets, but they have zero obligation to protect yours. If you share sensitive information about your business during negotiations — financials, strategies, technology — they can freely use or disclose it. In many business discussions, both sides inevitably share sensitive information, so a one-way NDA can leave you dangerously exposed.",
+    "saferAlternative": "Each party acknowledges that it may receive Confidential Information from the other party in connection with the discussions contemplated hereunder. Accordingly, the obligations of confidentiality and non-use set forth herein shall apply equally and reciprocally to both parties with respect to Confidential Information received from the other party.",
+    "jurisdictionNotes": "US: One-way NDAs are generally enforceable when parties have unequal bargaining power, but courts consider the totality of circumstances under Restatement (Second) of Contracts Section 208. EU: Unfair Contract Terms Directive 93/13/EEC Article 3(1) — significant imbalance in the parties' rights and obligations contrary to good faith. UK: CRA 2015 Part 2 — fairness requirement applies to all consumer and some B2B contracts."
+  },
+  {
+    "id": "c3b0c1d2-e3f4-4a5b-9c7d-9e0f1a2b3c4d",
+    "clausePattern": "Upon the termination or expiration of this Agreement, or upon the Disclosing Party's written request at any time, the Receiving Party shall immediately return or destroy all Confidential Information, including all copies, notes, summaries, analyses, compilations, studies, interpretations, memoranda, and other materials prepared by the Receiving Party that contain, reflect, or are derived from Confidential Information (collectively, \"Derivative Materials\"), and shall certify such return or destruction in writing within five (5) business days.",
+    "category": "return_of_materials",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This requires you to destroy all your own work product — notes, analyses, summaries, and anything 'derived from' confidential information. That could include your internal meeting minutes, strategy documents, evaluation reports, and more. It also ignores that you may have legal or regulatory obligations to retain certain records (tax records, compliance files, litigation holds). The five-day deadline is extremely tight for organizations with complex data systems.",
+    "saferAlternative": "Upon the termination or expiration of this Agreement, or upon the Disclosing Party's written request, the Receiving Party shall promptly return or destroy the Disclosing Party's Confidential Information in its possession, and shall confirm such return or destruction in writing within thirty (30) days. Notwithstanding the foregoing, the Receiving Party may retain (a) one archival copy of Confidential Information solely for legal compliance and dispute resolution purposes, and (b) Confidential Information contained in automatic computer back-up or archival systems, provided such retained copies remain subject to the confidentiality obligations of this Agreement.",
+    "jurisdictionNotes": "US: Legal hold obligations under Federal Rules of Civil Procedure may require retention of documents relevant to anticipated or pending litigation — destruction could constitute spoliation. Sarbanes-Oxley Act Section 802 imposes record retention requirements. EU: GDPR Article 17 and recital 65 — right to erasure must be balanced against legal obligation to retain. UK: Limitation Act 1980 — documents may need to be retained for potential claims within limitation periods."
+  },
+  {
+    "id": "c3c1d2e3-f4a5-4b6c-ad8e-0f1a2b3c4d5e",
+    "clausePattern": "The Receiving Party shall not retain any copies of Confidential Information in any form, including electronic back-ups, archived emails, or records stored on cloud-based systems, and shall take all steps necessary to purge Confidential Information from all systems, including those maintained by third-party service providers, within seventy-two (72) hours of the Disclosing Party's request.",
+    "category": "return_of_materials",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "Purging all traces of information from every system — including third-party cloud providers, email archives, and backup tapes — within 72 hours is technically impossible for most organizations. Enterprise backup systems, email servers, and cloud platforms retain data in ways that cannot be selectively deleted on a short timeline. Promising something impossible to perform makes this clause a trap: you'll inevitably be in breach because full compliance is not achievable.",
+    "saferAlternative": "Upon the Disclosing Party's written request, the Receiving Party shall use commercially reasonable efforts to delete or destroy Confidential Information from its active systems within thirty (30) days. The Receiving Party shall not be required to purge Confidential Information from (a) automatic backup or archival systems where deletion is not commercially practicable, provided that such copies are not actively accessed and remain subject to the confidentiality obligations herein, or (b) records required to be maintained under applicable law or regulation.",
+    "jurisdictionNotes": "US: Courts apply a reasonableness standard to return/destruction obligations. Requiring the technically impossible may render the clause void for impossibility under Restatement (Second) of Contracts Section 261. EU: GDPR Article 17(3) — exceptions to erasure obligations where retention is required by law. Trade Secrets Directive 2016/943 does not mandate specific destruction timelines. UK: Data Protection Act 2018 Section 45 — practical considerations for data deletion are recognized."
+  },
+  {
+    "id": "c3d2e3f4-a5b6-4c7d-8e9f-1a2b3c4d5e6f",
+    "clausePattern": "During the term of this Agreement and for a period of two (2) years following its termination or expiration, the Receiving Party shall not, directly or indirectly, solicit, recruit, hire, or engage any employee, contractor, consultant, or agent of the Disclosing Party, or induce or attempt to induce any such person to terminate their relationship with the Disclosing Party.",
+    "category": "non_solicitation",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "yellow",
+    "whyRisky": "This is a non-solicitation clause hiding inside an NDA. NDAs are supposed to protect confidential information — not prevent you from hiring people. A two-year ban on hiring any employee, contractor, or consultant of the other company is extremely broad and has nothing to do with protecting secrets. It could prevent you from hiring someone who applied to your company independently, or someone you had no idea worked for the other party.",
+    "saferAlternative": "During the term of this Agreement and for a period of six (6) months following its termination, neither party shall directly solicit for employment any employee of the other party who was personally involved in the exchange of Confidential Information under this Agreement, provided that this restriction shall not apply to (a) general advertising or recruitment efforts not specifically targeted at such individuals, or (b) any person who independently contacts the hiring party without solicitation.",
+    "jurisdictionNotes": "US: Non-solicitation provisions must be reasonable in scope and duration under Restatement (Second) of Contracts Section 188. Several states (California, Oklahoma, North Dakota) severely restrict non-compete/non-solicit agreements under Cal. Bus. & Prof. Code Section 16600. EU: Non-solicitation clauses may violate freedom of labor principles and must be proportionate. UK: Common law restraint of trade — must protect a legitimate business interest and be reasonable in scope."
+  },
+  {
+    "id": "c3e3f4a5-b6c7-4d8e-9f0a-2b3c4d5e6f7a",
+    "clausePattern": "The Receiving Party agrees that during the term of this Agreement and for a period of three (3) years thereafter, it shall not directly or indirectly engage in any business that competes with the Disclosing Party's business in any geographic market in which the Disclosing Party operates or plans to operate.",
+    "category": "non_solicitation",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This is a full non-compete agreement buried inside an NDA. It bans you from competing with the other party for three years in any market they operate in — or even plan to operate in (which could be anywhere). This has nothing to do with protecting confidential information and everything to do with eliminating competition. Non-competes are banned or heavily restricted in many US states and are generally unenforceable when hidden in an NDA because they go far beyond what's needed to protect trade secrets.",
+    "saferAlternative": "For the avoidance of doubt, nothing in this Agreement shall restrict either party from independently developing products or services that may compete with the other party's products or services, provided that the Receiving Party does not use the Disclosing Party's Confidential Information in connection with such development.",
+    "jurisdictionNotes": "US: California (Bus. & Prof. Code Section 16600), Oklahoma, North Dakota, and Minnesota ban most non-competes. FTC's 2024 non-compete rule (currently in litigation) would broadly restrict non-competes. Restatement (Second) of Contracts Section 188 — restraints must be reasonable and ancillary to a legitimate transaction. EU: Non-competes within NDAs must satisfy proportionality under national employment laws. UK: Restraint of trade doctrine — non-competes must protect a legitimate interest, be reasonable in scope and duration, and be in the public interest."
+  },
+  {
+    "id": "c3f4a5b6-c7d8-4e9f-ba1b-3c4d5e6f7a8b",
+    "clausePattern": "During the term of this Agreement and for a period of eighteen (18) months following its termination, the Receiving Party shall not, directly or indirectly, solicit, contact, or engage in any business transaction with any client, customer, vendor, supplier, or business contact of the Disclosing Party with whom the Receiving Party became acquainted or about whom the Receiving Party obtained information as a result of or in connection with this Agreement.",
+    "category": "non_solicitation",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause bans you from doing business with anyone you learned about through the NDA relationship — not just the other party's customers, but also their vendors, suppliers, and any 'business contacts.' For 18 months, you cannot engage in any transaction with these entities. This goes far beyond protecting confidential information and amounts to a non-compete in disguise, potentially cutting you off from a wide swath of an entire industry.",
+    "saferAlternative": "The Receiving Party agrees not to use the Disclosing Party's Confidential Information, including customer or client lists, to directly solicit the Disclosing Party's existing customers for the purpose of diverting their business during the term of this Agreement. This restriction shall not apply to customers with whom the Receiving Party had a pre-existing business relationship or who independently approach the Receiving Party.",
+    "jurisdictionNotes": "US: Overbroad non-solicitation provisions are frequently struck down. Restatement (Second) of Contracts Section 188 — must be no broader than reasonably necessary. See Boulanger v. Dunkin' Donuts Inc. (overbroad customer non-solicitation struck down). EU: Must be proportionate to a legitimate interest under national law. EU Competition law (TFEU Article 101) may apply to restrictions between businesses. UK: Restraint of trade — scope must be limited to customers with whom the party actually had contact."
+  },
+  {
+    "id": "c3a5b6c7-d8e9-4f0a-8b2c-4d5e6f7a8b9c",
+    "clausePattern": "The Receiving Party agrees that any knowledge, skills, experience, or expertise gained by the Receiving Party's employees, contractors, or agents as a result of exposure to the Disclosing Party's Confidential Information shall be deemed Confidential Information of the Disclosing Party and shall be subject to all restrictions of this Agreement, and the Receiving Party shall not permit any such person to utilize such knowledge, skills, experience, or expertise in any manner following the termination of this Agreement.",
+    "category": "residuals",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This clause claims ownership over knowledge that your employees absorb just by doing their jobs. If your engineer reads a technical document under this NDA and learns a new concept, this says they can never use that understanding again — even general skills and industry knowledge. This is functionally an intellectual servitude clause. People cannot simply erase what they've learned, and courts recognize that general skills and knowledge retained in human memory ('residual knowledge') cannot be restricted this way.",
+    "saferAlternative": "Nothing in this Agreement shall restrict the Receiving Party or its personnel from using Residual Knowledge. \"Residual Knowledge\" means ideas, concepts, know-how, and techniques that are retained in the unaided memory of persons who have had access to Confidential Information, without reference to or use of any written or recorded Confidential Information. This Section does not grant a license under any patent, copyright, or other intellectual property right.",
+    "jurisdictionNotes": "US: Courts recognize the residual knowledge doctrine — employees cannot be prohibited from using general skills and knowledge. See Restatement (Third) of Unfair Competition Section 42. DTSA protects employee mobility. EU: Trade Secrets Directive 2016/943 Recital 14 — the Directive should not affect the use of information lawfully acquired in the normal course of employment. Article 1(3)(a) — exercise of autonomy by employees shall not be affected. UK: Faccenda Chicken Ltd v. Fowler [1987] — only trade secrets, not general skill and knowledge, can be restricted post-employment."
+  },
+  {
+    "id": "c3b6c7d8-e9f0-4a1b-9c3d-5e6f7a8b9c0d",
+    "clausePattern": "The Receiving Party acknowledges that any analyses, reports, studies, or other work product (\"Derivative Works\") created by the Receiving Party that are based upon, derived from, or incorporate any Confidential Information shall be the sole and exclusive property of the Disclosing Party. The Receiving Party hereby irrevocably assigns to the Disclosing Party all right, title, and interest in and to such Derivative Works, including all intellectual property rights therein.",
+    "category": "residuals",
+    "contractType": [
+      "nda"
+    ],
+    "riskLevel": "red",
+    "whyRisky": "This NDA contains a hidden intellectual property assignment clause. It says that any work you create that's even partly 'derived from' confidential information automatically belongs to the other party. If you analyze their data and write an internal report, they own your report. If your engineers build a tool that was influenced by something they learned, the other party claims ownership of your tool. NDAs should protect secrecy, not transfer ownership of your own work product.",
+    "saferAlternative": "All right, title, and interest in any analyses, reports, or other work product created by the Receiving Party shall remain the property of the Receiving Party, subject to the confidentiality obligations set forth in this Agreement. Nothing in this Agreement shall operate to assign or transfer any intellectual property rights from one party to the other.",
+    "jurisdictionNotes": "US: IP assignment requires clear and specific language — courts disfavor hidden assignments in NDAs. See Teets v. Chromalloy Gas Turbine Corp. Restatement (Second) of Contracts Section 208 — unconscionable terms may be unenforceable. EU: IP assignment must be explicit and is subject to national law requirements on form and consent. Directive 2004/48/EC on enforcement of IP rights. UK: IP assignment must be in writing and signed (Patents Act 1977 Section 30, Copyright Designs and Patents Act 1988 Section 90(3)), but a clause buried in an NDA may satisfy this — making it particularly dangerous."
+  }
+]

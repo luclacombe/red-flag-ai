@@ -395,7 +395,7 @@ pnpm turbo lint type-check test build
 - [x] Contracts create analysis record, return `analysisId`
 - [x] All tests pass
 - [x] Quality gate passes
-- [ ] Commit: `feat: pdf upload, text extraction, and contract relevance gate`
+- [x] Commit: `feat: pdf upload, text extraction, and contract relevance gate`
 
 ---
 
@@ -408,59 +408,59 @@ pnpm turbo lint type-check test build
 ### Tasks
 
 #### 2.1 — Curate knowledge base patterns
-- [ ] Create `data/knowledge-base/` directory for raw pattern files
-- [ ] Use Claude (separate session) to generate patterns from public legal sources listed in PROJECT.md
-- [ ] Target: 100-150 patterns across all 5 contract types:
+- [x] Create `data/knowledge-base/` directory for raw pattern files
+- [x] Use Claude (separate session) to generate patterns from public legal sources listed in PROJECT.md
+- [x] Target: 100-150 patterns across all 5 contract types:
   - Residential lease: ~40 patterns (high priority)
   - Freelance/contractor: ~35 patterns (high priority)
   - NDA: ~25 patterns (medium priority)
   - Employment contract: ~25 patterns (medium priority)
   - Terms of Service: ~25 patterns (low priority)
-- [ ] Store as JSON files per contract type: `data/knowledge-base/lease.json`, etc.
-- [ ] Each entry must pass the quality rubric (see PROJECT.md):
+- [x] Store as JSON files per contract type: `data/knowledge-base/lease.json`, etc.
+- [x] Each entry must pass the quality rubric (see PROJECT.md):
   1. Grounded in real law/regulation
   2. Clear to a non-lawyer
   3. Actionable alternative (not generic)
   4. Correctly categorized
-- [ ] Validate all entries against `KnowledgePattern` Zod schema from `@redflag/shared`
+- [x] Validate all entries against `KnowledgePattern` Zod schema from `@redflag/shared`
 
 #### 2.2 — Voyage AI embedding integration
-- [ ] Create `packages/db/src/embeddings.ts`
-- [ ] Implement `embedText(text: string)` → `number[]` (1024 dimensions):
+- [x] Create `packages/db/src/embeddings.ts`
+- [x] Implement `embedText(text: string)` → `number[]` (1024 dimensions):
   - POST to `https://api.voyageai.com/v1/embeddings`
   - Model: `voyage-law-2`
   - Input type: `"document"` for knowledge base entries, `"query"` for clause search
   - Handle API errors: retry once, then throw
-- [ ] Implement `embedTexts(texts: string[])` → `number[][]` (batch embedding)
+- [x] Implement `embedTexts(texts: string[])` → `number[][]` (batch embedding)
   - Voyage API supports batch embedding (up to 128 texts per call)
   - Use for seed script efficiency
 
 #### 2.3 — Seed script
-- [ ] Create `scripts/seed-knowledge-base.ts`
-- [ ] Reads all JSON files from `data/knowledge-base/`
-- [ ] Validates each entry against Zod schema
-- [ ] Batch embeds all `clause_pattern` fields via Voyage AI
-- [ ] Inserts into `knowledge_patterns` table with embeddings
-- [ ] Idempotent: clears existing patterns before seeding (safe to re-run)
-- [ ] Logs progress: `"Seeding 142 patterns... Embedding batch 1/3... Done."`
-- [ ] Install `tsx` as a dev dependency at root: `pnpm add -D tsx -w`
-- [ ] Add script to `package.json`: `"seed": "tsx scripts/seed-knowledge-base.ts"`
+- [x] Create `scripts/seed-knowledge-base.ts`
+- [x] Reads all JSON files from `data/knowledge-base/`
+- [x] Validates each entry against Zod schema
+- [x] Batch embeds all `clause_pattern` fields via Voyage AI
+- [x] Inserts into `knowledge_patterns` table with embeddings
+- [x] Idempotent: clears existing patterns before seeding (safe to re-run)
+- [x] Logs progress: `"Seeding 142 patterns... Embedding batch 1/3... Done."`
+- [x] Install `tsx` as a dev dependency at root: `pnpm add -D tsx -w`
+- [x] Add script to `package.json`: `"seed": "tsx scripts/seed-knowledge-base.ts"`
 
 #### 2.4 — Vector search query
-- [ ] Create `packages/db/src/queries/findSimilarPatterns.ts`
-- [ ] Implement `findSimilarPatterns(embedding: number[], options?)` → `KnowledgePattern[]`:
+- [x] Create `packages/db/src/queries/findSimilarPatterns.ts`
+- [x] Implement `findSimilarPatterns(embedding: number[], options?)` → `KnowledgePattern[]`:
   - Cosine similarity search using pgvector `<=>` operator
   - Default top-k: 5
   - Optional filter by `contract_type`
   - Returns patterns with similarity score
-- [ ] Use Drizzle's `sql` template for the vector query
+- [x] Use Drizzle's `sql` template for the vector query
 
 #### 2.5 — Tests
-- [ ] Unit test: Zod validation of knowledge base entries (valid + invalid fixtures)
-- [ ] Unit test: `embedText` with mocked Voyage API response
-- [ ] Unit test: `findSimilarPatterns` with mocked DB (verify correct SQL generation)
-- [ ] Integration test: seed script → embed → search round-trip (requires real Voyage API key — skip in CI, run locally)
-- [ ] Verify: seed the DB, then search for "landlord can enter without notice" — should return relevant entry rights patterns
+- [x] Unit test: Zod validation of knowledge base entries (valid + invalid fixtures)
+- [x] Unit test: `embedText` with mocked Voyage API response
+- [x] Unit test: `findSimilarPatterns` with mocked DB (verify correct SQL generation)
+- [x] Integration test: seed script → embed → search round-trip (requires real Voyage API key — skip in CI, run locally)
+- [x] Verify: seed the DB, then search for "landlord can enter without notice" — should return relevant entry rights patterns
 
 ### MCP Usage
 - **Context7**: Voyage AI API docs, Drizzle raw SQL syntax, pgvector operators
@@ -473,12 +473,12 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
 ```
 
 ### Exit Criteria
-- [ ] 100-150 curated patterns in JSON files, all passing quality rubric
-- [ ] Seed script embeds and inserts all patterns into Supabase
-- [ ] Vector search returns semantically relevant results
-- [ ] Search for a predatory clause returns matching patterns from the knowledge base
-- [ ] All tests pass
-- [ ] Quality gate passes
+- [x] 100-150 curated patterns in JSON files, all passing quality rubric
+- [x] Seed script embeds and inserts all patterns into Supabase
+- [x] Vector search returns semantically relevant results
+- [x] Search for a predatory clause returns matching patterns from the knowledge base
+- [x] All tests pass
+- [x] Quality gate passes
 - [ ] Commit: `feat: knowledge base curation, embedding pipeline, and vector search`
 
 ---
