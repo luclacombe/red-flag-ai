@@ -311,9 +311,9 @@ pnpm turbo lint type-check test build
 - [x] Supabase project exists with tables, vector extension, storage bucket
 - [x] tRPC health-check works from the Next.js app
 - [x] `pnpm turbo lint type-check test build` passes
-- [ ] GitHub Actions CI passes on push
+- [x] GitHub Actions CI passes on push
 - [x] Next.js dev server starts and renders placeholder pages
-- [ ] Commit: `feat: scaffold turborepo monorepo with all packages and infrastructure`
+- [x] Commit: `feat: scaffold turborepo monorepo with all packages and infrastructure`
 
 ---
 
