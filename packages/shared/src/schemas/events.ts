@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ClauseAnalysisSchema } from "./clause.js";
-import { SummarySchema } from "./summary.js";
+import { ClauseAnalysisSchema } from "./clause";
+import { SummarySchema } from "./summary";
 
 export const StatusEventSchema = z.object({
   type: z.literal("status"),

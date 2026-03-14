@@ -9,14 +9,18 @@ AI contract red-flag detector. Upload a PDF, get clause-by-clause risk analysis 
 ## Package Structure
 
 ```
-apps/web/              → Next.js 15 App Router (UI + route handlers)
-packages/api/          → tRPC routers, procedures, context
+apps/web/              → Next.js 16 App Router (UI + route handlers)
+packages/api/          → tRPC v11 routers, procedures, context
 packages/agents/       → Agent pipeline (gate, parse, risk, rewrite, summary)
 packages/db/           → Drizzle schema, migrations, client, queries (incl. RAG vector search)
 packages/shared/       → Zod schemas, types, constants (all packages import from here)
 ```
 
 Dependency direction: `web → api → agents → db → shared` (shared is the leaf).
+
+Internal packages export TypeScript source directly (`"exports": { ".": "./src/index.ts" }`).
+No build step per package — Next.js `transpilePackages` compiles them.
+Cross-package deps use pnpm `workspace:*` protocol.
 
 ## Commands
 
@@ -37,9 +41,11 @@ Dependency direction: `web → api → agents → db → shared` (shared is the 
 - **Agents are pure async functions** — no classes, no state. Input → output. Testable in isolation.
 - **Prompts live in `packages/agents/prompts/`** — one file per agent, template strings
 - **Cross-package imports** use aliases: `@redflag/shared`, `@redflag/db`, `@redflag/api`, `@redflag/agents`
+- **No `.js` extensions in imports** — use extensionless imports (`./schema`, not `./schema.js`). Turbopack cannot resolve `.js` → `.ts`.
 - **Conventional commits**: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
 - **Drizzle migrations** for all schema changes — never modify DB directly
 - **Mobile-first** responsive design — design for 375px, scale up
+- **Biome import ordering** is enforced — run `npx biome check --write` after adding new exports to barrel files
 
 ## Anti-Patterns — Never Do These
 
@@ -77,3 +83,26 @@ Dependency direction: `web → api → agents → db → shared` (shared is the 
 - **Prompt injection defense:** All agent prompts must frame document text as untrusted input. Zod validates output structure, but system prompts must also instruct Claude to analyze objectively regardless of any instructions in the document
 - **Pipeline idempotency:** Use atomic `UPDATE ... WHERE status = 'pending' RETURNING *` to prevent duplicate pipeline runs from concurrent SSE subscriptions. If status is already `processing`, yield persisted clauses from DB instead of re-running
 - **Clause position strategy:** Don't rely on Claude for character offsets — LLMs can't count. Have Claude return clause text, then compute `startIndex`/`endIndex` via `text.indexOf(clauseText)` in the orchestrator
+
+## Current Stack Versions
+
+| Dependency | Version | Notes |
+|-----------|---------|-------|
+| Next.js | 16.1.6 | App Router, Turbopack |
+| React | 19.2.4 | |
+| tRPC | 11.12.0 | v11 API — NOT v10 patterns |
+| Drizzle ORM | 0.45.1 | `postgres` driver via `drizzle-orm/postgres-js` |
+| Zod | 4.3.6 | v4 — API is backwards-compatible with v3 |
+| Tailwind CSS | 4.2.1 | v4 with `@tailwindcss/postcss` — NOT the old PostCSS plugin |
+| Biome | 2.4.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
+| Vitest | 4.1.0 | |
+| TypeScript | 5.9.3 | |
+| Turborepo | 2.8.17 | |
+
+## Supabase
+
+- **Project:** `red-flag-ai` (region: eu-west-1)
+- **DB tables:** documents, analyses, clauses, knowledge_patterns, rate_limits
+- **Storage bucket:** `contracts` (private, 10MB max, PDF only)
+- **pgvector extension** enabled, HNSW index on `knowledge_patterns.embedding`
+- **Connection:** transaction pooler URL (port 6543) with `{ prepare: false }`

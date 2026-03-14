@@ -6,8 +6,8 @@ export {
   MAX_PAGES,
   RATE_LIMIT_PER_DAY,
   VOYAGE_DIMENSIONS,
-} from "./constants.js";
-export { type ClauseAnalysis, ClauseAnalysisSchema } from "./schemas/clause.js";
+} from "./constants";
+export { type ClauseAnalysis, ClauseAnalysisSchema } from "./schemas/clause";
 export {
   type AnalysisStatus,
   AnalysisStatusSchema,
@@ -17,7 +17,7 @@ export {
   RecommendationSchema,
   type RiskLevel,
   RiskLevelSchema,
-} from "./schemas/enums.js";
+} from "./schemas/enums";
 export {
   type ClauseEvent,
   ClauseEventSchema,
@@ -29,7 +29,7 @@ export {
   StatusEventSchema,
   type SummaryEvent,
   SummaryEventSchema,
-} from "./schemas/events.js";
-export { type GateResult, GateResultSchema } from "./schemas/gate.js";
-export { type KnowledgePattern, KnowledgePatternSchema } from "./schemas/knowledge.js";
-export { ClauseBreakdownSchema, type Summary, SummarySchema } from "./schemas/summary.js";
+} from "./schemas/events";
+export { type GateResult, GateResultSchema } from "./schemas/gate";
+export { type KnowledgePattern, KnowledgePatternSchema } from "./schemas/knowledge";
+export { ClauseBreakdownSchema, type Summary, SummarySchema } from "./schemas/summary";

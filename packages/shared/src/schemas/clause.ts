@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RiskLevelSchema } from "./enums.js";
+import { RiskLevelSchema } from "./enums";
 
 export const ClauseAnalysisSchema = z.object({
   clauseText: z.string(),

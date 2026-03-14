@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { KnowledgeRiskLevelSchema } from "./enums.js";
+import { KnowledgeRiskLevelSchema } from "./enums";
 
 export const KnowledgePatternSchema = z.object({
   id: z.string().uuid(),

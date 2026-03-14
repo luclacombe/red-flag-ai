@@ -86,9 +86,9 @@ On page refresh (analysis already complete):
 ### Tasks
 
 #### 0.1 — Turborepo scaffold
-- [ ] Initialize Turborepo with pnpm: `pnpm dlx create-turbo@latest`
-- [ ] Configure pnpm workspace: `apps/*`, `packages/*`
-- [ ] Create package structure:
+- [x] Initialize Turborepo with pnpm: `pnpm dlx create-turbo@latest`
+- [x] Configure pnpm workspace: `apps/*`, `packages/*`
+- [x] Create package structure:
   ```
   apps/web/              → Next.js 15 (App Router)
   packages/api/          → tRPC routers, procedures, context
@@ -96,7 +96,7 @@ On page refresh (analysis already complete):
   packages/db/           → Drizzle schema, migrations, client, queries
   packages/shared/       → Zod schemas, types, constants
   ```
-- [ ] Configure root `turbo.json` task pipeline:
+- [x] Configure root `turbo.json` task pipeline:
   ```json
   {
     "tasks": {
@@ -108,17 +108,17 @@ On page refresh (analysis already complete):
     }
   }
   ```
-- [ ] Set up TypeScript strict mode in root `tsconfig.json` with package-level extends
-- [ ] Configure path aliases for cross-package imports (`@redflag/shared`, `@redflag/db`, etc.)
-- [ ] Create `.gitignore`: `node_modules`, `.next`, `dist`, `coverage`, `.turbo`, `.env.local`, `.env`
+- [x] Set up TypeScript strict mode in root `tsconfig.json` with package-level extends
+- [x] Configure path aliases for cross-package imports (`@redflag/shared`, `@redflag/db`, etc.)
+- [x] Create `.gitignore`: `node_modules`, `.next`, `dist`, `coverage`, `.turbo`, `.env.local`, `.env`
 
 #### 0.2 — Biome setup
-- [ ] Install Biome at root: `pnpm add -D @biomejs/biome -w`
-- [ ] Create `biome.json` at root: TypeScript strict, consistent formatting rules
-- [ ] Add `lint` script to root and each package
+- [x] Install Biome at root: `pnpm add -D @biomejs/biome -w`
+- [x] Create `biome.json` at root: TypeScript strict, consistent formatting rules
+- [x] Add `lint` script to root and each package
 
 #### 0.3 — Shared package (`packages/shared`)
-- [ ] Zod schemas for streamed SSE event types:
+- [x] Zod schemas for streamed SSE event types:
   ```typescript
   // Discriminated union for all streamed events
   StatusEvent      → { type: "status", message: string }
@@ -126,7 +126,7 @@ On page refresh (analysis already complete):
   SummaryEvent     → { type: "summary", data: Summary }
   ErrorEvent       → { type: "error", message: string, recoverable: boolean }
   ```
-- [ ] Zod schema for `ClauseAnalysis`:
+- [x] Zod schema for `ClauseAnalysis`:
   ```typescript
   {
     clauseText: string,
@@ -140,7 +140,7 @@ On page refresh (analysis already complete):
     matchedPatterns: string[],  // IDs of matched knowledge base patterns
   }
   ```
-- [ ] Zod schema for `Summary`:
+- [x] Zod schema for `Summary`:
   ```typescript
   {
     overallRiskScore: number,       // 0-100
@@ -151,7 +151,7 @@ On page refresh (analysis already complete):
     contractType: string,
   }
   ```
-- [ ] Zod schema for `KnowledgePattern` (matches DB shape):
+- [x] Zod schema for `KnowledgePattern` (matches DB shape):
   ```typescript
   {
     id: string,
@@ -164,7 +164,7 @@ On page refresh (analysis already complete):
     jurisdictionNotes: string,
   }
   ```
-- [ ] Zod schema for gate result:
+- [x] Zod schema for gate result:
   ```typescript
   {
     isContract: boolean,
@@ -173,13 +173,13 @@ On page refresh (analysis already complete):
     reason: string,
   }
   ```
-- [ ] Constants: `MAX_PAGES = 30`, `RATE_LIMIT_PER_DAY = 2`, `VOYAGE_DIMENSIONS = 1024`
-- [ ] Export all types and schemas
+- [x] Constants: `MAX_PAGES = 30`, `RATE_LIMIT_PER_DAY = 2`, `VOYAGE_DIMENSIONS = 1024`
+- [x] Export all types and schemas
 
 #### 0.4 — Database package (`packages/db`)
-- [ ] Install Drizzle ORM + `drizzle-kit` + `postgres` driver
-- [ ] Create Drizzle config pointing to Supabase Postgres
-- [ ] Define schema:
+- [x] Install Drizzle ORM + `drizzle-kit` + `postgres` driver
+- [x] Create Drizzle config pointing to Supabase Postgres
+- [x] Define schema:
   ```
   documents
     id              uuid PK default gen_random_uuid()
@@ -237,44 +237,44 @@ On page refresh (analysis already complete):
     count           integer not null default 0
     (composite PK: ip_address + date)
   ```
-- [ ] Add database indexes:
+- [x] Add database indexes:
   - `analyses.document_id` — FK lookup when loading analysis for a document
   - `clauses.analysis_id` — results page loads all clauses for an analysis
   - `knowledge_patterns.embedding` — IVFFlat or HNSW index for vector search performance
   - `rate_limits` composite PK already serves as the index
-- [ ] Create DB client (connection wrapper with env var validation)
-- [ ] Generate initial migration with `drizzle-kit generate`
-- [ ] Export schema, client, and types
+- [x] Create DB client (connection wrapper with env var validation)
+- [x] Generate initial migration with `drizzle-kit generate`
+- [x] Export schema, client, and types
 
 #### 0.5 — Supabase setup
-- [ ] Create Supabase project (via **Supabase MCP** or dashboard)
-- [ ] Enable `vector` extension: `CREATE EXTENSION IF NOT EXISTS vector;`
-- [ ] Create Storage bucket: `contracts` (private, 10MB max file size)
-- [ ] Run Drizzle migration to create tables
-- [ ] Verify tables and indexes exist and vector column works
-- [ ] **Use Supabase transaction pooler URL** (port 6543) for the Drizzle connection — Vercel serverless requires connection pooling. Direct connections (port 5432) will exhaust the connection limit.
-- [ ] Create `.env.example` with all 5 env vars
-- [ ] Create `.env.local` with real values (gitignored)
+- [x] Create Supabase project (via **Supabase MCP** or dashboard)
+- [x] Enable `vector` extension: `CREATE EXTENSION IF NOT EXISTS vector;`
+- [x] Create Storage bucket: `contracts` (private, 10MB max file size)
+- [x] Run Drizzle migration to create tables
+- [x] Verify tables and indexes exist and vector column works
+- [x] **Use Supabase transaction pooler URL** (port 6543) for the Drizzle connection — Vercel serverless requires connection pooling. Direct connections (port 5432) will exhaust the connection limit.
+- [x] Create `.env.example` with all 5 env vars
+- [x] Create `.env.local` with real values (gitignored)
 
 #### 0.6 — Next.js app shell (`apps/web`)
-- [ ] Initialize Next.js 15 with App Router, TypeScript strict
-- [ ] Install Tailwind CSS v4 + `@tailwindcss/postcss`
-- [ ] Install shadcn/ui, initialize with default config
-- [ ] Create minimal layout: `app/layout.tsx` with Tailwind, fonts
-- [ ] Create placeholder pages: `app/page.tsx`, `app/analysis/[id]/page.tsx`
-- [ ] Configure `next.config.ts`: set `transpilePackages` for all internal packages (`@redflag/shared`, `@redflag/db`, `@redflag/api`, `@redflag/agents`) so Next.js can import TypeScript source directly during dev
-- [ ] Verify `pnpm dev` starts and renders
+- [x] Initialize Next.js 15 with App Router, TypeScript strict
+- [x] Install Tailwind CSS v4 + `@tailwindcss/postcss`
+- [x] Install shadcn/ui, initialize with default config
+- [x] Create minimal layout: `app/layout.tsx` with Tailwind, fonts
+- [x] Create placeholder pages: `app/page.tsx`, `app/analysis/[id]/page.tsx`
+- [x] Configure `next.config.ts`: set `transpilePackages` for all internal packages (`@redflag/shared`, `@redflag/db`, `@redflag/api`, `@redflag/agents`) so Next.js can import TypeScript source directly during dev
+- [x] Verify `pnpm dev` starts and renders
 
 #### 0.7 — tRPC setup
-- [ ] `packages/api`: Create tRPC router, context, procedure helpers
-- [ ] Use **Context7 MCP** for latest tRPC v11 + Next.js App Router integration docs
-- [ ] Create tRPC route handler in `apps/web/app/api/trpc/[trpc]/route.ts`
-- [ ] Configure client-side tRPC with `httpBatchStreamLink` + `httpSubscriptionLink`
-- [ ] Create a health-check procedure to verify the setup works
-- [ ] Wire `apps/web` to import from `@redflag/api`
+- [x] `packages/api`: Create tRPC router, context, procedure helpers
+- [x] Use **Context7 MCP** for latest tRPC v11 + Next.js App Router integration docs
+- [x] Create tRPC route handler in `apps/web/app/api/trpc/[trpc]/route.ts`
+- [x] Configure client-side tRPC with `httpBatchStreamLink` + `httpSubscriptionLink`
+- [x] Create a health-check procedure to verify the setup works
+- [x] Wire `apps/web` to import from `@redflag/api`
 
 #### 0.8 — CI pipeline
-- [ ] Create `.github/workflows/ci.yml`:
+- [x] Create `.github/workflows/ci.yml`:
   ```yaml
   on: [push, pull_request]
   jobs:
@@ -286,13 +286,13 @@ On page refresh (analysis already complete):
         - pnpm install --frozen-lockfile
         - pnpm turbo lint type-check test build
   ```
-- [ ] Add `.claudeignore`: `node_modules`, `.next`, `dist`, `coverage`, `.turbo`
+- [x] Add `.claudeignore`: `node_modules`, `.next`, `dist`, `coverage`, `.turbo`
 
 #### 0.9 — Vitest setup
-- [ ] Install Vitest at root
-- [ ] Configure in each package that needs tests (`packages/shared`, `packages/db`, `packages/agents`, `packages/api`)
-- [ ] Write one smoke test per package to verify setup
-- [ ] Verify `pnpm turbo test` runs all tests
+- [x] Install Vitest at root
+- [x] Configure in each package that needs tests (`packages/shared`, `packages/db`, `packages/agents`, `packages/api`)
+- [x] Write one smoke test per package to verify setup
+- [x] Verify `pnpm turbo test` runs all tests
 
 ### MCP Usage
 - **Context7**: tRPC v11 App Router setup, Drizzle schema syntax, Supabase client config, Next.js 15 App Router patterns, Tailwind v4
@@ -305,14 +305,14 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] All 5 packages exist with correct `tsconfig.json` and `package.json`
-- [ ] Cross-package imports work (`@redflag/shared`, `@redflag/db`, `@redflag/api`)
-- [ ] Drizzle schema compiles, migration generated
-- [ ] Supabase project exists with tables, vector extension, storage bucket
-- [ ] tRPC health-check works from the Next.js app
-- [ ] `pnpm turbo lint type-check test build` passes
+- [x] All 5 packages exist with correct `tsconfig.json` and `package.json`
+- [x] Cross-package imports work (`@redflag/shared`, `@redflag/db`, `@redflag/api`)
+- [x] Drizzle schema compiles, migration generated
+- [x] Supabase project exists with tables, vector extension, storage bucket
+- [x] tRPC health-check works from the Next.js app
+- [x] `pnpm turbo lint type-check test build` passes
 - [ ] GitHub Actions CI passes on push
-- [ ] Next.js dev server starts and renders placeholder pages
+- [x] Next.js dev server starts and renders placeholder pages
 - [ ] Commit: `feat: scaffold turborepo monorepo with all packages and infrastructure`
 
 ---

@@ -12,6 +12,7 @@
   },
   "scripts": {
     "lint": "biome check src/",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

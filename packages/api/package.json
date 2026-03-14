@@ -7,12 +7,17 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@redflag/shared": "workspace:*",
+    "@redflag/agents": "workspace:*",
     "@redflag/db": "workspace:*",
-    "@redflag/agents": "workspace:*"
+    "@redflag/shared": "workspace:*",
+    "@trpc/client": "^11.12.0",
+    "@trpc/server": "^11.12.0",
+    "superjson": "^2.2.6",
+    "zod": "^4.3.6"
   },
   "scripts": {
     "lint": "biome check src/",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

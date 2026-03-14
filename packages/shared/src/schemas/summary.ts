@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RecommendationSchema } from "./enums.js";
+import { RecommendationSchema } from "./enums";
 
 export const ClauseBreakdownSchema = z.object({
   red: z.number().int().nonnegative(),
