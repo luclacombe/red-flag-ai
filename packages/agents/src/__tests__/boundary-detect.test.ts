@@ -30,9 +30,9 @@ describe("findAnchorPosition", () => {
   it("finds match with normalized whitespace", () => {
     // PDF extraction might produce different whitespace than what Haiku copies
     const text = "1.1  The   premises\nThe unit located at the address";
-    expect(
-      findAnchorPosition(text, "1.1 The premises The unit located", 0),
-    ).toBeGreaterThanOrEqual(0);
+    expect(findAnchorPosition(text, "1.1 The premises The unit located", 0)).toBeGreaterThanOrEqual(
+      0,
+    );
   });
 
   it("returns -1 for anchor shorter than minimum length", () => {
@@ -74,11 +74,11 @@ describe("splitAtAnchors", () => {
     const clauses = splitAtAnchors(contractText, anchors);
 
     expect(clauses.length).toBe(4);
-    expect(clauses[0]!.text).toContain("Premises");
-    expect(clauses[0]!.text).toContain("Springfield");
-    expect(clauses[1]!.text).toContain("Duration of the lease");
-    expect(clauses[2]!.text).toContain("Payment obligations");
-    expect(clauses[3]!.text).toContain("Maintenance");
+    expect(clauses[0]?.text).toContain("Premises");
+    expect(clauses[0]?.text).toContain("Springfield");
+    expect(clauses[1]?.text).toContain("Duration of the lease");
+    expect(clauses[2]?.text).toContain("Payment obligations");
+    expect(clauses[3]?.text).toContain("Maintenance");
   });
 
   it("assigns sequential zero-based positions", () => {
@@ -88,8 +88,8 @@ describe("splitAtAnchors", () => {
     ];
     const clauses = splitAtAnchors(contractText, anchors);
 
-    expect(clauses[0]!.position).toBe(0);
-    expect(clauses[1]!.position).toBe(1);
+    expect(clauses[0]?.position).toBe(0);
+    expect(clauses[1]?.position).toBe(1);
   });
 
   it("returns empty for empty anchors", () => {
@@ -106,8 +106,8 @@ describe("splitAtAnchors", () => {
 
     // Only 2 anchors found (skipped the missing one)
     expect(clauses.length).toBe(2);
-    expect(clauses[0]!.text).toContain("Premises");
-    expect(clauses[1]!.text).toContain("Maintenance");
+    expect(clauses[0]?.text).toContain("Premises");
+    expect(clauses[1]?.text).toContain("Maintenance");
   });
 
   it("skips anchors shorter than minimum length", () => {
@@ -115,7 +115,7 @@ describe("splitAtAnchors", () => {
     const clauses = splitAtAnchors(contractText, anchors);
 
     expect(clauses.length).toBe(1);
-    expect(clauses[0]!.text).toContain("Premises");
+    expect(clauses[0]?.text).toContain("Premises");
   });
 
   it("merges short fragments into previous clause", () => {
@@ -147,9 +147,9 @@ describe("splitAtAnchors", () => {
     const clauses = splitAtAnchors(singleLine, anchors);
 
     expect(clauses.length).toBe(3);
-    expect(clauses[0]!.text).toContain("PREMISES");
-    expect(clauses[1]!.text).toContain("RENT");
-    expect(clauses[2]!.text).toContain("DEPOSIT");
+    expect(clauses[0]?.text).toContain("PREMISES");
+    expect(clauses[1]?.text).toContain("RENT");
+    expect(clauses[2]?.text).toContain("DEPOSIT");
   });
 
   it("handles duplicate phrases with forward-searching", () => {
@@ -165,8 +165,8 @@ describe("splitAtAnchors", () => {
     const clauses = splitAtAnchors(text, anchors);
 
     expect(clauses.length).toBe(2);
-    expect(clauses[0]!.text).toContain("pay rent");
-    expect(clauses[1]!.text).toContain("maintain the property");
+    expect(clauses[0]?.text).toContain("pay rent");
+    expect(clauses[1]?.text).toContain("maintain the property");
   });
 });
 
