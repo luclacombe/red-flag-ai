@@ -38,7 +38,7 @@ export function ClauseCard({
     }
   }, []);
 
-  const hasSaferAlt = clause.saferAlternative != null && clause.riskLevel !== "green";
+  const hasSaferAlt = !!clause.saferAlternative && clause.riskLevel !== "green";
 
   return (
     <div

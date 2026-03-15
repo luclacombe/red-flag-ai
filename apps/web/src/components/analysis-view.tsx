@@ -10,6 +10,7 @@ import { ClauseSkeleton } from "./clause-skeleton";
 import { ErrorState } from "./error-state";
 import { LegalDisclaimer } from "./legal-disclaimer";
 import { NavBar } from "./nav-bar";
+import { ProgressBar } from "./progress-bar";
 import { StatusBar } from "./status-bar";
 import { SummaryPanel } from "./summary-panel";
 
@@ -20,6 +21,7 @@ interface AnalysisViewProps {
 export function AnalysisView({ id }: AnalysisViewProps) {
   // Streaming state
   const [streamClauses, setStreamClauses] = useState<ClauseAnalysis[]>([]);
+  const [totalClauses, setTotalClauses] = useState<number>(0);
   const [streamSummary, setStreamSummary] = useState<Summary | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [streamError, setStreamError] = useState<{
@@ -49,6 +51,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       onData(event: { type: string; [key: string]: unknown }) {
         const e = event as
           | { type: "status"; message: string }
+          | { type: "clause_positions"; data: { totalClauses: number } }
           | { type: "clause_analysis"; data: ClauseAnalysis }
           | { type: "summary"; data: Summary }
           | {
@@ -60,6 +63,9 @@ export function AnalysisView({ id }: AnalysisViewProps) {
         switch (e.type) {
           case "status":
             setStatusMessage(e.message);
+            break;
+          case "clause_positions":
+            setTotalClauses(e.data.totalClauses);
             break;
           case "clause_analysis":
             setStreamClauses((prev) => {
@@ -214,25 +220,60 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   }
 
   // ── STREAMING ────────────────────────────────
-  const showSkeletons = !streamDone && !streamError;
   const showSummary = streamSummary !== null;
+  const isAnalyzing = !streamDone && !streamError;
+
+  // Compute progress status message from state (avoids stale closure in event handler)
+  const progressMessage =
+    totalClauses > 0 && streamClauses.length > 0 && isAnalyzing
+      ? `Analyzed ${streamClauses.length} of ${totalClauses} clauses...`
+      : statusMessage;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <NavBar hideHowItWorks />
-      {statusMessage && <StatusBar message={statusMessage} />}
+      {progressMessage && <StatusBar message={progressMessage} />}
+      {totalClauses > 0 && isAnalyzing && (
+        <ProgressBar current={streamClauses.length} total={totalClauses} />
+      )}
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-4 px-4 py-8">
         <h1 className="sr-only">Analyzing contract</h1>
-        {streamClauses.map((clause, index) => (
-          <ClauseCard key={clause.position} clause={clause} animate animationDelay={index * 30} />
-        ))}
 
-        {/* Skeletons during streaming */}
-        {showSkeletons && (
+        {/* Render all positions: analyzed clauses as ClauseCards, pending as skeletons */}
+        {totalClauses > 0 ? (
+          Array.from({ length: totalClauses }, (_, position) => {
+            const clause = streamClauses.find((c) => c.position === position);
+            if (clause) {
+              return (
+                <ClauseCard
+                  key={`pos-${clause.position}`}
+                  clause={clause}
+                  animate
+                  animationDelay={0}
+                />
+              );
+            }
+            // biome-ignore lint/suspicious/noArrayIndexKey: position is a stable clause identifier, not an array index
+            return isAnalyzing ? <ClauseSkeleton key={position} /> : null;
+          })
+        ) : (
           <>
-            <ClauseSkeleton />
-            {streamClauses.length < 2 && <ClauseSkeleton />}
-            {streamClauses.length === 0 && <ClauseSkeleton />}
+            {/* Before clause_positions arrives, show analyzed clauses + generic skeletons */}
+            {streamClauses.map((clause, index) => (
+              <ClauseCard
+                key={clause.position}
+                clause={clause}
+                animate
+                animationDelay={index * 30}
+              />
+            ))}
+            {isAnalyzing && (
+              <>
+                <ClauseSkeleton />
+                {streamClauses.length < 2 && <ClauseSkeleton />}
+                {streamClauses.length === 0 && <ClauseSkeleton />}
+              </>
+            )}
           </>
         )}
 
