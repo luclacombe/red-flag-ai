@@ -83,4 +83,18 @@ describe("computeClausePositions", () => {
     // "More text." still found because search continues from last found position
     expect(result[2]?.startIndex).toBe(17);
   });
+
+  it("falls back to whitespace-normalized match when exact indexOf fails", () => {
+    // Document has extra newlines and spaces (common in PDF extraction)
+    const doc = "Section 1\n  The landlord   must\n  provide   24 hours notice before entry.";
+    // Clause text has normalized whitespace (collapsed to single spaces)
+    const clauseText = "Section 1 The landlord must provide 24 hours notice before entry.";
+    const clauses = [{ text: clauseText, position: 0 }];
+
+    const result = computeClausePositions(doc, clauses);
+
+    // Should find via whitespace-normalized fallback, not return -1
+    expect(result[0]?.startIndex).toBeGreaterThanOrEqual(0);
+    expect(result[0]?.startIndex).not.toBe(-1);
+  });
 });

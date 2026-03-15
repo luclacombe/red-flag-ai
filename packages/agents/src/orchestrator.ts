@@ -7,6 +7,7 @@ import {
   type SSEEvent,
   type Summary,
 } from "@redflag/shared";
+import { findAnchorPosition } from "./boundary-detect";
 import { analyzeAllClauses } from "./combined-analysis";
 import { computeMatchedPatterns } from "./compute-matched-patterns";
 import { parseClausesSmart } from "./smart-parse";
@@ -44,12 +45,19 @@ export function computeClausePositions(
 ): PositionedClause[] {
   let searchFrom = 0;
   return parsedClauses.map((clause) => {
+    // Primary: exact match
     const idx = documentText.indexOf(clause.text, searchFrom);
-    if (idx === -1) {
-      return { ...clause, startIndex: -1, endIndex: -1 };
+    if (idx !== -1) {
+      searchFrom = idx + clause.text.length;
+      return { ...clause, startIndex: idx, endIndex: idx + clause.text.length };
     }
-    searchFrom = idx + clause.text.length;
-    return { ...clause, startIndex: idx, endIndex: idx + clause.text.length };
+    // Fallback: whitespace-normalized match (handles PDF extraction variance)
+    const normIdx = findAnchorPosition(documentText, clause.text, searchFrom);
+    if (normIdx !== -1) {
+      searchFrom = normIdx + clause.text.length;
+      return { ...clause, startIndex: normIdx, endIndex: normIdx + clause.text.length };
+    }
+    return { ...clause, startIndex: -1, endIndex: -1 };
   });
 }
 
