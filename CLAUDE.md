@@ -19,7 +19,7 @@ apps/web/              → Next.js 16 App Router (UI + route handlers)
 packages/api/          → tRPC v11 routers, procedures, context
 packages/agents/       → Agent pipeline (gate, parse, risk, rewrite, summary)
 packages/db/           → Drizzle schema, migrations, client, queries (incl. RAG vector search)
-packages/shared/       → Zod schemas, types, constants (all packages import from here)
+packages/shared/       → Zod schemas, types, constants, logger (all packages import from here)
 ```
 
 Dependency direction: `web → api → agents → db → shared` (shared is the leaf).

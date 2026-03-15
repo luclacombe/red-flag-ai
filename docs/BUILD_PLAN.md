@@ -814,7 +814,7 @@ pnpm turbo lint type-check test build
 #### 5.4 — Tests
 - [x] No component unit tests for MVP (visual QA via Playwright screenshots is sufficient)
 - [x] Verify tRPC client correctly subscribes and receives events (code verified: type-checks, builds, follows tRPC v11 patterns — live test requires API keys)
-- [ ] Manual test: full end-to-end flow with a real PDF (requires API keys — run locally or in Phase 6 smoke test)
+- [x] Manual test: full end-to-end flow with a real PDF (requires API keys — run locally or in Phase 6 smoke test)
 
 ### MCP Usage
 - **UI/UX Pro Max skill**: Run `--domain ux` for UX validation, pre-delivery checklist from MASTER.md. Script: `.claude/skills/ui-ux-pro-max-skill/src/ui-ux-pro-max/scripts/search.py`
@@ -849,29 +849,29 @@ pnpm turbo lint type-check test build
 ### Tasks
 
 #### 6.1 — Rate limiting
-- [ ] Create rate limit middleware/helper in `packages/api/src/rateLimit.ts`
-- [ ] On analysis trigger (in upload route):
+- [x] Create rate limit middleware/helper in `packages/api/src/rateLimit.ts`
+- [x] On analysis trigger (in upload route):
   1. Extract IP from request headers (`x-forwarded-for` on Vercel — Vercel overwrites client-spoofed values)
   2. Query `rate_limits` table for (ip, today's date)
   3. If count ≥ 2: reject with 429 + clear message
   4. If under limit: increment count
-- [ ] Upsert pattern: insert on first use, increment on subsequent
-- [ ] Rate limit response includes reset time (midnight UTC)
+- [x] Upsert pattern: insert on first use, increment on subsequent
+- [x] Rate limit response includes reset time (midnight UTC)
 
 #### 6.2 — Structured logging
-- [ ] Create logger utility in `packages/shared/src/logger.ts`
-- [ ] JSON-structured logs with fields: `timestamp`, `level`, `message`, `metadata`
-- [ ] Log at pipeline boundaries:
+- [x] Create logger utility in `packages/shared/src/logger.ts`
+- [x] JSON-structured logs with fields: `timestamp`, `level`, `message`, `metadata`
+- [x] Log at pipeline boundaries:
   - Upload received: `{ filename, pageCount, fileSize }`
   - Gate result: `{ isContract, contractType, durationMs }`
   - Clause analyzed: `{ position, riskLevel, ragPatternsFound, durationMs }`
   - Pipeline complete: `{ totalClauses, totalDurationMs, overallScore }`
   - Errors: `{ step, error, retried }`
-- [ ] Use `console.log` with JSON.stringify (Vercel captures structured logs natively)
+- [x] Use `console.log` with JSON.stringify (Vercel captures structured logs natively)
 
 #### 6.3 — Edge cases + error handling audit
-- [ ] Walk through every error scenario in PROJECT.md's Error Handling table
-- [ ] Verify each one works:
+- [x] Walk through every error scenario in PROJECT.md's Error Handling table
+- [x] Verify each one works:
   - Scanned PDF → clear rejection message
   - Spoofed file type → rejected by magic byte check
   - PDF extraction failure → user-friendly error
@@ -882,15 +882,15 @@ pnpm turbo lint type-check test build
   - Over 30 pages → reject at upload
   - Empty document → reject post-extraction
   - Concurrent SSE subscriptions → atomic claim prevents duplicates
-- [ ] Fix any gaps found
+- [x] Fix any gaps found
 
 #### 6.4 — Vercel deployment
-- [ ] Use **Vercel MCP** to configure:
+- [x] Use **Vercel MCP** to configure:
   - Link repo to Vercel project
   - Set environment variables (all 5 from .env.example)
   - Configure build settings: `pnpm turbo build`, output dir `apps/web/.next`
   - Root directory: `apps/web` (or configure Turborepo root build)
-- [ ] Streaming route runtime:
+- [x] Streaming route runtime:
   - Use **Node.js runtime** (not Edge) — `@anthropic-ai/sdk` and `postgres` driver are not Edge-compatible
   - Set `maxDuration` in route config to extend timeout (Pro plan: up to 300s)
   - If on Hobby plan (10s limit): consider chunked processing or upgrading
@@ -904,24 +904,24 @@ pnpm turbo lint type-check test build
 - [ ] Verify HTTPS + domain propagation
 
 #### 6.6 — GitHub Actions CI finalization
-- [ ] Verify CI workflow runs on push and PR
-- [ ] Add CI status badge to README
-- [ ] Ensure all CI steps pass on the `main` branch
+- [x] Verify CI workflow runs on push and PR
+- [x] Add CI status badge to README
+- [x] Ensure all CI steps pass on the `main` branch
 
 #### 6.7 — README
-- [ ] Project title + one-line description
-- [ ] Live demo URL
-- [ ] CI badge
-- [ ] Architecture diagram (Mermaid):
+- [x] Project title + one-line description
+- [x] Live demo URL
+- [x] CI badge
+- [x] Architecture diagram (Mermaid):
   ```
   Upload → Gate → Parse → Risk+RAG → Rewrite → Summary → Stream to UI
   ```
-- [ ] Tech stack table (from PROJECT.md)
+- [x] Tech stack table (from PROJECT.md)
 - [ ] Screenshots or demo GIF (use Playwright to capture, or record manually)
-- [ ] Local setup instructions (clone, pnpm install, env vars, seed, dev)
-- [ ] What I'd improve with more time (shows self-awareness — per RESEARCH.md)
-- [ ] Cost awareness note: approximate cost per analysis (~$0.10-0.20) and how rate limiting controls spend
-- [ ] Legal disclaimer note
+- [x] Local setup instructions (clone, pnpm install, env vars, seed, dev)
+- [x] What I'd improve with more time (shows self-awareness — per RESEARCH.md)
+- [x] Cost awareness note: approximate cost per analysis (~$0.10-0.20) and how rate limiting controls spend
+- [x] Legal disclaimer note
 
 #### 6.8 — Final smoke test
 - [ ] Upload a residential lease → verify full analysis streams correctly
@@ -948,13 +948,13 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Rate limiting works (2/day per IP)
-- [ ] Structured logs capture pipeline metrics
-- [ ] All error scenarios handled gracefully (including new: spoofed files, prompt injection, concurrent SSE)
+- [x] Rate limiting works (2/day per IP)
+- [x] Structured logs capture pipeline metrics
+- [x] All error scenarios handled gracefully (including new: spoofed files, prompt injection, concurrent SSE)
 - [ ] Deployed on Vercel with live URL
 - [ ] Domain configured (red-flag-ai.com)
-- [ ] CI badge green on README
-- [ ] README has architecture diagram, screenshots, setup instructions, cost note
+- [x] CI badge green on README
+- [x] README has architecture diagram, setup instructions, cost note
 - [ ] Smoke tests pass on production
 - [ ] Mobile responsive on deployed version
 - [ ] Commit: `feat: rate limiting, logging, deployment, and README`
