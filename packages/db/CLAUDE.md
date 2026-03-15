@@ -28,7 +28,7 @@ pnpm --filter @redflag/db db:studio     # Open Drizzle Studio
 - **Vector column:** `knowledge_patterns.embedding` is `vector(1024)` with HNSW index using cosine distance
 - **Composite PK:** `rate_limits` uses `(ip_address, date)` composite primary key
 - **Cascading deletes:** `documents → analyses → clauses` cascade on delete
-- **jsonb columns:** `top_concerns`, `matched_patterns`, `contract_type` — typed with `$type<string[]>()`
+- **jsonb columns:** `top_concerns`, `matched_patterns`, `contract_type` — typed with `$type<string[]>()`; `parsed_clauses` typed with `$type<PositionedClause[]>()`
 
 ## Embedding Functions
 

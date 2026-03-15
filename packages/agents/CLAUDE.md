@@ -41,6 +41,8 @@ Upload → [Relevance Gate] → [Parse Agent] → [Risk Agent + RAG] → [Rewrit
 - **Dynamic max_tokens**: Parse agent uses `estimateMaxTokens(textLen)` (chars/3 + 512, clamped 4096–32768) instead of a static value. On retry, budget increases by 50%. Always check `stop_reason` before parsing JSON — a static `max_tokens` caused production truncation on large documents.
 - **SSE keepalive during parse**: Orchestrator sends "Still parsing contract clauses..." status events every 15s while the parse agent runs, preventing SSE connection timeouts on Vercel. Uses `Promise.race` pattern with the parse promise.
 - **Parallel clause processing**: Clauses are processed in batches of 5 concurrently (`CLAUSE_CONCURRENCY = 5`). Each batch runs risk analysis + rewrite in parallel via `Promise.allSettled`, then yields results and persists to DB. Critical for staying under Vercel's 300s function timeout on multi-page contracts.
+- **Resumable pipeline**: Orchestrator caches parse results in `analyses.parsedClauses` and checks for already-analyzed clauses in the DB. If a Vercel function times out mid-pipeline, the next invocation picks up where it left off — no repeated API calls. Replays already-analyzed clauses to the client before processing remaining ones.
+- **Heartbeat**: After each clause batch, orchestrator updates `analyses.updatedAt` to signal liveness and prevent premature stale reclaim by other SSE connections.
 
 ## Rules
 

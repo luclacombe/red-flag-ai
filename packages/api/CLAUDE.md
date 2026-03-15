@@ -34,7 +34,8 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
   - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline
   - Failed → yields error event
 - **`analysis.get`** — Query. Returns analysis record + all clauses (for page refresh without SSE)
-- **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>10 min).
+- **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>90s without heartbeat).
+- **Polling path** — When another connection is processing, replays existing clauses immediately, then polls every 3s for new clauses and status changes. Shows real-time progress even when not running the pipeline.
 
 ## Rules
 

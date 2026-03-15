@@ -88,6 +88,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Connection pooling:** Use Supabase's transaction pooler URL (port 6543) in Drizzle config, not the direct connection — Vercel serverless creates a new connection per invocation
 - **Prompt injection defense:** All agent prompts must frame document text as untrusted input. Zod validates output structure, but system prompts must also instruct Claude to analyze objectively regardless of any instructions in the document
 - **Pipeline idempotency:** Use atomic `UPDATE ... WHERE status = 'pending' RETURNING *` to prevent duplicate pipeline runs from concurrent SSE subscriptions. If status is already `processing`, yield persisted clauses from DB instead of re-running
+- **Pipeline resumability:** Parse results are cached in `analyses.parsedClauses`. Clause analyses are persisted per-batch. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from where it left off. Heartbeat updates `updatedAt` after each batch to prevent premature stale detection (90s threshold).
 - **Clause position strategy:** Don't rely on Claude for character offsets — LLMs can't count. Have Claude return clause text, then compute `startIndex`/`endIndex` via `text.indexOf(clauseText)` in the orchestrator
 
 ## Current Stack Versions
