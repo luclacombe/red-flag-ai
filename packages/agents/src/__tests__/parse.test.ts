@@ -13,8 +13,12 @@ vi.mock("../client", () => ({
 
 const { parseClauses } = await import("../parse");
 
-function makeTextResponse(text: string) {
-  return { content: [{ type: "text" as const, text }] };
+function makeTextResponse(text: string, stopReason = "end_turn") {
+  return {
+    content: [{ type: "text" as const, text }],
+    stop_reason: stopReason,
+    usage: { input_tokens: 100, output_tokens: text.length },
+  };
 }
 
 describe("parseClauses", () => {
@@ -77,6 +81,25 @@ describe("parseClauses", () => {
 
     const result = await parseClauses("text", "lease", "en");
     expect(result).toHaveLength(0);
+  });
+
+  it("detects truncated response (stop_reason: max_tokens) and retries", async () => {
+    const truncated = '{"clauses":[{"text":"partial clause...';
+    const valid = { clauses: [{ text: "Full clause.", position: 0 }] };
+    mockCreate.mockResolvedValueOnce(makeTextResponse(truncated, "max_tokens"));
+    mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(valid)));
+
+    const result = await parseClauses("some text", "lease", "en");
+    expect(result).toHaveLength(1);
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("fails after 2 truncations", async () => {
+    const truncated = '{"clauses":[{"text":"partial...';
+    mockCreate.mockResolvedValueOnce(makeTextResponse(truncated, "max_tokens"));
+    mockCreate.mockResolvedValueOnce(makeTextResponse(truncated, "max_tokens"));
+
+    await expect(parseClauses("text", "lease", "en")).rejects.toThrow(/Response truncated/);
   });
 
   it("passes contractType and language to the prompt", async () => {

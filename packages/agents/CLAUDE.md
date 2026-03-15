@@ -6,13 +6,13 @@ Agent pipeline — pure async functions for each step of contract analysis.
 
 - `src/client.ts` — Shared Anthropic client factory (`getAnthropicClient()`) + model ID constants (`MODELS.haiku`, `MODELS.sonnet`)
 - `src/gate.ts` — Relevance gate agent (`relevanceGate(text)` → `GateResult`). Uses Haiku, retries once on failure.
-- `src/parse.ts` — Parse agent (`parseClauses(text, contractType, language)` → `ParsedClause[]`). Returns verbatim clause text; positions computed by orchestrator.
+- `src/parse.ts` — Parse agent (`parseClauses(text, contractType, language)` → `ParsedClause[]`). Returns verbatim clause text; positions computed by orchestrator. Dynamic `max_tokens` via `estimateMaxTokens(textLen)` — scales with document size (4096–32768). Detects truncation via `stop_reason === "max_tokens"` before JSON parse.
 - `src/risk.ts` — Risk agent (`analyzeClause(clause, patterns, language)` → `RiskAnalysisResult`). Receives pre-retrieved RAG patterns. Internal `RiskAnalysisResult` type (riskLevel, explanation, category).
 - `src/rewrite.ts` — Rewrite agent (`rewriteClause(clauseText, riskLevel, explanation, language)` → `string`). Only called for red/yellow clauses.
 - `src/summary.ts` — Summary agent (`summarize(analyses, contractType, language)` → `Omit<Summary, "clauseBreakdown">`). `clauseBreakdown` computed by orchestrator.
 - `src/orchestrator.ts` — Pipeline orchestrator (`analyzeContract(params)` async generator → `SSEEvent`). Chains all agents, handles errors, persists to DB. Also exports `computeClausePositions()`.
 - `src/prompts/` — System prompts + user message builders (one file per agent: gate, parse, risk, rewrite, summary)
-- `src/__tests__/` — Unit tests for gate agent + PDF extraction
+- `src/__tests__/` — Unit tests for all agents (gate, parse, risk, rewrite, summary), orchestrator, PDF extraction, positions
 - `src/__tests__/fixtures/generate-pdf.ts` — Minimal valid PDF generator for tests (no deps)
 
 ## Pipeline
@@ -38,6 +38,7 @@ Upload → [Relevance Gate] → [Parse Agent] → [Risk Agent + RAG] → [Rewrit
 - **Position clamping**: `computeClausePositions` returns -1 for unfound text; orchestrator clamps to 0/1 before DB insert.
 - **RAG degradation**: If Voyage API is down, orchestrator skips RAG and appends note to explanations.
 - **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared` — JSON-structured logs with `timestamp`, `level`, `message`, metadata fields. No raw `console.log`.
+- **Dynamic max_tokens**: Parse agent uses `estimateMaxTokens(textLen)` (chars/3 + 512, clamped 4096–32768) instead of a static value. On retry, budget increases by 50%. Always check `stop_reason` before parsing JSON — a static `max_tokens` caused production truncation on large documents.
 
 ## Rules
 

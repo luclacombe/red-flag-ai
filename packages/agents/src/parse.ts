@@ -3,6 +3,19 @@ import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildParseUserMessage, PARSE_SYSTEM_PROMPT } from "./prompts/parse";
 
 /**
+ * Estimate output tokens needed for a document.
+ * The parse output must contain all clause texts verbatim (≈ the full document),
+ * plus JSON overhead. Rough ratio: 1 token ≈ 4 characters.
+ * We add a generous buffer for JSON structure + multilingual token expansion.
+ */
+function estimateMaxTokens(textLen: number): number {
+  // Estimate: document chars / 3 (conservative for non-English) + 512 for JSON overhead
+  const estimated = Math.ceil(textLen / 3) + 512;
+  // Clamp between 4096 (small docs) and 32768 (very large docs)
+  return Math.min(32768, Math.max(4096, estimated));
+}
+
+/**
  * Parse agent — splits contract text into individual clauses.
  * Uses Claude Sonnet to identify clause boundaries and extract verbatim text.
  *
@@ -20,14 +33,24 @@ export async function parseClauses(
   const client = getAnthropicClient();
   let lastError: unknown;
 
-  logger.info("Parse starting", { contractType, language, textLen: text.length });
+  const baseMaxTokens = estimateMaxTokens(text.length);
+  logger.info("Parse starting", {
+    contractType,
+    language,
+    textLen: text.length,
+    maxTokens: baseMaxTokens,
+  });
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    // On retry after truncation, increase the budget by 50%
+    const maxTokens =
+      attempt === 0 ? baseMaxTokens : Math.min(32768, Math.ceil(baseMaxTokens * 1.5));
+
     try {
-      if (attempt > 0) logger.info("Parse retry", { attempt: attempt + 1 });
+      if (attempt > 0) logger.info("Parse retry", { attempt: attempt + 1, maxTokens });
       const response = await client.messages.create({
         model: MODELS.sonnet,
-        max_tokens: 4096,
+        max_tokens: maxTokens,
         system: PARSE_SYSTEM_PROMPT,
         messages: [{ role: "user", content: buildParseUserMessage(text, contractType, language) }],
       });
@@ -37,7 +60,19 @@ export async function parseClauses(
         throw new Error("No text content in Claude response");
       }
 
-      logger.info("Parse response received", { responseLen: textBlock.text.length });
+      logger.info("Parse response received", {
+        responseLen: textBlock.text.length,
+        stopReason: response.stop_reason,
+        outputTokens: response.usage.output_tokens,
+        maxTokens,
+      });
+
+      // Detect truncation — Claude hit the token limit before finishing JSON
+      if (response.stop_reason === "max_tokens") {
+        throw new Error(
+          `Response truncated at ${response.usage.output_tokens} tokens (limit: ${maxTokens}). Document may be too large for single-pass parsing.`,
+        );
+      }
 
       const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = ParseClausesResponseSchema.parse(parsed);
