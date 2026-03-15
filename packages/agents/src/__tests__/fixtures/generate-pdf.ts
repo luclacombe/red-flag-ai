@@ -50,20 +50,20 @@ startxref
 /** A sample contract text for testing */
 export const SAMPLE_CONTRACT_TEXT = `RESIDENTIAL LEASE AGREEMENT
 
-This Lease Agreement is entered into as of January 1, 2025, by and between
+This Lease Agreement is entered into as of March 1, 2024, by and between
 John Smith (hereinafter referred to as "Landlord") and Jane Doe (hereinafter
 referred to as "Tenant").
 
 1. PREMISES. Landlord hereby leases to Tenant the property located at
-123 Main Street, Anytown, State 12345.
+456 Oak Avenue, Springfield, State 60001.
 
-2. TERM. The lease term shall begin on February 1, 2025 and end on
-January 31, 2026.
+2. TERM. The lease term shall begin on April 1, 2024 and end on
+March 31, 2025.
 
-3. RENT. Tenant shall pay monthly rent of $1,500.00, due on the first
+3. RENT. Tenant shall pay monthly rent of $1,800.00, due on the first
 day of each month.
 
-4. SECURITY DEPOSIT. Tenant shall pay a security deposit of $3,000.00.
+4. SECURITY DEPOSIT. Tenant shall pay a security deposit of $3,600.00.
 
 5. TERMINATION. Either party may terminate this lease with 30 days
 written notice.`;

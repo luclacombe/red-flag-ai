@@ -21,67 +21,67 @@ describe("heuristic parser validation against real documents", () => {
     expect(allText).not.toContain("John Smith (hereinafter");
   });
 
-  it("parses a realistic 20-clause Dutch lease (ROZ model)", () => {
-    const dutchLease = `HUUROVEREENKOMST WOONRUIMTE
-(model Raad voor Onroerende Zaken, versie 2017)
+  it("parses a realistic 10-article lease with Article headings", () => {
+    const articleLease = `RESIDENTIAL LEASE AGREEMENT
+(Standard Form, revised 2023)
 
-De ondergetekenden:
-1. A.B. Jansen, wonende te Amsterdam, hierna te noemen: "verhuurder"
-2. C.D. de Vries, wonende te Rotterdam, hierna te noemen: "huurder"
+The undersigned:
+1. R. Thompson, residing at 45 Maple Drive, hereinafter referred to as "Landlord"
+2. S. Patel, residing at 12 Oak Lane, hereinafter referred to as "Tenant"
 
-zijn het volgende overeengekomen:
+have agreed as follows:
 
-Artikel 1 Het gehuurde, bestemming
-1.1 Verhuurder verhuurt aan huurder en huurder huurt van verhuurder de woonruimte, hierna te noemen: "het gehuurde", plaatselijk bekend als Keizersgracht 100-H, 1015 AA Amsterdam.
-1.2 Het gehuurde is uitsluitend bestemd om te worden gebruikt als woonruimte ten behoeve van huurder en de leden van zijn huishouden.
+Article 1 Premises, intended use
+1.1 Landlord leases to Tenant the residential unit, hereinafter referred to as "the premises", located at 88 Birch Court, Unit 4-A, Springfield 60001.
+1.2 The premises shall be used exclusively as a private residence for the Tenant and members of the Tenant's household.
 
-Artikel 2 Huurprijs, huurprijsaanpassing, betaalperiode
-2.1 De huurprijs van het gehuurde bedraagt op de ingangsdatum € 1.500,00 per maand.
-2.2 De huurprijs wordt jaarlijks per 1 juli aangepast overeenkomstig het bepaalde in artikel 18 van de algemene bepalingen.
+Article 2 Rent, rent adjustment, payment period
+2.1 The monthly rent for the premises shall be $1,800.00 as of the commencement date.
+2.2 The rent shall be adjusted annually on July 1 in accordance with the consumer price index as set forth in Section 18 of the general terms.
 
-Artikel 3 Servicekosten
-3.1 Per maand is huurder aan verhuurder een voorschot op de servicekosten verschuldigd van € 150,00.
-3.2 De servicekosten worden jaarlijks afgerekend.
+Article 3 Service charges
+3.1 Each month the Tenant shall pay to the Landlord an advance on service charges of $125.00.
+3.2 Service charges shall be settled annually.
 
-Artikel 4 Borgsom
-4.1 Huurder is verplicht bij aanvang van de huurovereenkomst een waarborgsom te betalen ter grootte van twee maanden kale huurprijs, derhalve € 3.000,00.
+Article 4 Security deposit
+4.1 Tenant shall pay a security deposit equal to two months base rent, being $3,600.00, at the commencement of this lease.
 
-Artikel 5 Duur, verlenging, opzegging
-5.1 Deze huurovereenkomst is aangegaan voor de duur van 12 maanden, ingaande op 1 februari 2025.
-5.2 Na het verstrijken van de in 5.1 genoemde periode wordt deze huurovereenkomst voortgezet voor onbepaalde tijd.
-5.3 Beëindiging van deze huurovereenkomst door opzegging kan slechts plaatsvinden tegen het einde van een maand.
+Article 5 Duration, renewal, termination
+5.1 This lease is entered into for a period of 12 months, commencing on April 1, 2024.
+5.2 After the expiry of the period referred to in 5.1, this lease shall continue on a month-to-month basis.
+5.3 Termination of this lease by notice may only take effect at the end of a calendar month.
 
-Artikel 6 Leveringen en diensten
-6.1 Verhuurder zal de volgende leveringen en diensten verzorgen: schoonmaak gemeenschappelijke ruimten.
+Article 6 Services and utilities
+6.1 Landlord shall provide the following services: cleaning of common areas and hallways.
 
-Artikel 7 Bijzondere bepalingen
-7.1 Huisdieren zijn niet toegestaan in het gehuurde.
-7.2 Roken is niet toegestaan in het gehuurde.
-7.3 Onderverhuur is niet toegestaan zonder schriftelijke toestemming van verhuurder.
+Article 7 Special provisions
+7.1 Pets are not permitted on the premises without prior written consent.
+7.2 Smoking is not permitted on the premises.
+7.3 Subletting is not permitted without written consent of the Landlord.
 
-Artikel 8 Onderhoud
-8.1 Huurder is verplicht het gehuurde als een goed huurder te onderhouden.
-8.2 Kleine herstellingen als bedoeld in het Besluit kleine herstellingen komen voor rekening van huurder.
+Article 8 Maintenance
+8.1 Tenant shall maintain the premises as a responsible tenant.
+8.2 Minor repairs as defined in the maintenance schedule shall be at the expense of the Tenant.
 
-Artikel 9 Aansprakelijkheid
-9.1 Verhuurder is niet aansprakelijk voor schade als gevolg van gebreken die niet aan hem zijn toe te rekenen.
+Article 9 Liability
+9.1 Landlord shall not be liable for damage resulting from defects not attributable to the Landlord.
 
-Artikel 10 Slotbepalingen
-10.1 Op deze huurovereenkomst zijn de algemene bepalingen huurovereenkomst woonruimte van toepassing.
-10.2 Huurder verklaart de algemene bepalingen te hebben ontvangen.
+Article 10 Final provisions
+10.1 The general terms and conditions for residential leases shall apply to this agreement.
+10.2 Tenant acknowledges receipt of the general terms and conditions.
 
-Aldus opgemaakt en getekend te Amsterdam.`;
+Signed by the parties at Springfield.`;
 
-    const result = parseClausesHeuristic(dutchLease, "residential_lease", "nl");
+    const result = parseClausesHeuristic(articleLease, "residential_lease", "en");
 
     // Should find 10 articles
     expect(result.length).toBe(10);
 
     // Verify first and last articles
-    expect(result[0]?.text).toContain("Artikel 1");
-    expect(result[0]?.text).toContain("gehuurde");
-    expect(result[9]?.text).toContain("Artikel 10");
-    expect(result[9]?.text).toContain("Slotbepalingen");
+    expect(result[0]?.text).toContain("Article 1");
+    expect(result[0]?.text).toContain("Premises");
+    expect(result[9]?.text).toContain("Article 10");
+    expect(result[9]?.text).toContain("Final provisions");
 
     // Verify sub-sections are within parent
     expect(result[0]?.text).toContain("1.1");
@@ -92,11 +92,11 @@ Aldus opgemaakt en getekend te Amsterdam.`;
 
     // Preamble should be skipped
     const allText = result.map((c) => c.text).join(" ");
-    expect(allText).not.toContain("De ondergetekenden");
-    expect(allText).not.toContain("A.B. Jansen");
+    expect(allText).not.toContain("The undersigned");
+    expect(allText).not.toContain("R. Thompson");
 
     // Signature block should be removed
-    expect(allText).not.toContain("Aldus opgemaakt en getekend");
+    expect(allText).not.toContain("Signed by the parties");
 
     // Sequential positions
     for (let i = 0; i < result.length; i++) {
@@ -108,13 +108,13 @@ Aldus opgemaakt en getekend te Amsterdam.`;
     const frenchContract = `Contrat de bail entre les parties soussignées.
 
 Article 1 - Objet du bail
-Le présent contrat a pour objet la location du logement situé au 42 Rue de Rivoli, Paris. Le logement est destiné à l'usage exclusif d'habitation principale du locataire.
+Le présent contrat a pour objet la location du logement situé au 8 Boulevard Haussmann, Lyon. Le logement est destiné à l'usage exclusif d'habitation principale du locataire.
 
 Article 2 - Durée du bail
-Le présent bail est consenti pour une durée de trois ans à compter du premier mars deux mille vingt-cinq.
+Le présent bail est consenti pour une durée de trois ans à compter du premier juin deux mille vingt-quatre.
 
 Article 3 - Loyer et charges
-Le loyer mensuel est fixé à mille deux cents euros, payable le premier jour de chaque mois.
+Le loyer mensuel est fixé à neuf cents euros, payable le premier jour de chaque mois.
 
 Article 4 - Dépôt de garantie
 Un dépôt de garantie équivalent à un mois de loyer est exigé à la signature du bail.`;
@@ -130,13 +130,13 @@ Un dépôt de garantie équivalent à un mois de loyer est exigé à la signatur
     const germanContract = `Mietvertrag zwischen den nachstehend genannten Parteien.
 
 Paragraph 1 Mietobjekt
-Der Vermieter vermietet dem Mieter die Wohnung in der Hauptstraße 15, Berlin. Die Wohnung ist ausschließlich zu Wohnzwecken bestimmt.
+Der Vermieter vermietet dem Mieter die Wohnung in der Schillerstraße 22, München. Die Wohnung ist ausschließlich zu Wohnzwecken bestimmt.
 
 Paragraph 2 Mietdauer
-Das Mietverhältnis beginnt am ersten März zweitausendundzwanzig und läuft auf unbestimmte Zeit.
+Das Mietverhältnis beginnt am ersten Januar zweitausendeinundzwanzig und läuft auf unbestimmte Zeit.
 
 Paragraph 3 Mietzins
-Die monatliche Miete beträgt achthundert Euro, zahlbar jeweils zum ersten eines Monats.`;
+Die monatliche Miete beträgt sechshundert Euro, zahlbar jeweils zum ersten eines Monats.`;
 
     const result = parseClausesHeuristic(germanContract, "residential_lease", "de");
 
@@ -157,13 +157,13 @@ Die monatliche Miete beträgt achthundert Euro, zahlbar jeweils zum ersten eines
 The landlord leases the property at 123 Main St to the tenant. The property includes all fixtures and fittings currently installed.
 
 2. Term
-The lease runs for 12 months from February 1, 2025. After the initial term, it continues month-to-month.
+The lease runs for 12 months from April 1, 2024. After the initial term, it continues month-to-month.
 
 3. Rent
-Monthly rent is $1,500 due on the first of each month. Late payment incurs a 5% penalty after a 5-day grace period.
+Monthly rent is $1,800 due on the first of each month. Late payment incurs a 5% penalty after a 5-day grace period.
 
 4. Security Deposit
-Tenant shall pay a security deposit of $3,000. The deposit will be returned within 30 days of lease termination, minus any deductions for damages.
+Tenant shall pay a security deposit of $3,600. The deposit will be returned within 30 days of lease termination, minus any deductions for damages.
 
 5. Utilities
 Tenant is responsible for all utilities including electricity, gas, water, and internet. Landlord pays for building maintenance.
@@ -184,7 +184,7 @@ No pets without written consent. If approved, an additional pet deposit of $500 
 Either party may terminate with 60 days written notice. Early termination by tenant requires payment of two months rent as penalty.
 
 11. Governing Law
-This agreement shall be governed by the laws of the State of California. Any disputes shall be resolved through binding arbitration.
+This agreement shall be governed by the laws of the State of New York. Any disputes shall be resolved through binding arbitration.
 
 12. Entire Agreement
 This document constitutes the entire agreement between the parties. No oral agreements or representations are binding.`;

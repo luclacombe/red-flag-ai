@@ -1,79 +1,79 @@
 import { describe, expect, it } from "vitest";
 import { parseClausesHeuristic } from "../heuristic-parse";
 
-// ── Dutch lease with numbered sections (primary use case) ────────
+// ── Lease with dotted decimal numbered sections (primary use case) ────────
 
-const DUTCH_LEASE = `HUUROVEREENKOMST WOONRUIMTE
+const DOTTED_DECIMAL_LEASE = `RESIDENTIAL LEASE AGREEMENT
 
-De ondergetekenden:
-Verhuurder: Jan Jansen, wonende te Amsterdam
-Huurder: Piet Pieter, wonende te Rotterdam
-Zijn het volgende overeengekomen:
+The undersigned:
+Landlord: R. Thompson, residing at 45 Maple Drive
+Tenant: S. Patel, residing at 12 Oak Lane
+Have agreed as follows:
 
-1. Het gehuurde, bestemming
-1.1 Verhuurder verhuurt aan huurder de woonruimte gelegen aan de Keizersgracht 100 te Amsterdam.
-1.2 Het gehuurde is uitsluitend bestemd om te worden gebruikt als woonruimte.
+1. Premises, intended use
+1.1 Landlord leases to Tenant the residential unit located at 88 Birch Court, Springfield.
+1.2 The premises shall be used exclusively as a private residence.
 
-2. Huurprijs, huurprijsaanpassing
-2.1 De huurprijs van het gehuurde bedraagt € 1.500,- per maand.
-2.2 De huurprijs wordt jaarlijks per 1 juli aangepast conform de consumentenprijsindex.
+2. Rent, rent adjustment
+2.1 The monthly rent for the premises shall be $1,800 per month.
+2.2 The rent shall be adjusted annually on July 1 in accordance with the consumer price index.
 
-3. Betalingsverplichting, betaalperiode
-3.1 Per maand is huurder verschuldigd de huurprijs vermeerderd met de vergoeding voor bijkomende leveringen en diensten.
-3.2 De betaling dient te geschieden voor de eerste dag van de maand.
+3. Payment obligations, payment period
+3.1 Each month the Tenant shall pay the rent together with the service charge for additional services.
+3.2 Payment shall be made before the first day of each month.
 
-4. Borgsom
-4.1 Huurder zal bij aanvang van de huurovereenkomst een borgsom betalen ter grootte van twee maanden huur.
-4.2 De borgsom wordt terugbetaald na beëindiging van de huur, verminderd met eventuele kosten.
+4. Security deposit
+4.1 Tenant shall pay a security deposit equal to two months rent at the start of the lease.
+4.2 The deposit shall be returned upon termination of the lease, minus any outstanding costs.
 
-5. Onderhoud
-5.1 Huurder dient het gehuurde in goede staat te onderhouden.
-5.2 Kleine herstellingen komen voor rekening van huurder.
+5. Maintenance
+5.1 Tenant shall maintain the premises in good condition.
+5.2 Minor repairs shall be at the expense of the Tenant.
 
 In witness whereof the parties have signed this agreement.`;
 
 describe("parseClausesHeuristic", () => {
-  describe("Dutch lease with dotted decimal headings", () => {
+  describe("lease with dotted decimal headings", () => {
     it("splits on top-level numbered sections", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       // Should split on 1., 2., 3., 4., 5. — preamble skipped, signature removed
       expect(result.length).toBeGreaterThanOrEqual(4);
       expect(result.length).toBeLessThanOrEqual(6);
     });
 
     it("preserves heading numbers in clause text", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       expect(result[0]?.text).toMatch(/^1\.\s/);
     });
 
     it("includes sub-sections within parent clause", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       expect(result[0]?.text).toContain("1.1");
       expect(result[0]?.text).toContain("1.2");
     });
 
     it("skips pre-heading content (preamble)", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       const allText = result.map((c) => c.text).join(" ");
-      expect(allText).not.toContain("De ondergetekenden");
-      expect(allText).not.toContain("HUUROVEREENKOMST");
+      expect(allText).not.toContain("The undersigned");
+      expect(allText).not.toContain("RESIDENTIAL LEASE AGREEMENT");
     });
 
     it("removes signature blocks", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       const allText = result.map((c) => c.text).join(" ");
       expect(allText).not.toContain("In witness whereof");
     });
 
     it("returns zero-based sequential positions", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       for (let i = 0; i < result.length; i++) {
         expect(result[i]?.position).toBe(i);
       }
     });
 
     it("returns correct ParsedClause shape", () => {
-      const result = parseClausesHeuristic(DUTCH_LEASE, "residential_lease", "nl");
+      const result = parseClausesHeuristic(DOTTED_DECIMAL_LEASE, "residential_lease", "en");
       for (const clause of result) {
         expect(clause).toHaveProperty("text");
         expect(clause).toHaveProperty("position");

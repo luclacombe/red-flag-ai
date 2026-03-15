@@ -158,9 +158,10 @@ describe("analysis.stream", () => {
       events.push(event as SSEEvent);
     }
 
-    expect(events[0]?.type).toBe("clause_analysis");
-    expect(events[1]?.type).toBe("summary");
-    expect(events).toHaveLength(2);
+    expect(events[0]?.type).toBe("clause_positions");
+    expect(events[1]?.type).toBe("clause_analysis");
+    expect(events[2]?.type).toBe("summary");
+    expect(events).toHaveLength(3);
   });
 
   it("yields error for failed analysis", async () => {

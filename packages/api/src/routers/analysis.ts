@@ -90,6 +90,15 @@ export const analysisRouter = router({
           .where(eq(clauses.analysisId, input.analysisId))
           .orderBy(clauses.position);
 
+        // Emit clause positions for skeleton cards
+        yield {
+          type: "clause_positions" as const,
+          data: {
+            totalClauses: existingClauses.length,
+            clauses: existingClauses.map((c) => ({ text: c.clauseText, position: c.position })),
+          },
+        };
+
         for (const clause of existingClauses) {
           yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
         }
@@ -131,6 +140,21 @@ export const analysisRouter = router({
         if (!isStale) {
           // Another connection is actively processing — replay existing + poll for new
           let lastYieldedCount = 0;
+
+          // Emit clause positions if parse results are cached
+          const parsedClauses = analysis.parsedClauses as
+            | Array<{ text: string; position: number }>
+            | null
+            | undefined;
+          if (parsedClauses && parsedClauses.length > 0) {
+            yield {
+              type: "clause_positions" as const,
+              data: {
+                totalClauses: parsedClauses.length,
+                clauses: parsedClauses.map((c) => ({ text: c.text, position: c.position })),
+              },
+            };
+          }
 
           // Immediately replay any already-analyzed clauses
           const existingClauses = await db

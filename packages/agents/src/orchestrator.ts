@@ -1,5 +1,4 @@
-import type { SimilarPattern } from "@redflag/db";
-import { analyses, clauses, embedTexts, eq, findSimilarPatterns, getDb } from "@redflag/db";
+import { analyses, clauses, eq, getDb, getPatternsByContractType, sql } from "@redflag/db";
 import {
   type ClauseAnalysis,
   logger,
@@ -8,16 +7,25 @@ import {
   type SSEEvent,
   type Summary,
 } from "@redflag/shared";
-import { parseClauses } from "./parse";
-import { rewriteClause } from "./rewrite";
-import { analyzeClause } from "./risk";
+import { analyzeAllClauses } from "./combined-analysis";
+import { computeMatchedPatterns } from "./compute-matched-patterns";
+import { parseClausesSmart } from "./smart-parse";
 import { summarize } from "./summary";
 
-/** Similarity threshold for considering a knowledge pattern as "matched" */
-const PATTERN_MATCH_THRESHOLD = 0.7;
-
-/** Max texts per Voyage API batch call */
-const EMBEDDING_BATCH_LIMIT = 128;
+/**
+ * Map gate agent contract types to knowledge base contract types.
+ * The gate returns specific types (e.g. "residential_lease") but the
+ * knowledge base uses broader categories (e.g. "lease").
+ */
+const RAG_TYPE_MAP: Record<string, string> = {
+  residential_lease: "lease",
+  commercial_lease: "lease",
+  freelance_agreement: "freelance",
+  freelance_contract: "freelance",
+  employment_agreement: "employment",
+  employment_contract: "employment",
+  terms_of_service: "tos",
+};
 
 export interface AnalyzeContractParams {
   analysisId: string;
@@ -43,23 +51,6 @@ export function computeClausePositions(
     searchFrom = idx + clause.text.length;
     return { ...clause, startIndex: idx, endIndex: idx + clause.text.length };
   });
-}
-
-/**
- * Batch-embed texts, chunking into groups of 128 to respect Voyage API limits.
- */
-async function batchEmbed(texts: string[]): Promise<number[][]> {
-  if (texts.length <= EMBEDDING_BATCH_LIMIT) {
-    return embedTexts(texts, "query");
-  }
-
-  const allEmbeddings: number[][] = [];
-  for (let start = 0; start < texts.length; start += EMBEDDING_BATCH_LIMIT) {
-    const batch = texts.slice(start, start + EMBEDDING_BATCH_LIMIT);
-    const batchEmbeddings = await embedTexts(batch, "query");
-    allEmbeddings.push(...batchEmbeddings);
-  }
-  return allEmbeddings;
 }
 
 /** Update analysis status and error message in DB */
@@ -107,17 +98,21 @@ function clauseRowToAnalysis(row: {
 }
 
 /**
- * Pipeline orchestrator — chains all agents and yields typed SSE events.
+ * Pipeline orchestrator — chains heuristic parse, bulk RAG, and combined
+ * streaming analysis into a single pipeline yielding typed SSE events.
+ *
+ * Pipeline: Gate → Heuristic Parse → Bulk RAG → Combined Analysis (streaming) → [Summary fallback]
+ * Total API calls: 3 (gate + combined analysis + optional summary fallback)
  *
  * RESUMABLE: Caches parse results in analyses.parsedClauses and checks for
  * already-analyzed clauses in the DB. If the function was killed mid-pipeline
  * (e.g. Vercel 300s timeout), the next invocation picks up where it left off.
  *
- * HEARTBEAT: Updates analyses.updatedAt after each batch to prevent premature
- * stale detection while actively processing.
+ * HEARTBEAT: Updates analyses.updatedAt after each yielded event to prevent
+ * premature stale detection while actively processing.
  *
  * Event sequence:
- *   status → [clause_analysis (×already done)] → status → clause_analysis (×remaining) → status → summary
+ *   clause_positions → status → [clause_analysis (×already done)] → clause_analysis (×remaining) → summary
  */
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
   const { analysisId, text, contractType } = params;
@@ -151,6 +146,15 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         alreadyAnalyzed: existingClauses.length,
       });
 
+      // Emit clause positions for skeleton cards (even on resume)
+      yield {
+        type: "clause_positions",
+        data: {
+          totalClauses: positionedClauses.length,
+          clauses: positionedClauses.map((c) => ({ text: c.text, position: c.position })),
+        },
+      };
+
       // Replay already-analyzed clauses to the client
       for (const row of existingClauses) {
         yield { type: "clause_analysis", data: clauseRowToAnalysis(row) };
@@ -164,45 +168,8 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         };
       }
     } else {
-      // Fresh parse
-      yield { type: "status", message: "Parsing contract clauses..." };
-
-      let rawClauses: ParsedClause[];
-      try {
-        const parsePromise = parseClauses(text, contractType, language);
-        for (;;) {
-          const result = await Promise.race([
-            parsePromise.then(
-              (value) => ({ status: "fulfilled" as const, value }),
-              (error: unknown) => ({ status: "rejected" as const, error }),
-            ),
-            new Promise<{ status: "pending" }>((r) =>
-              setTimeout(() => r({ status: "pending" }), 15_000),
-            ),
-          ]);
-
-          if (result.status === "fulfilled") {
-            rawClauses = result.value;
-            break;
-          }
-          if (result.status === "rejected") {
-            throw result.error;
-          }
-          yield { type: "status", message: "Still parsing contract clauses..." };
-        }
-      } catch (parseErr) {
-        logger.error("Parse failed", {
-          step: "parse",
-          error: parseErr instanceof Error ? parseErr.message : String(parseErr),
-        });
-        yield {
-          type: "error",
-          message: "Failed to parse contract clauses. Please try again.",
-          recoverable: true,
-        };
-        await updateAnalysisStatus(analysisId, "failed", "Parse agent failed");
-        return;
-      }
+      // Fresh parse — heuristic first, LLM fallback if suspicious
+      const rawClauses = await parseClausesSmart(text, contractType, language);
 
       if (rawClauses.length === 0) {
         yield {
@@ -227,6 +194,16 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       }
 
       logger.info("Clauses parsed and cached", { clauseCount: positionedClauses.length });
+
+      // Emit clause positions for frontend skeleton cards
+      yield {
+        type: "clause_positions",
+        data: {
+          totalClauses: positionedClauses.length,
+          clauses: positionedClauses.map((c) => ({ text: c.text, position: c.position })),
+        },
+      };
+
       yield {
         type: "status",
         message: `Found ${positionedClauses.length} clauses. Analyzing...`,
@@ -238,139 +215,88 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     const allAnalyses: ClauseAnalysis[] = existingClauses.map(clauseRowToAnalysis);
 
     if (remainingClauses.length === 0 && allAnalyses.length > 0) {
-      // All clauses already analyzed — just need summary
       logger.info("All clauses already analyzed, generating summary", {
         clauseCount: allAnalyses.length,
       });
     }
 
-    // ── Step 3: Batch embed remaining clause texts ───────────
-    let embeddings: number[][] | null = null;
-    let ragDegraded = false;
+    // ── Step 3: Bulk RAG + parallel embedding + combined analysis ─
+    let combinedSummary: Summary | null = null;
 
     if (remainingClauses.length > 0) {
-      try {
-        embeddings = await batchEmbed(remainingClauses.map((c) => c.text));
-        logger.info("Embeddings complete", { vectorCount: embeddings.length });
-      } catch (embedErr) {
-        logger.warn("Embeddings failed, degrading gracefully", {
-          step: "embed",
-          error: embedErr instanceof Error ? embedErr.message : String(embedErr),
+      // Bulk RAG fetch (single SQL query, <50ms)
+      // Try exact contract type first, then mapped base type, then unfiltered
+      let ragPatterns = await getPatternsByContractType(contractType);
+      if (ragPatterns.length === 0 && RAG_TYPE_MAP[contractType]) {
+        logger.info("RAG type fallback", {
+          from: contractType,
+          to: RAG_TYPE_MAP[contractType],
         });
-        ragDegraded = true;
+        ragPatterns = await getPatternsByContractType(RAG_TYPE_MAP[contractType]!);
       }
 
-      await heartbeat(analysisId);
-    }
-
-    // ── Step 4: Process remaining clauses in batches ─────────
-    const CLAUSE_CONCURRENCY = 5;
-    const totalClauses = positionedClauses.length;
-
-    for (
-      let batchStart = 0;
-      batchStart < remainingClauses.length;
-      batchStart += CLAUSE_CONCURRENCY
-    ) {
-      const batch = remainingClauses.slice(batchStart, batchStart + CLAUSE_CONCURRENCY);
-
-      const batchResults = await Promise.allSettled(
-        batch.map(async (clause, batchIdx) => {
-          const i = batchIdx;
-
-          let patterns: SimilarPattern[] = [];
-          const clauseEmbedding = embeddings?.[batchStart + i];
-          if (clauseEmbedding) {
-            try {
-              patterns = await findSimilarPatterns(clauseEmbedding, {
-                topK: 5,
-                contractType,
-              });
-            } catch {
-              // DB query failed — continue without patterns
-            }
-          }
-
-          const riskResult = await analyzeClause(clause, patterns, language);
-
-          let saferAlternative: string | null = null;
-          if (riskResult.riskLevel !== "green") {
-            try {
-              saferAlternative = await rewriteClause(
-                clause.text,
-                riskResult.riskLevel,
-                riskResult.explanation,
-                language,
-              );
-            } catch {
-              // Not critical — continue with null alternative
-            }
-          }
-
-          const matchedPatterns = patterns
-            .filter((p) => p.similarity >= PATTERN_MATCH_THRESHOLD)
-            .map((p) => p.id);
-
-          return {
-            clauseText: clause.text,
-            startIndex: Math.max(0, clause.startIndex),
-            endIndex: Math.max(1, clause.endIndex),
-            position: clause.position,
-            riskLevel: riskResult.riskLevel,
-            explanation: ragDegraded
-              ? `${riskResult.explanation} (Note: analysis performed without knowledge base reference)`
-              : riskResult.explanation,
-            saferAlternative,
-            category: riskResult.category,
-            matchedPatterns,
-          } satisfies ClauseAnalysis;
-        }),
+      // Kick off embedding in parallel for matchedPatterns enrichment
+      const embeddingPromise = computeMatchedPatterns(positionedClauses, ragPatterns).catch(
+        (err: unknown) => {
+          logger.warn("Embedding failed, degrading gracefully", {
+            error: err instanceof Error ? err.message : String(err),
+          });
+          return new Map<number, string[]>();
+        },
       );
 
-      for (const [batchIdx, result] of batchResults.entries()) {
-        if (result.status === "fulfilled") {
-          const clauseAnalysis = result.value;
+      // Single streaming analysis call
+      for await (const event of analyzeAllClauses({
+        clauses: remainingClauses,
+        contractType,
+        language,
+        ragPatterns,
+      })) {
+        if (event.type === "clause_analysis") {
+          allAnalyses.push(event.data);
 
+          // Persist to DB
           try {
             await db.insert(clauses).values({
               analysisId,
-              clauseText: clauseAnalysis.clauseText,
-              startIndex: clauseAnalysis.startIndex,
-              endIndex: clauseAnalysis.endIndex,
-              position: clauseAnalysis.position,
-              riskLevel: clauseAnalysis.riskLevel,
-              explanation: clauseAnalysis.explanation,
-              saferAlternative: clauseAnalysis.saferAlternative,
-              category: clauseAnalysis.category,
-              matchedPatterns: clauseAnalysis.matchedPatterns,
+              clauseText: event.data.clauseText,
+              startIndex: event.data.startIndex,
+              endIndex: event.data.endIndex,
+              position: event.data.position,
+              riskLevel: event.data.riskLevel,
+              explanation: event.data.explanation,
+              saferAlternative: event.data.saferAlternative,
+              category: event.data.category,
+              matchedPatterns: event.data.matchedPatterns,
             });
           } catch {
             // DB insert failed — still yield the event to the client
           }
-
-          allAnalyses.push(clauseAnalysis);
-          yield { type: "clause_analysis", data: clauseAnalysis };
-        } else {
-          yield {
-            type: "error",
-            message: `Failed to analyze clause ${batchStart + batchIdx + 1}. Skipping.`,
-            recoverable: true,
-          };
         }
+        if (event.type === "summary") {
+          combinedSummary = event.data;
+        }
+        yield event;
+        await heartbeat(analysisId);
       }
 
-      // Heartbeat after each batch + progress status
-      await heartbeat(analysisId);
-      const doneCount = allAnalyses.length;
-      if (doneCount < totalClauses) {
-        yield {
-          type: "status",
-          message: `Analyzed ${doneCount} of ${totalClauses} clauses...`,
-        };
+      // Enrich clauses with matchedPatterns after embedding completes
+      const matchedMap = await embeddingPromise;
+      for (const [position, patternIds] of matchedMap) {
+        try {
+          await db
+            .update(clauses)
+            .set({ matchedPatterns: patternIds })
+            .where(
+              sql`${clauses.analysisId} = ${analysisId} AND ${clauses.position} = ${position}`,
+            );
+        } catch {
+          // Non-fatal — matchedPatterns is supplementary
+        }
       }
     }
 
-    // ── Step 5: Generate summary ──────────────────────────────
+    // ── Step 4: Summary (fallback if not from combined call) ──
     if (allAnalyses.length === 0) {
       yield {
         type: "error",
@@ -381,39 +307,45 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       return;
     }
 
-    yield { type: "status", message: "Generating summary..." };
-
     let summary: Summary;
-    try {
-      const summaryResult = await summarize(
-        allAnalyses.map((a) => ({
-          riskLevel: a.riskLevel,
-          explanation: a.explanation,
-          category: a.category,
-          clauseText: a.clauseText,
-        })),
-        contractType,
-        language,
-      );
 
-      const clauseBreakdown = {
-        red: allAnalyses.filter((a) => a.riskLevel === "red").length,
-        yellow: allAnalyses.filter((a) => a.riskLevel === "yellow").length,
-        green: allAnalyses.filter((a) => a.riskLevel === "green").length,
-      };
+    if (combinedSummary) {
+      summary = combinedSummary;
+    } else {
+      yield { type: "status", message: "Generating summary..." };
 
-      summary = { ...summaryResult, clauseBreakdown };
-    } catch {
-      yield {
-        type: "error",
-        message: "Failed to generate summary. Individual clause analyses are still available.",
-        recoverable: true,
-      };
-      await updateAnalysisStatus(analysisId, "failed", "Summary agent failed");
-      return;
+      try {
+        const summaryResult = await summarize(
+          allAnalyses.map((a) => ({
+            riskLevel: a.riskLevel,
+            explanation: a.explanation,
+            category: a.category,
+            clauseText: a.clauseText,
+          })),
+          contractType,
+          language,
+        );
+
+        const clauseBreakdown = {
+          red: allAnalyses.filter((a) => a.riskLevel === "red").length,
+          yellow: allAnalyses.filter((a) => a.riskLevel === "yellow").length,
+          green: allAnalyses.filter((a) => a.riskLevel === "green").length,
+        };
+
+        summary = { ...summaryResult, clauseBreakdown };
+        yield { type: "summary", data: summary };
+      } catch {
+        yield {
+          type: "error",
+          message: "Failed to generate summary. Individual clause analyses are still available.",
+          recoverable: true,
+        };
+        await updateAnalysisStatus(analysisId, "failed", "Summary agent failed");
+        return;
+      }
     }
 
-    // ── Step 6: Persist summary + mark complete ───────────────
+    // ── Step 5: Persist summary + mark complete ──────────────
     try {
       await db
         .update(analyses)
@@ -427,7 +359,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         })
         .where(eq(analyses.id, analysisId));
     } catch {
-      // DB update failed — still yield the summary to the client
+      // DB update failed — summary was still yielded to the client
     }
 
     logger.info("Pipeline complete", {
@@ -436,7 +368,6 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       totalClauses: allAnalyses.length,
       clauseBreakdown: summary.clauseBreakdown,
     });
-    yield { type: "summary", data: summary };
   } catch (error) {
     logger.error("Pipeline unrecoverable error", {
       step: "pipeline",
