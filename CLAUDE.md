@@ -82,14 +82,16 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **File upload** uses a raw Next.js route handler (POST `/api/upload`), not tRPC — tRPC doesn't handle multipart
 - **Streaming** uses tRPC SSE subscriptions via `httpSubscriptionLink` — async generators yielding typed events
 - **Vercel constraint:** first SSE event must emit within 25 seconds. Pipeline emits a status event immediately.
-- **RAG vector search** lives in `packages/db`, not `packages/agents` — it's a database query
-- **Claude models:** Haiku for relevance gate (fast/cheap), Sonnet for all other agents
-- **Clause positions** (`startIndex`/`endIndex`) are stored even though the MVP uses a vertical card stack — this enables future side-by-side view with zero schema changes
+- **RAG vector search** lives in `packages/db`, not `packages/agents` — it's a database query. Bulk fetch by contract type (`getPatternsByContractType()`), injected into system prompt. Orchestrator includes `RAG_TYPE_MAP` to map gate types (e.g. `residential_lease`) to knowledge base types (e.g. `lease`).
+- **Claude models:** Haiku for relevance gate + boundary detection fallback (fast/cheap), Sonnet for combined analysis + summary
+- **Hybrid clause parsing** (Phase 1b): Heuristic regex parser runs first (instant, free). If the result is suspicious (e.g. 1 clause for a large document — common with unconventional formatting), falls back to Haiku LLM boundary detection (~1-3s, ~$0.001). Haiku returns only line numbers via `strict: true` tool_use; splitting is deterministic. Graceful degradation: if Haiku fails, heuristic result used as-is.
+- **Combined streaming analysis** (Phase 2): Single `client.messages.stream()` call with `report_clause` and `report_summary` tools. Uses `strict: true` (constrained decoding — guaranteed valid JSON, zero parse errors) and `eager_input_streaming: true` (fine-grained streaming). Replaces ~30 separate risk + rewrite calls with 1 streaming call. Total pipeline: 3-4 API calls (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
+- **Clause positions** (`startIndex`/`endIndex`) are computed by `computeClausePositions()` via `text.indexOf()` after heuristic parse. Stored even though MVP uses vertical card stack — enables future side-by-side view.
 - **Connection pooling:** Use Supabase's transaction pooler URL (port 6543) in Drizzle config, not the direct connection — Vercel serverless creates a new connection per invocation
 - **Prompt injection defense:** All agent prompts must frame document text as untrusted input. Zod validates output structure, but system prompts must also instruct Claude to analyze objectively regardless of any instructions in the document
 - **Pipeline idempotency:** Use atomic `UPDATE ... WHERE status = 'pending' RETURNING *` to prevent duplicate pipeline runs from concurrent SSE subscriptions. If status is already `processing`, yield persisted clauses from DB instead of re-running
-- **Pipeline resumability:** Parse results are cached in `analyses.parsedClauses`. Clause analyses are persisted per-batch. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from where it left off. Heartbeat updates `updatedAt` after each batch to prevent premature stale detection (90s threshold).
-- **Clause position strategy:** Don't rely on Claude for character offsets — LLMs can't count. Have Claude return clause text, then compute `startIndex`/`endIndex` via `text.indexOf(clauseText)` in the orchestrator
+- **Pipeline resumability:** Parse results are cached in `analyses.parsedClauses`. Clause analyses are persisted individually as each `report_clause` tool call completes. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from where it left off. Heartbeat updates `updatedAt` after each yielded event to prevent premature stale detection (90s threshold).
+- **Clause position strategy:** Heuristic parse returns clause text; orchestrator computes `startIndex`/`endIndex` via `text.indexOf()`. Claude references clauses by position number only (no verbatim copying in output — saves ~50% output tokens).
 
 ## Current Stack Versions
 

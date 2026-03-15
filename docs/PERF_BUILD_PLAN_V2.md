@@ -284,7 +284,368 @@ pnpm turbo lint type-check test build
 - [x] All new tests pass
 - [x] Quality gate passes
 - [x] `packages/agents/CLAUDE.md` and `packages/db/CLAUDE.md` updated
-- [ ] Commit: `perf(agents,db): heuristic clause parser and bulk RAG pattern fetch`
+- [x] Commit: `perf(agents,db): heuristic clause parser and bulk RAG pattern fetch`
+
+---
+
+## Phase 1b: Hybrid Parse — Heuristic + LLM Fallback
+
+**Objective:** Fix the critical failure where the heuristic parser returns 1 clause for unconventionally-formatted contracts (e.g., the Dutch rental test PDF). Add a lightweight Haiku LLM fallback that detects clause boundaries when regex patterns fail. The fallback returns only line numbers (~50 tokens output, 1-3 seconds, ~$0.001) — NOT the old approach of copying entire clauses verbatim.
+
+**Why this is needed:** The heuristic parser works well for professionally-formatted contracts with numbered sections, article keywords, or ALL-CAPS headings. But real-world contracts — especially residential leases, informal agreements, and documents with formatting lost during PDF extraction — often lack these structural markers. When heuristic parse produces 1-2 clauses for a large document, the downstream combined analysis (Phase 2) breaks: Claude detects multiple risks within the single giant clause and tries to report them with position numbers that don't exist.
+
+**The approach — hybrid parse:**
+1. Try heuristic parser first (instant, free)
+2. Check if result is "suspicious" — too few clauses for the document size
+3. If suspicious, call Haiku with `strict: true` tool_use to identify clause start **line numbers** only
+4. Split document at those line boundaries deterministically
+5. Return same `ParsedClause[]` shape — Phase 2's combined analysis works unchanged
+
+**Why Haiku line-number detection is the right approach:**
+- **Output is tiny** (~50-100 tokens for 20 clauses): `{ clauseStartLines: [1, 15, 32, 48, ...] }`
+- **Haiku is fast** (1-3 seconds) and cheap (~$0.001 per call)
+- **`strict: true`** guarantees valid JSON — zero parse errors, no retries needed
+- **No text copying** — document splitting is done deterministically from line numbers
+- **Language-agnostic** — Haiku understands document structure regardless of language or formatting
+- **Universal** — works for any contract format that the heuristic misses
+
+**Entry criteria:** Phase 1 + Phase 2 complete. Heuristic parser, bulk RAG, and combined analysis all working. The issue is specifically that the heuristic parser produces poor results on unconventional documents.
+
+**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file — especially this Phase 1b section), `CLAUDE.md`, and:
+- `packages/agents/src/heuristic-parse.ts` — current heuristic parser (being wrapped, NOT replaced)
+- `packages/agents/src/orchestrator.ts` — current orchestrator (calls `parseClausesHeuristic` — will call the new smart wrapper instead)
+- `packages/agents/src/client.ts` — Anthropic client factory + model constants (`MODELS.haiku`)
+- `packages/agents/src/combined-analysis.ts` — Phase 2 combined analysis (consumes `ParsedClause[]` — must NOT change)
+- `packages/agents/src/prompts/` — prompt directory for the new boundary detection prompt
+- `packages/shared/src/` — `ParsedClause` type definition
+
+### Tasks
+
+#### 1b.1 — LLM boundary detection agent
+
+- [x] Create `packages/agents/src/boundary-detect.ts`
+- [x] Implement `detectClauseBoundaries(text: string, contractType: string, language: string)` → `ParsedClause[]`:
+  1. **Prepare line-numbered text**: Split document into lines, prepend line numbers:
+     ```
+     L1: HUUROVEREENKOMST WOONRUIMTE
+     L2:
+     L3: Partijen:
+     L4: De verhuurder: Jan de Vries...
+     ...
+     L15: Het gehuurde betreft de woning...
+     L30: De huurprijs bedraagt EUR 1.200...
+     ```
+  2. **Call Haiku with tool_use and `strict: true`**:
+     - Use `MODELS.haiku` (fast, cheap)
+     - Define a `report_boundaries` tool with `strict: true`:
+       ```typescript
+       {
+         name: "report_boundaries",
+         strict: true,
+         input_schema: {
+           type: "object",
+           properties: {
+             clauseStartLines: {
+               type: "array",
+               items: { type: "integer" },
+               description: "Line numbers (L-prefixed numbers) where each new clause or section starts"
+             }
+           },
+           required: ["clauseStartLines"],
+           additionalProperties: false
+         }
+       }
+       ```
+     - `tool_choice: { type: "tool", name: "report_boundaries" }` — force the tool call (no free text)
+     - `max_tokens: 1024` — more than enough for line number list
+  3. **Parse the tool call result**: Extract `clauseStartLines` array
+  4. **Split document at line boundaries**: Map line numbers back to character positions, extract text between boundaries
+  5. **Post-process**: Merge fragments < 50 chars, trim signature blocks (reuse existing `postProcess` logic from heuristic-parse if possible)
+  6. **Return `ParsedClause[]`** with same shape as heuristic parse
+
+- [x] Create `packages/agents/src/prompts/boundary-detect.ts`
+- [x] System prompt must:
+  - Explain the task: identify where each new clause, section, or article begins in the document
+  - Frame document text as untrusted input (prompt injection defense)
+  - Instruct to skip preambles, party identification, signature blocks
+  - Instruct to identify clause boundaries based on semantic content, not just formatting
+  - Give examples of what constitutes a clause boundary (new topic, new obligation, new right)
+  - Be concise — Haiku doesn't need long prompts
+- [x] The user message is the line-numbered document text with contract type and language metadata
+- [x] Retry pattern: 2 attempts (matching existing agent pattern), catch any error, throw descriptive error after both fail
+
+#### 1b.2 — Smart parse wrapper
+
+- [x] Create `packages/agents/src/smart-parse.ts`
+- [x] Implement `parseClausesSmart(text: string, contractType: string, language: string)` → `Promise<ParsedClause[]>`:
+  1. Call `parseClausesHeuristic(text, contractType, language)` (instant, synchronous)
+  2. Evaluate quality of heuristic result:
+     - **Suspicious conditions** (trigger LLM fallback):
+       - 1 clause AND document > 500 characters
+       - 2 clauses AND document > 2000 characters
+       - Any result where the largest clause is > 80% of total document text
+     - **Acceptable conditions** (keep heuristic result):
+       - 3+ clauses with reasonable size distribution
+       - Document is very short (< 500 chars) — likely a simple agreement
+  3. If suspicious: log a warning, call `detectClauseBoundaries()` as fallback
+  4. If fallback also fails (throws error): return the heuristic result as-is (better than nothing)
+  5. Log which path was taken: `"heuristic"` or `"llm_fallback"`
+- [x] Export from `packages/agents/src/index.ts`
+- [x] **The orchestrator will call `parseClausesSmart()` instead of `parseClausesHeuristic()` directly**
+
+#### 1b.3 — Update orchestrator to use smart parse
+
+- [x] In `packages/agents/src/orchestrator.ts`, replace:
+  ```typescript
+  const rawClauses = parseClausesHeuristic(text, contractType, language);
+  ```
+  with:
+  ```typescript
+  const rawClauses = await parseClausesSmart(text, contractType, language);
+  ```
+- [x] Note: `parseClausesSmart` is async (because the LLM fallback is async), while `parseClausesHeuristic` was sync. The orchestrator already runs in an async generator, so this is a trivial change.
+- [x] Add a keepalive status event if the LLM fallback is triggered (it takes 1-3 seconds):
+  ```typescript
+  yield { type: "status", message: "Detecting clause boundaries..." };
+  ```
+  Only emit this if the heuristic result was suspicious and we're falling back to Haiku. If heuristic succeeds, no delay, no extra event.
+
+#### 1b.4 — Tests
+
+- [x] **Boundary detection tests** (`packages/agents/src/__tests__/boundary-detect.test.ts`):
+  - Mock Haiku streaming response with `report_boundaries` tool call
+  - Verify correct line-number extraction from tool call result
+  - Verify document splitting at line boundaries produces correct clause text
+  - Verify post-processing merges short fragments
+  - Verify retry on API failure
+  - Verify tool schema has `strict: true`
+  - Verify `tool_choice` forces the `report_boundaries` tool
+- [x] **Smart parse tests** (`packages/agents/src/__tests__/smart-parse.test.ts`):
+  - Document with clear numbered sections → heuristic path taken, no LLM call
+  - Long document producing 1 clause from heuristic → LLM fallback triggered
+  - Long document producing 2 clauses from heuristic → LLM fallback triggered
+  - Short document (< 500 chars) producing 1 clause → heuristic kept (acceptable)
+  - LLM fallback failure → returns heuristic result as-is (graceful degradation)
+  - Verify logging indicates which path was taken
+- [x] **Orchestrator test update** (`packages/agents/src/__tests__/orchestrator.test.ts`):
+  - Update mocks to use `parseClausesSmart` instead of `parseClausesHeuristic`
+  - Add test case: heuristic produces 1 clause → LLM fallback produces 15 → combined analysis receives 15
+- [x] **Integration test with realistic fixture**:
+  - Create a test fixture that mimics the Dutch rental contract format (no numbered sections, informal structure, paragraph-based)
+  - Verify heuristic detects it as suspicious (1-2 clauses)
+  - Verify LLM fallback (mocked) produces reasonable clause boundaries
+- [x] Run full test suite: `pnpm turbo test`
+
+#### 1b.5 — Validate against the real Dutch test PDF (manual)
+
+- [ ] Upload the Dutch rental contract PDF on local dev
+- [ ] Verify:
+  - Heuristic parse produces 1 clause (confirming the problem)
+  - LLM fallback triggers automatically
+  - Haiku returns reasonable clause boundaries (check logs for line numbers)
+  - Combined analysis receives multiple clauses and analyzes each
+  - All clause positions are valid (no position mismatch errors)
+  - Total parse time: 1-3 seconds (Haiku call) — not 3 minutes
+  - Total pipeline time: <30 seconds
+- [ ] Also test with a well-structured English contract to verify heuristic path still works (no regression, no unnecessary Haiku calls)
+
+#### 1b.6 — Update CLAUDE.md files
+
+- [x] Update `packages/agents/CLAUDE.md`:
+  - Document `smart-parse.ts`, `boundary-detect.ts`, `prompts/boundary-detect.ts`
+  - Document the hybrid approach: heuristic first, Haiku LLM fallback
+  - Document the suspicious-result thresholds
+  - Update pipeline diagram to show hybrid parse step
+- [x] Update root `CLAUDE.md` if needed:
+  - Note that pipeline uses 3-4 API calls (gate + optional Haiku boundary detection + combined analysis + optional summary fallback)
+
+### MCP Usage
+- **Context7**: Anthropic SDK tool_use API (specifically `tool_choice: { type: "tool", name: "..." }` to force a specific tool), Haiku model capabilities
+- **Supabase MCP**: Not needed for this phase
+
+### Quality Gate
+```bash
+pnpm turbo lint type-check test build
+# Upload Dutch rental contract locally — verify LLM fallback produces good clause splits
+# Upload a well-structured contract — verify heuristic path taken, no Haiku call
+```
+
+### Exit Criteria
+- [x] Smart parse wrapper correctly detects suspicious heuristic results
+- [x] Haiku boundary detection returns valid line numbers in 1-3 seconds
+- [x] `strict: true` on tool definition — zero parse errors from Haiku
+- [x] Document splitting from line numbers produces correct clause text
+- [ ] Dutch rental contract: LLM fallback triggers, produces 10+ clauses, combined analysis works end-to-end
+- [x] Well-structured contracts: heuristic path taken, no Haiku call (no regression)
+- [x] Graceful degradation: if Haiku fails, heuristic result used as-is
+- [ ] Total pipeline time with LLM fallback: <30 seconds
+- [x] All tests pass (existing + new)
+- [x] Quality gate passes
+- [x] `packages/agents/CLAUDE.md` updated
+- [ ] Commit: `fix(agents): hybrid clause parser with Haiku LLM fallback for unconventional contracts`
+
+---
+
+## Phase 2b: Fix Boundary Detection + max_tokens + RAG Loading
+
+**Objective:** Fix three issues discovered during Phase 1b/2 production testing: (1) line-number-based boundary detection produces poor clause splits on PDF-extracted text, (2) combined analysis `max_tokens` too low causing Claude to skip clauses 13-20, (3) RAG patterns not loading (`ragPatternCount: 0`).
+
+**What went wrong in testing:**
+1. **Clause splitting quality**: PDF text extraction produces long lines with `\n` at arbitrary points. The virtual line splitting at 200 chars creates meaningless boundaries. Haiku returned line numbers, but splitting at those lines cut mid-sentence. Clause 1 was the entire `KERNGEGEVENS` section (all parties + payment terms + property info), clauses 2-4 were sentence fragments.
+2. **Claude stopped at clause 13**: `max_tokens` was estimated at `21 * 600 + 2048 = 14,648` with a 32,768 cap. Claude used all tokens by clause 13 and stopped (`stopReason: "tool_use"`). 8 of 21 clauses were never analyzed.
+3. **No RAG patterns loaded**: Log showed `ragPatternCount: 0` for `residential_lease`. Either knowledge base isn't seeded in dev, or the contract type filter doesn't match any patterns.
+
+**The fix for boundary detection — anchor-based instead of line-number-based:**
+
+Instead of returning line numbers (meaningless in poorly-structured PDF text), Haiku returns **the first few words of each clause as text anchors**. Then we use `text.indexOf(anchor)` to find the exact position in the document and split there.
+
+Why this is better:
+- **Works regardless of line structure** — PDF extraction can produce any line format
+- **Deterministic splitting** — `indexOf()` finds the exact character position
+- **Still tiny output** — `["1. KERNGEGEVENS VAN DE", "1.2 Huurder", "2. OBJECT VAN DE"]` is ~100-200 tokens
+- **Haiku understands structure** — it identifies real clause/section headings, not arbitrary line breaks
+- **Same cost/speed** — still Haiku, still `strict: true`, still ~1-3 seconds
+
+**Entry criteria:** Phase 1b + Phase 2 complete. The hybrid parse triggers LLM fallback correctly but produces poor splits. Combined analysis works but runs out of tokens.
+
+**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file — especially this Phase 2b section), `CLAUDE.md`, and:
+- `packages/agents/src/boundary-detect.ts` — current line-number-based detection (being rewritten to anchor-based)
+- `packages/agents/src/prompts/boundary-detect.ts` — current prompt (being updated)
+- `packages/agents/src/smart-parse.ts` — smart parse wrapper (no changes needed)
+- `packages/agents/src/combined-analysis.ts` — `estimateMaxTokens()` function (needs fix)
+- `packages/agents/src/orchestrator.ts` — check how RAG patterns are loaded
+- `packages/db/src/queries/getPatternsByContractType.ts` — verify the query
+- `data/knowledge-base/` — check if patterns exist for `residential_lease`
+
+### Tasks
+
+#### 2b.1 — Rewrite boundary detection to anchor-based
+
+- [x] Rewrite `packages/agents/src/boundary-detect.ts`:
+  - **Remove** `prepareLineNumberedText()` and `splitAtLineBoundaries()` (line-number approach)
+  - **New tool schema** — `report_boundaries` now returns text anchors:
+    ```typescript
+    {
+      name: "report_boundaries",
+      strict: true,
+      input_schema: {
+        type: "object",
+        properties: {
+          clauseAnchors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                anchor: {
+                  type: "string",
+                  description: "The first 5-15 words of the clause, copied EXACTLY from the document"
+                }
+              },
+              required: ["anchor"],
+              additionalProperties: false
+            }
+          }
+        },
+        required: ["clauseAnchors"],
+        additionalProperties: false
+      }
+    }
+    ```
+  - **New splitting logic** — `splitAtAnchors(text: string, anchors: string[])`:
+    1. For each anchor, find its position in the document: `text.indexOf(anchor)`
+    2. If exact match fails, try fuzzy matching: trim whitespace, normalize spaces, try first 20 chars
+    3. Sort found positions, split document at those positions
+    4. Post-process: merge short fragments (< 50 chars), trim signature blocks
+    5. Return `ParsedClause[]`
+  - **User message** — send the raw document text (no line numbering needed), with contract type and language
+  - **Keep**: `strict: true`, `tool_choice: { type: "tool", name: "report_boundaries" }`, retry pattern, Haiku model
+
+#### 2b.2 — Update boundary detection prompt
+
+- [x] Rewrite `packages/agents/src/prompts/boundary-detect.ts`:
+  - System prompt changes:
+    - Remove all references to line numbers and L-prefixed labels
+    - Instruct Haiku to return the **first 5-15 words** of each clause, copied **exactly** from the document
+    - Emphasize: copy verbatim, do not paraphrase, do not add words
+    - Keep: clause boundary definition, what to skip (preamble, signatures), prompt injection defense
+  - User message builder: raw document text with metadata (no line numbering)
+
+#### 2b.3 — Fix combined analysis max_tokens
+
+- [x] In `packages/agents/src/combined-analysis.ts`, update `estimateMaxTokens()`:
+  ```typescript
+  function estimateMaxTokens(clauseCount: number): number {
+    // ~600 tokens per clause (explanation + category + rewrite) + 2048 for summary + buffer
+    // Cap at 64000 (Sonnet 4.6 max output)
+    return Math.min(clauseCount * 800 + 4096, 64000);
+  }
+  ```
+  - Raise per-clause estimate from 600 to 800 (Dutch text is more token-dense)
+  - Raise buffer from 2048 to 4096 (summary + inter-tool-call text)
+  - Raise cap from 32768 to 64000 (the model supports it, we should use it)
+
+#### 2b.4 — Investigate and fix RAG pattern loading
+
+- [x] Check `data/knowledge-base/` — do JSON files exist with patterns for `residential_lease`?
+- [x] Check the knowledge base seed: has `pnpm run seed` been run in the development environment?
+- [x] Check the `getPatternsByContractType` query — does `residential_lease` match the `contract_type` jsonb array in the knowledge_patterns table? The query uses `@>` containment: `WHERE contract_type @> '"residential_lease"'::jsonb`. Verify the stored values match (e.g., are they `["residential_lease"]` or `["lease"]` or `["lease", "rental"]`?).
+- [x] If the issue is dev-only (knowledge base not seeded locally), document this clearly and verify it works with the seeded production DB
+- [x] If the issue is a contract type mismatch, fix the filter or add a fallback that fetches all patterns when type-specific fetch returns empty
+- **Finding:** Knowledge base uses `contractType: ["lease"]` but gate returns `"residential_lease"`. Added `RAG_TYPE_MAP` in orchestrator with fallback: tries exact type first, then mapped base type.
+
+#### 2b.5 — Update tests
+
+- [x] **Boundary detection tests** — rewritten for anchor-based approach:
+  - Mock Haiku response with `clauseAnchors` instead of `clauseStartLines`
+  - Verify `splitAtAnchors()` correctly finds anchor positions via `indexOf()`
+  - Verify `findAnchorPosition()` fuzzy matching with whitespace normalization using `buildNormalizedMap()` position mapping
+  - Verify unfound anchors are skipped gracefully
+  - Verify post-processing merges short fragments
+  - Verify single-line PDF text (no newlines) works
+  - Verify duplicate phrases with forward-searching
+- [x] Run full test suite: `pnpm turbo test` — **138 tests pass, 16 files**
+
+#### 2b.6 — Local end-to-end validation
+
+- [ ] Upload the Dutch rental contract PDF on local dev
+- [ ] Verify:
+  - LLM fallback triggers (heuristic produces 1 clause)
+  - Haiku returns meaningful clause anchors (section headings, not mid-sentence fragments)
+  - `splitAtAnchors()` finds all anchors in the document text
+  - Clauses are clean — each starts at a real section boundary
+  - Combined analysis receives all clauses and analyzes ALL of them (no skipped positions)
+  - `max_tokens` is sufficient — `stopReason` should be `"end_turn"` not `"max_tokens"` or `"tool_use"` with missing positions
+  - Total pipeline time: <60 seconds (may be longer than 30s with 21 clauses, that's OK)
+  - Check if RAG patterns are loaded (if knowledge base is seeded)
+- [ ] Also test with a well-structured English contract to verify heuristic path still works
+
+#### 2b.7 — Update CLAUDE.md files
+
+- [ ] Update `packages/agents/CLAUDE.md`:
+  - Document anchor-based boundary detection replacing line-number-based
+  - Update `boundary-detect.ts` description
+  - Note the `max_tokens` cap of 64000
+
+### MCP Usage
+- **Context7**: If needed for Anthropic SDK tool_use details
+- **Supabase MCP**: Check if knowledge_patterns table has data, verify contract_type values
+
+### Quality Gate
+```bash
+pnpm turbo lint type-check test build
+# Upload Dutch rental contract locally — verify clean clause splits and full analysis
+```
+
+### Exit Criteria
+- [ ] Anchor-based boundary detection produces clean clause splits on the Dutch rental contract
+- [ ] Each clause starts at a real section/topic boundary (not mid-sentence)
+- [ ] Combined analysis completes ALL clauses (zero skipped positions)
+- [ ] `max_tokens` cap raised to 64000 — no more truncation
+- [ ] RAG pattern loading issue identified and fixed (or documented as dev-only)
+- [ ] All tests pass
+- [ ] Quality gate passes
+- [ ] `packages/agents/CLAUDE.md` updated
+- [ ] Commit: `fix(agents): anchor-based boundary detection and max_tokens fix`
 
 ---
 
@@ -319,19 +680,19 @@ pnpm turbo lint type-check test build
 
 #### 2.1 — Combined analysis prompt
 
-- [ ] Create `packages/agents/src/prompts/combined-analysis.ts`
-- [ ] System prompt must:
+- [x] Create `packages/agents/src/prompts/combined-analysis.ts`
+- [x] System prompt must:
   - Frame document text as untrusted input (prompt injection defense)
   - Instruct Claude to analyze each clause for risk, explain in plain language, suggest rewrites for flagged clauses
   - Instruct Claude to call the `report_clause` tool once per clause in document order
   - Instruct Claude to respond in the document's language
   - Include contract type and language metadata
   - Include all RAG patterns for the contract type (formatted by `formatPatternsForPrompt()`)
-- [ ] User message builder:
+- [x] User message builder:
   - Takes the heuristically-parsed clauses as input
   - Formats them as a numbered list: `[1] "clause text here"`, `[2] "clause text here"`, etc.
   - Places analysis instructions AFTER the clauses (Anthropic recommendation: instructions after document for long-context analysis)
-- [ ] Prompt should instruct Claude:
+- [x] Prompt should instruct Claude:
   - For each clause: determine risk level (red/yellow/green), explain why, categorize, and provide a safer alternative if red or yellow
   - Call `report_clause` tool once per clause with results
   - After all clauses, call `report_summary` tool with overall assessment
@@ -339,7 +700,7 @@ pnpm turbo lint type-check test build
 
 #### 2.2 — Tool definitions
 
-- [ ] Define `report_clause` tool schema:
+- [x] Define `report_clause` tool schema:
   ```typescript
   {
     name: "report_clause",
@@ -362,7 +723,7 @@ pnpm turbo lint type-check test build
     }
   }
   ```
-- [ ] Define `report_summary` tool schema:
+- [x] Define `report_summary` tool schema:
   ```typescript
   {
     name: "report_summary",
@@ -380,13 +741,13 @@ pnpm turbo lint type-check test build
     }
   }
   ```
-- [ ] **Note on `strict: true`**: First request with a new schema has ~100-300ms overhead for grammar compilation; cached for 24 hours after. This is a one-time cost.
-- [ ] Both tools must be registered in the single `messages.create()` call with `tool_choice: { type: "auto" }`
+- [x] **Note on `strict: true`**: First request with a new schema has ~100-300ms overhead for grammar compilation; cached for 24 hours after. This is a one-time cost.
+- [x] Both tools must be registered in the single `messages.create()` call with `tool_choice: { type: "auto" }`
 
 #### 2.3 — Streaming tool call handler
 
-- [ ] Create `packages/agents/src/combined-analysis.ts`
-- [ ] Implement `analyzeAllClauses(params)` as an async generator that yields `SSEEvent`:
+- [x] Create `packages/agents/src/combined-analysis.ts`
+- [x] Implement `analyzeAllClauses(params)` as an async generator that yields `SSEEvent`:
   ```typescript
   interface CombinedAnalysisParams {
     clauses: ParsedClause[];
@@ -395,30 +756,30 @@ pnpm turbo lint type-check test build
     ragPatterns: KnowledgePattern[];  // pre-fetched by contract type
   }
   ```
-- [ ] Use the Anthropic SDK streaming API: `client.messages.stream()` or `client.messages.create({ stream: true })`
-- [ ] Listen for streaming events:
+- [x] Use the Anthropic SDK streaming API: `client.messages.stream()` or `client.messages.create({ stream: true })`
+- [x] Listen for streaming events:
   - `content_block_start` with `type: "tool_use"` — a new tool call is starting
   - `content_block_delta` with `type: "input_json_delta"` — incremental tool input JSON
   - `content_block_stop` — tool call is complete, parse the accumulated JSON
   - `message_stop` — entire response is complete
-- [ ] When a `report_clause` tool call completes:
+- [x] When a `report_clause` tool call completes:
   1. The accumulated JSON is already guaranteed valid by `strict: true`
   2. Map `position` back to the original clause from `params.clauses`
   3. Compute `startIndex`/`endIndex` via `text.indexOf()` (existing `computeClausePositions` logic)
   4. Yield `{ type: "clause_analysis", data: ClauseAnalysis }`
-- [ ] When `report_summary` tool call completes:
+- [x] When `report_summary` tool call completes:
   1. Compute `clauseBreakdown` deterministically from accumulated results
   2. Yield `{ type: "summary", data: Summary }`
-- [ ] Handle errors:
+- [x] Handle errors:
   - If Claude's response is cut off (`stop_reason: "max_tokens"`): yield error event for any unanalyzed clauses, yield partial summary
   - If Claude API returns a 429/500: retry once with exponential backoff, then yield error
   - If a tool call has an unexpected `position` value: log warning, skip
-- [ ] **Do NOT use `tool_choice: { type: "any" }`** — use `"auto"` so Claude can emit text between tool calls if needed
-- [ ] After the streaming response completes, check that all clause positions were covered. Log a warning for any missing positions.
+- [x] **Do NOT use `tool_choice: { type: "any" }`** — use `"auto"` so Claude can emit text between tool calls if needed
+- [x] After the streaming response completes, check that all clause positions were covered. Log a warning for any missing positions.
 
 #### 2.4 — Restructure orchestrator
 
-- [ ] Rewrite `packages/agents/src/orchestrator.ts` to use the new pipeline:
+- [x] Rewrite `packages/agents/src/orchestrator.ts` to use the new pipeline:
   ```typescript
   async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
     // Step 1: Heuristic parse (instant)
@@ -462,27 +823,27 @@ pnpm turbo lint type-check test build
     await db.update(analyses).set({ status: "complete", ... });
   }
   ```
-- [ ] **Resumability**: Cache parse results in `analyses.parsedClauses` (same as before). If resuming, check for already-analyzed clauses in DB and replay them. For the combined analysis, skip already-analyzed positions in the prompt.
-- [ ] **Heartbeat**: Update `analyses.updatedAt` after each yielded clause event (same pattern as before)
-- [ ] **Keep the `computeClausePositions()` function** — it still computes `startIndex`/`endIndex`
-- [ ] Remove imports of old `parseClauses`, `analyzeClause`, `rewriteClause` from the orchestrator
-- [ ] The summary can come from the `report_summary` tool call in the combined analysis. If Claude doesn't call it (edge case), fall back to a separate `summarize()` call.
+- [x] **Resumability**: Cache parse results in `analyses.parsedClauses` (same as before). If resuming, check for already-analyzed clauses in DB and replay them. For the combined analysis, skip already-analyzed positions in the prompt.
+- [x] **Heartbeat**: Update `analyses.updatedAt` after each yielded clause event (same pattern as before)
+- [x] **Keep the `computeClausePositions()` function** — it still computes `startIndex`/`endIndex`
+- [x] Remove imports of old `parseClauses`, `analyzeClause`, `rewriteClause` from the orchestrator
+- [x] The summary can come from the `report_summary` tool call in the combined analysis. If Claude doesn't call it (edge case), fall back to a separate `summarize()` call.
 
 #### 2.5 — Update tRPC analysis router
 
-- [ ] Update `packages/api/src/routers/analysis.ts`:
+- [x] Update `packages/api/src/routers/analysis.ts`:
   - Handle the new `clause_positions` event type in the SSE stream
   - The polling path (when another connection is processing) should also emit `clause_positions` when available from cached parse results
   - The `complete` replay path should reconstruct `clause_positions` from stored clauses
-- [ ] Verify the `claimAnalysis()` atomic claim still works with the new pipeline
-- [ ] Verify the stale detection (90s heartbeat threshold) still works
+- [x] Verify the `claimAnalysis()` atomic claim still works with the new pipeline
+- [x] Verify the stale detection (90s heartbeat threshold) still works
 
 #### 2.6 — Summary agent refinements
 
-- [ ] The combined analysis call includes a `report_summary` tool, which may produce the summary inline
-- [ ] If the summary comes from the combined call, skip the separate `summarize()` call
-- [ ] If the summary is missing from the combined call (Claude didn't call the tool), fall back to a separate `summarize()` call
-- [ ] Add prompt caching to the fallback summary call:
+- [x] The combined analysis call includes a `report_summary` tool, which may produce the summary inline
+- [x] If the summary comes from the combined call, skip the separate `summarize()` call
+- [x] If the summary is missing from the combined call (Claude didn't call the tool), fall back to a separate `summarize()` call
+- [x] Add prompt caching to the fallback summary call:
   ```typescript
   system: [
     { type: "text", text: SUMMARY_SYSTEM_PROMPT },
@@ -492,15 +853,15 @@ pnpm turbo lint type-check test build
 
 #### 2.7 — Remove old per-clause agents from pipeline
 
-- [ ] **Do NOT delete the old files yet** — keep `risk.ts`, `rewrite.ts`, `parse.ts` in the repo for reference and test comparison. They are no longer imported by the orchestrator.
-- [ ] Remove the old per-clause batch processing loop from the orchestrator
-- [ ] Remove the `batchEmbed()` call that happened before clause processing (replaced by `computeMatchedPatterns()` running in parallel)
-- [ ] Remove the per-clause `findSimilarPatterns()` calls
-- [ ] Verify `packages/agents/src/index.ts` exports the new functions
+- [x] **Do NOT delete the old files yet** — keep `risk.ts`, `rewrite.ts`, `parse.ts` in the repo for reference and test comparison. They are no longer imported by the orchestrator.
+- [x] Remove the old per-clause batch processing loop from the orchestrator
+- [x] Remove the `batchEmbed()` call that happened before clause processing (replaced by `computeMatchedPatterns()` running in parallel)
+- [x] Remove the per-clause `findSimilarPatterns()` calls
+- [x] Verify `packages/agents/src/index.ts` exports the new functions
 
 #### 2.8 — Tests
 
-- [ ] **Combined analysis tests** (`packages/agents/src/__tests__/combined-analysis.test.ts`):
+- [x] **Combined analysis tests** (`packages/agents/src/__tests__/combined-analysis.test.ts`):
   - Mock streaming Claude response with multiple `report_clause` tool calls
   - Verify each tool call produces a valid `ClauseAnalysis` event
   - Verify `report_summary` tool call produces a valid `Summary` event
@@ -508,16 +869,16 @@ pnpm turbo lint type-check test build
   - Verify error handling: `stop_reason: "max_tokens"` → partial results
   - Verify error handling: API error → retry once, then error event
   - Verify missing clause positions are logged
-- [ ] **Orchestrator integration tests** (`packages/agents/src/__tests__/orchestrator.test.ts`):
+- [x] **Orchestrator integration tests** (`packages/agents/src/__tests__/orchestrator.test.ts`):
   - Update existing orchestrator tests to work with the new pipeline
   - Mock heuristic parse, bulk RAG, and combined analysis
   - Verify event sequence: `clause_positions → status → clause_analysis (×N) → summary`
   - Verify resumability: cached parse → skip parse, replay existing clauses
   - Verify heartbeat after each clause event
-- [ ] **tRPC router tests** (`packages/api/src/__tests__/analysis.test.ts`):
+- [x] **tRPC router tests** (`packages/api/src/__tests__/analysis.test.ts`):
   - Update to handle new `clause_positions` event
   - Verify `claimAnalysis()` still works
-- [ ] Run full test suite: `pnpm turbo test`
+- [x] Run full test suite: `pnpm turbo test`
 
 #### 2.9 — Local end-to-end validation
 
@@ -536,14 +897,14 @@ pnpm turbo lint type-check test build
 
 #### 2.10 — Update CLAUDE.md files
 
-- [ ] Update `packages/agents/CLAUDE.md`:
+- [x] Update `packages/agents/CLAUDE.md`:
   - Document new combined analysis approach
   - Document `report_clause` and `report_summary` tool definitions
   - Document `strict: true` and `eager_input_streaming` usage
   - Note that old per-clause agents (`risk.ts`, `rewrite.ts`, `parse.ts`) are retained but unused
   - Update pipeline diagram
-- [ ] Update `packages/api/CLAUDE.md`: document new `clause_positions` event handling
-- [ ] Update root `CLAUDE.md`:
+- [x] Update `packages/api/CLAUDE.md`: document new `clause_positions` event handling
+- [x] Update root `CLAUDE.md`:
   - Update "Pipeline model" in architecture decisions
   - Update "Claude models" notes
   - Add note about `strict: true` structured outputs
@@ -562,50 +923,55 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Single streaming Claude call replaces ~30 separate risk + rewrite calls
-- [ ] `strict: true` produces guaranteed valid JSON (zero parse errors)
-- [ ] `eager_input_streaming` delivers clause results as they're generated
-- [ ] Heuristic parse + bulk RAG + combined analysis = 3 API calls total (gate + analysis + optional summary fallback)
+- [x] Single streaming Claude call replaces ~30 separate risk + rewrite calls
+- [x] `strict: true` produces guaranteed valid JSON (zero parse errors)
+- [x] `eager_input_streaming` delivers clause results as they're generated
+- [x] Heuristic parse + bulk RAG + combined analysis = 3 API calls total (gate + analysis + optional summary fallback)
 - [ ] First clause result arrives within ~5 seconds of analysis start
 - [ ] Full pipeline completes in <30 seconds for a typical contract
-- [ ] Resumability still works (cached parse, replay existing clauses)
-- [ ] matchedPatterns populated via in-memory similarity
-- [ ] Summary produced (either inline from combined call or fallback separate call)
-- [ ] All tests pass
-- [ ] Quality gate passes
-- [ ] CLAUDE.md files updated in agents, api, and root
-- [ ] Commit: `perf(agents): single streaming analysis call with tool_use, 15-20x faster`
+- [x] Resumability still works (cached parse, replay existing clauses)
+- [x] matchedPatterns populated via in-memory similarity
+- [x] Summary produced (either inline from combined call or fallback separate call)
+- [x] All tests pass
+- [x] Quality gate passes
+- [x] CLAUDE.md files updated in agents, api, and root
+- [x] Commit: `perf(agents): single streaming analysis call with tool_use, 15-20x faster`
 
 ---
 
 ## Phase 3: Polish — Frontend UX + Cleanup + Deployment Validation
 
-**Objective:** Update the frontend to take advantage of instant parsing (skeleton cards), clean up dead code, run full smoke tests on production, and validate the 15-20x performance improvement.
+**Objective:** Update the frontend to take advantage of instant parsing (skeleton cards), clean up dead code, run full smoke tests on production, and validate the performance improvement.
 
-**Entry criteria:** Phase 2 complete. Pipeline works locally with 3 API calls and <30s total time.
+**Entry criteria:** Phases 1, 1b/2b, and 2 complete. Pipeline works locally: hybrid parse (heuristic + Haiku fallback) → bulk RAG → single streaming combined analysis → summary. The `clause_positions` SSE event is emitted by the server but NOT yet handled by the frontend.
 
 **Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file), `CLAUDE.md`, and:
-- `apps/web/src/components/analysis-view.tsx` — main analysis page client component
+- `apps/web/src/components/analysis-view.tsx` — main analysis page client component (**key file: does NOT handle `clause_positions` yet**)
 - `apps/web/src/components/clause-card.tsx` — clause card component
 - `apps/web/src/components/clause-skeleton.tsx` — skeleton loader
 - `apps/web/src/components/status-bar.tsx` — status bar
 - `apps/web/src/components/summary-panel.tsx` — summary panel
-- `packages/shared/src/` — SSE event types (including new `clause_positions`)
-- `packages/agents/src/orchestrator.ts` — new orchestrator (Phase 2)
-- `packages/agents/src/risk.ts`, `rewrite.ts`, `parse.ts` — old agents (to be removed)
+- `packages/shared/src/schemas/events.ts` — SSE event types (includes `ClausePositionsEventSchema`)
+- `packages/agents/src/orchestrator.ts` — pipeline orchestrator (emits `clause_positions` events)
+- `packages/api/src/routers/analysis.ts` — tRPC SSE router (emits `clause_positions` in complete/polling paths)
+- **Active new files** (keep these): `smart-parse.ts`, `heuristic-parse.ts`, `boundary-detect.ts`, `combined-analysis.ts`, `format-patterns.ts`, `compute-matched-patterns.ts`, `prompts/combined-analysis.ts`, `prompts/boundary-detect.ts`
+- **Old deprecated files** (to delete): `parse.ts`, `risk.ts`, `rewrite.ts`, `prompts/parse.ts`, `prompts/risk.ts`, `prompts/rewrite.ts`
 
 ### Tasks
 
 #### 3.1 — Handle `clause_positions` event in frontend
 
 - [ ] Update `apps/web/src/components/analysis-view.tsx` to handle the `clause_positions` SSE event:
-  - When received, immediately render skeleton cards for ALL clauses (one per position)
+  - Add a `"clause_positions"` case to the event switch statement
+  - When received, store `totalClauses` and the clause position list in component state
+  - Immediately render skeleton cards for ALL clauses (one per position)
   - Each skeleton card should show the clause number and occupy the correct vertical space
   - This gives users an instant structural preview of the document
 - [ ] The skeleton cards should use the existing `ClauseSkeleton` component
 - [ ] As `clause_analysis` events arrive, replace the corresponding skeleton with a real `ClauseCard`:
   - Match by `position` field
   - Animate the transition: skeleton → colored card (CSS fade/slide, matching existing `fade-slide-in` animation)
+- [ ] Replace the current hardcoded skeleton logic (1-3 skeletons based on `streamClauses.length`) with position-aware skeletons driven by `clause_positions` data
 - [ ] Update the progress indicator to show: `"Analyzed 3 of 18 clauses..."` with a determinate progress bar (since total is known from `clause_positions`)
 
 #### 3.2 — Improve streaming UX
@@ -620,43 +986,63 @@ pnpm turbo lint type-check test build
 
 #### 3.3 — Remove old agent code
 
-- [ ] Delete `packages/agents/src/parse.ts` (replaced by `heuristic-parse.ts`)
-- [ ] Delete `packages/agents/src/prompts/parse.ts` (no longer used)
-- [ ] Delete `packages/agents/src/risk.ts` (replaced by combined analysis)
-- [ ] Delete `packages/agents/src/prompts/risk.ts` (replaced by combined analysis prompt)
-- [ ] Delete `packages/agents/src/rewrite.ts` (replaced by combined analysis)
-- [ ] Delete `packages/agents/src/prompts/rewrite.ts` (replaced by combined analysis prompt)
-- [ ] Update `packages/agents/src/index.ts` to remove old exports, add new ones
-- [ ] Delete or update old tests:
-  - `packages/agents/src/__tests__/parse.test.ts` → delete (replaced by heuristic-parse tests)
-  - `packages/agents/src/__tests__/risk.test.ts` → delete (replaced by combined-analysis tests)
-  - `packages/agents/src/__tests__/rewrite.test.ts` → delete (replaced by combined-analysis tests)
-  - `packages/agents/src/__tests__/orchestrator.test.ts` → already updated in Phase 2
-  - Keep: `gate.test.ts`, `summary.test.ts`, `positions.test.ts`, `smoke.test.ts`
+**Files to DELETE** (deprecated, not imported anywhere):
+- [ ] `packages/agents/src/parse.ts` (replaced by `heuristic-parse.ts` + `smart-parse.ts`)
+- [ ] `packages/agents/src/prompts/parse.ts` (no longer used)
+- [ ] `packages/agents/src/risk.ts` (replaced by `combined-analysis.ts`)
+- [ ] `packages/agents/src/prompts/risk.ts` (replaced by `prompts/combined-analysis.ts`)
+- [ ] `packages/agents/src/rewrite.ts` (replaced by `combined-analysis.ts`)
+- [ ] `packages/agents/src/prompts/rewrite.ts` (replaced by `prompts/combined-analysis.ts`)
+
+**Test files to DELETE:**
+- [ ] `packages/agents/src/__tests__/parse.test.ts` → replaced by `heuristic-parse.test.ts` + `smart-parse.test.ts`
+- [ ] `packages/agents/src/__tests__/risk.test.ts` → replaced by `combined-analysis.test.ts`
+- [ ] `packages/agents/src/__tests__/rewrite.test.ts` → replaced by `combined-analysis.test.ts`
+
+**Files to KEEP** (active, do NOT delete):
+- `heuristic-parse.ts`, `smart-parse.ts`, `boundary-detect.ts` — hybrid parse chain
+- `combined-analysis.ts` — streaming analysis with tool_use
+- `format-patterns.ts`, `compute-matched-patterns.ts` — RAG support
+- `gate.ts`, `summary.ts` — still used directly
+- `prompts/gate.ts`, `prompts/combined-analysis.ts`, `prompts/boundary-detect.ts`, `prompts/summary.ts`
+- `__tests__/gate.test.ts`, `summary.test.ts`, `positions.test.ts`, `smoke.test.ts`, `pdf-extraction.test.ts`
+- `__tests__/heuristic-parse.test.ts`, `heuristic-parse-validation.test.ts`, `smart-parse.test.ts`, `boundary-detect.test.ts`, `combined-analysis.test.ts`, `compute-matched-patterns.test.ts`, `format-patterns.test.ts`, `orchestrator.test.ts`
+
+**After deletion:**
+- [ ] Update `packages/agents/src/index.ts` — remove old exports if any remain, verify new exports are present
 - [ ] Verify all imports across the codebase still resolve: `pnpm turbo type-check`
 - [ ] Run `npx biome check --write` to fix any import ordering issues
 
 #### 3.4 — Update shared types if needed
 
 - [ ] Verify `ClauseAnalysis`, `Summary`, `SSEEvent` types are still correct
-- [ ] If the `saferAlternative` field behavior changed (e.g., empty string instead of null for green clauses), update the Zod schema and any frontend checks
-- [ ] Verify the frontend correctly handles both null and empty string for `saferAlternative`
+- [ ] The combined analysis returns `saferAlternative: ""` for green clauses (tool schema requires string). The handler in `combined-analysis.ts` normalizes `""` → `null`. Verify the frontend correctly handles both `null` and empty string for `saferAlternative`.
+- [ ] Verify the `clause_positions` event type in `packages/shared/src/schemas/events.ts` matches what the orchestrator emits
 
 #### 3.5 — Production deployment and validation
 
 - [ ] Run full quality gate: `pnpm turbo lint type-check test build`
 - [ ] Deploy to Vercel (or let auto-deploy on push)
-- [ ] **Performance smoke test on production** — upload the Dutch test PDF and measure:
-  - Time from upload to first clause result (target: <10 seconds)
-  - Time from upload to all clauses complete (target: <30 seconds)
-  - Time from upload to summary (target: <35 seconds)
-  - Total Vercel function duration from logs
-  - Number of SSE reconnections (target: 0 — should complete in one connection)
+- [ ] **Performance smoke test on production** — test with documents from `test-documents/`:
+
+  | Document | File | What to verify |
+  |----------|------|----------------|
+  | US English lease | `01-lease-en-us-gov.pdf` | Heuristic parse works (numbered sections), reasonable clause count, risk analysis makes sense |
+  | English NDA | `02-nda-en-usdoj.pdf` | Shorter document, fewer clauses, fast completion |
+  | French lease | `03-lease-fr-gov.pdf` | Multilingual heading detection, French-language explanations |
+  | German/English lease | `04-lease-de-en-mieterbund.pdf` | Mixed-language handling, German heading keywords |
+  | English ToS | `05-tos-en-sample.pdf` | Different contract type, ToS-specific risk patterns |
+  | English/German freelance | `06-freelance-en-de.pdf` | Freelance-specific patterns, IP/payment/non-compete risks |
+
+- [ ] For each document, measure:
+  - Time from upload to first clause result (target: <15 seconds)
+  - Time from upload to all clauses complete (target: <60 seconds for 20+ clause contracts, <30s for shorter ones)
+  - Time from upload to summary (target: within 15s of last clause)
+  - Number of SSE reconnections (target: 0)
   - JSON parse errors (target: 0)
+  - Which parse path was taken (heuristic vs Haiku fallback) — check structured logs
 - [ ] **Quality smoke test on production:**
-  - Upload a residential lease → verify clause count is reasonable, risk levels make sense
-  - Upload a freelance contract → verify different patterns matched
-  - Upload a non-contract → verify rejection still works
+  - Upload a non-contract (e.g., a recipe PDF or any non-legal document) → verify rejection still works
   - Upload a scanned PDF → verify rejection still works
   - Rate limit still works
   - Concurrent tabs still work (atomic claim)
@@ -664,27 +1050,32 @@ pnpm turbo lint type-check test build
 - [ ] Check Vercel function logs for:
   - No Vercel Runtime Timeout errors
   - No JSON parse errors
-  - Structured logs show pipeline timing
-  - RAG patterns loaded correctly
+  - Structured logs show pipeline timing (parse method, clause count, analysis duration)
+  - RAG patterns loaded correctly (check for "RAG type map fallback" if contract type doesn't match exactly)
 - [ ] Compare before/after:
   | Metric | Before | After | Improvement |
   |--------|--------|-------|-------------|
-  | Total time | 4-5 min | ? | ? |
-  | First clause | 3+ min | ? | ? |
-  | API calls | ~40 | 3 | ~13x fewer |
+  | Total time | 4-5 min | ? | target: 5-10x faster |
+  | First clause | 3+ min | ? | target: <15s |
+  | API calls | ~40 | 3-4 | ~10-13x fewer |
   | JSON errors | frequent | 0 | eliminated |
   | Vercel timeouts | frequent | 0 | eliminated |
+  | Parse time | 3+ min | <3s (heuristic) or <5s (Haiku) | ~60x faster |
 
 #### 3.6 — Update documentation
 
-- [ ] Update `packages/agents/CLAUDE.md`: remove references to deleted files, finalize new architecture docs
+- [ ] Update `packages/agents/CLAUDE.md`:
+  - Remove references to deleted files (`parse.ts`, `risk.ts`, `rewrite.ts` and their prompts)
+  - Remove "**OLD:**" labels — these files no longer exist
+  - Finalize documentation for hybrid parse chain: `smart-parse.ts` → `heuristic-parse.ts` + `boundary-detect.ts`
 - [ ] Update root `CLAUDE.md`:
-  - Update pipeline description
-  - Remove "Parallel clause processing" note (replaced by single streaming call)
-  - Remove "Pipeline resumability" notes about per-batch heartbeats (simplified)
-  - Update "Clause position strategy" to note heuristic parse
-  - Add note about `strict: true` structured outputs
-  - Add performance characteristics
+  - Update pipeline description to: `Gate → Hybrid Parse (heuristic + Haiku fallback) → Bulk RAG → Combined Streaming Analysis (tool_use) → [Summary fallback]`
+  - Remove "Parallel clause processing in batches of 5" note (replaced by single streaming call)
+  - Update "Pipeline resumability" to reflect new architecture (cached parse + per-event heartbeat)
+  - Update "Clause position strategy" to note hybrid parse with anchor-based boundary detection
+  - Add note about `strict: true` structured outputs eliminating JSON parse errors
+  - Add note about RAG type mapping (`RAG_TYPE_MAP` in orchestrator handles contract type mismatches like `residential_lease` → `lease`)
+  - Add performance characteristics section
 - [ ] Update `docs/BUILD_PLAN.md`: check off Phase 6 smoke tests if they now pass
 - [ ] Update `README.md` architecture diagram if it references the old pipeline
 
@@ -698,22 +1089,46 @@ pnpm turbo lint type-check test build
 ```bash
 pnpm turbo lint type-check test build
 # Production smoke tests pass (all items in 3.5)
-# Performance target met: <30 seconds total
+# Performance target met: <60 seconds total for complex contracts, <30s for simple ones
 ```
 
 ### Exit Criteria
-- [ ] Frontend renders skeleton cards immediately after heuristic parse
+- [ ] Frontend renders skeleton cards immediately after parse (driven by `clause_positions` event)
 - [ ] Clause cards fill in progressively with smooth animation
 - [ ] Progress indicator shows determinate progress (X of N)
-- [ ] Old agent code (parse.ts, risk.ts, rewrite.ts) deleted
+- [ ] Old agent code (parse.ts, risk.ts, rewrite.ts and their prompts/tests) deleted
 - [ ] All imports resolve, no dead code
 - [ ] Production deployment works — no Vercel timeouts
-- [ ] Performance validated: <30 seconds total, first clause in <10 seconds
+- [ ] Performance validated: <60 seconds total for Dutch test PDF, first clause in <15 seconds
 - [ ] Zero JSON parse errors on production
 - [ ] All smoke tests pass
-- [ ] All documentation updated
+- [ ] All documentation updated (agents CLAUDE.md, root CLAUDE.md, README)
 - [ ] Quality gate passes
-- [ ] Commit: `perf: frontend streaming UX, cleanup dead code, validate 15-20x speedup`
+- [ ] Commit: `perf: frontend streaming UX, cleanup dead code, validate performance improvement`
+
+---
+
+## Phase 4: Ambitious UI — PDF Viewer + Live Clause Highlighting (Future)
+
+> **This phase is not yet planned in detail.** It will be scoped after Phase 3 ships and production performance is validated. This is a stub to capture the vision.
+
+**Vision:** A split-screen experience where the uploaded PDF is rendered on the left with each clause highlighted in its risk color (red/yellow/green). As analysis streams in, clauses animate from a "scanning" state to their final color with the risk report appearing on the right. Think GPTZero's document highlighting meets a professional legal review tool.
+
+**Key components to research/build:**
+- PDF rendering in-browser (`react-pdf` / `pdf.js`) with text layer overlay
+- Clause highlight overlays using `startIndex`/`endIndex` positions (already stored)
+- "Analyzing..." animation per clause (shimmer/pulse on the highlighted region)
+- Side-by-side layout: PDF left, risk cards right
+- Synchronized scrolling between PDF and risk cards
+- Click a clause in the PDF → scroll to its risk card (and vice versa)
+- Mobile: stack layout (PDF on top, cards below) or tab switching
+
+**Prerequisites from earlier phases:**
+- `startIndex`/`endIndex` positions must be accurate (computed via `indexOf()` ✓)
+- `clause_positions` event provides clause data instantly after parse ✓
+- Streaming analysis fills in risk data progressively ✓
+
+**This phase is a full UI redesign** — scope it as its own build plan with design system updates, component inventory, and Playwright visual QA.
 
 ---
 
@@ -748,10 +1163,9 @@ Verify all of these before committing:
 
 ## Rollback Plan
 
-If the new pipeline produces worse analysis quality:
-1. The old agents (`risk.ts`, `rewrite.ts`, `parse.ts`) are retained through Phase 2
+If the new pipeline produces issues after Phase 3 (old agent files deleted):
+1. Git history preserves the old agents — `git checkout <commit> -- packages/agents/src/parse.ts packages/agents/src/risk.ts packages/agents/src/rewrite.ts` to restore
 2. The orchestrator can be reverted to import the old per-clause agents
-3. The heuristic parser can be swapped back for the LLM parse
-4. RAG can revert to per-clause embedding + vector search
+3. RAG can revert to per-clause embedding + vector search by re-importing `findSimilarPatterns` and `embedTexts`
 
 The DB schema is unchanged. The SSE event types are backwards-compatible (new `clause_positions` event is additive). The frontend gracefully handles missing events.
