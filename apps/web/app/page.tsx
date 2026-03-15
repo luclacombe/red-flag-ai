@@ -1,10 +1,32 @@
+import { HeroSection } from "@/components/hero-section";
+import { HowItWorks } from "@/components/how-it-works";
+import { LegalDisclaimer } from "@/components/legal-disclaimer";
+import { NavBar } from "@/components/nav-bar";
+import { UploadZone } from "@/components/upload-zone";
+
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold">RedFlag AI</h1>
-      <p className="mt-4 text-lg text-gray-600">
-        AI-powered contract risk analysis. Upload coming soon.
-      </p>
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <NavBar />
+      <HeroSection />
+
+      {/* Upload section */}
+      <section id="upload" className="bg-slate-50 px-4 py-12 md:py-16">
+        <div className="mx-auto max-w-xl">
+          <h2 className="text-center font-heading text-xl font-semibold text-slate-900 md:text-2xl">
+            Analyze your contract
+          </h2>
+          <div className="mt-8">
+            <UploadZone />
+          </div>
+        </div>
+      </section>
+
+      <HowItWorks />
+
+      <div className="mt-auto">
+        <LegalDisclaimer />
+      </div>
+    </div>
   );
 }
