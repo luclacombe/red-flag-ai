@@ -113,39 +113,80 @@ export const analysisRouter = router({
         return;
       }
 
-      // ── PROCESSING → recovery path ─────────────────────────
+      // ── PROCESSING → wait for completion or reclaim if stale ─
       if (analysis.status === "processing") {
-        const existingClauses = await db
-          .select()
-          .from(clauses)
-          .where(eq(clauses.analysisId, input.analysisId))
-          .orderBy(clauses.position);
-
-        for (const clause of existingClauses) {
-          yield {
-            type: "clause_analysis" as const,
-            data: {
-              clauseText: clause.clauseText,
-              startIndex: clause.startIndex,
-              endIndex: clause.endIndex,
-              position: clause.position,
-              riskLevel: clause.riskLevel,
-              explanation: clause.explanation,
-              saferAlternative: clause.saferAlternative ?? null,
-              category: clause.category,
-              matchedPatterns: (clause.matchedPatterns as string[]) ?? [],
-            },
-          };
-        }
-
-        // Check staleness
         const isStale = Date.now() - analysis.updatedAt.getTime() > STALE_THRESHOLD_MS;
         if (!isStale) {
-          yield {
-            type: "status" as const,
-            message: "Analysis in progress on another connection...",
-          };
-          return;
+          // Another connection is actively processing — poll DB until it finishes
+          yield { type: "status" as const, message: "Analysis in progress..." };
+
+          for (;;) {
+            await new Promise((r) => setTimeout(r, 5_000));
+            const rows = await db.select().from(analyses).where(eq(analyses.id, input.analysisId));
+            const current = rows[0];
+            if (!current) return;
+
+            if (current.status === "complete") {
+              // Replay results from DB
+              const completedClauses = await db
+                .select()
+                .from(clauses)
+                .where(eq(clauses.analysisId, input.analysisId))
+                .orderBy(clauses.position);
+
+              for (const clause of completedClauses) {
+                yield {
+                  type: "clause_analysis" as const,
+                  data: {
+                    clauseText: clause.clauseText,
+                    startIndex: clause.startIndex,
+                    endIndex: clause.endIndex,
+                    position: clause.position,
+                    riskLevel: clause.riskLevel,
+                    explanation: clause.explanation,
+                    saferAlternative: clause.saferAlternative ?? null,
+                    category: clause.category,
+                    matchedPatterns: (clause.matchedPatterns as string[]) ?? [],
+                  },
+                };
+              }
+
+              yield {
+                type: "summary" as const,
+                data: {
+                  overallRiskScore: current.overallRiskScore ?? 0,
+                  recommendation: (current.recommendation ?? "caution") as
+                    | "sign"
+                    | "caution"
+                    | "do_not_sign",
+                  topConcerns: (current.topConcerns as string[]) ?? [],
+                  clauseBreakdown: {
+                    red: completedClauses.filter((c) => c.riskLevel === "red").length,
+                    yellow: completedClauses.filter((c) => c.riskLevel === "yellow").length,
+                    green: completedClauses.filter((c) => c.riskLevel === "green").length,
+                  },
+                  language: "",
+                  contractType: "",
+                },
+              };
+              return;
+            }
+
+            if (current.status === "failed") {
+              yield {
+                type: "error" as const,
+                message: current.errorMessage ?? "Analysis failed.",
+                recoverable: true,
+              };
+              return;
+            }
+
+            // Check if it became stale while we were polling
+            const nowStale = Date.now() - current.updatedAt.getTime() > STALE_THRESHOLD_MS;
+            if (nowStale) break; // Fall through to claim stale analysis
+
+            yield { type: "status" as const, message: "Analysis in progress..." };
+          }
         }
         // Fall through to claim stale analysis
       }

@@ -30,7 +30,7 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 
 - **`analysis.stream`** — SSE subscription. Input: `{ analysisId: string (uuid) }`. Dual path:
   - Complete → replays clauses + summary from DB
-  - Processing (not stale) → yields existing clauses, returns status message
+  - Processing (not stale) → polls DB every 5s until analysis completes or fails, then replays results. Sends keepalive status events while polling. Falls through to claim if it becomes stale.
   - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline
   - Failed → yields error event
 - **`analysis.get`** — Query. Returns analysis record + all clauses (for page refresh without SSE)

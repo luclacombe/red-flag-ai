@@ -97,7 +97,28 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
 
     let rawClauses: ParsedClause[];
     try {
-      rawClauses = await parseClauses(text, contractType, language);
+      // Parse with keepalive — send status events every 15s to prevent SSE timeout
+      const parsePromise = parseClauses(text, contractType, language);
+      for (;;) {
+        const result = await Promise.race([
+          parsePromise.then(
+            (value) => ({ status: "fulfilled" as const, value }),
+            (error: unknown) => ({ status: "rejected" as const, error }),
+          ),
+          new Promise<{ status: "pending" }>((r) =>
+            setTimeout(() => r({ status: "pending" }), 15_000),
+          ),
+        ]);
+
+        if (result.status === "fulfilled") {
+          rawClauses = result.value;
+          break;
+        }
+        if (result.status === "rejected") {
+          throw result.error;
+        }
+        yield { type: "status", message: "Still parsing contract clauses..." };
+      }
     } catch (parseErr) {
       logger.error("Parse failed", {
         step: "parse",

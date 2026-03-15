@@ -39,6 +39,7 @@ Upload → [Relevance Gate] → [Parse Agent] → [Risk Agent + RAG] → [Rewrit
 - **RAG degradation**: If Voyage API is down, orchestrator skips RAG and appends note to explanations.
 - **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared` — JSON-structured logs with `timestamp`, `level`, `message`, metadata fields. No raw `console.log`.
 - **Dynamic max_tokens**: Parse agent uses `estimateMaxTokens(textLen)` (chars/3 + 512, clamped 4096–32768) instead of a static value. On retry, budget increases by 50%. Always check `stop_reason` before parsing JSON — a static `max_tokens` caused production truncation on large documents.
+- **SSE keepalive during parse**: Orchestrator sends "Still parsing contract clauses..." status events every 15s while the parse agent runs, preventing SSE connection timeouts on Vercel. Uses `Promise.race` pattern with the parse promise.
 
 ## Rules
 

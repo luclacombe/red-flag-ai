@@ -191,23 +191,50 @@ describe("analysis.stream", () => {
     });
   });
 
-  it("returns status message for non-stale processing analysis", async () => {
+  it("polls DB and replays results when processing analysis completes", async () => {
+    vi.useFakeTimers();
+
     const analysis = {
       id: "a1",
       status: "processing",
       updatedAt: new Date(), // Just now — not stale
+    };
+    const completedAnalysis = {
+      id: "a1",
+      status: "complete",
+      updatedAt: new Date(),
+      overallRiskScore: 30,
+      recommendation: "sign",
+      topConcerns: [],
+    };
+    const dbClause = {
+      clauseText: "Clause 1.",
+      startIndex: 0,
+      endIndex: 9,
+      position: 0,
+      riskLevel: "green",
+      explanation: "Standard.",
+      saferAlternative: null,
+      category: "general",
+      matchedPatterns: [],
     };
 
     let callCount = 0;
     mockSelect.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
+        // Initial status check → processing
         return { from: () => ({ where: () => Promise.resolve([analysis]) }) };
       }
+      if (callCount === 2) {
+        // First poll → complete
+        return { from: () => ({ where: () => Promise.resolve([completedAnalysis]) }) };
+      }
+      // Clause replay
       return {
         from: () => ({
           where: () => ({
-            orderBy: () => Promise.resolve([]),
+            orderBy: () => Promise.resolve([dbClause]),
           }),
         }),
       };
@@ -215,14 +242,26 @@ describe("analysis.stream", () => {
 
     const caller = await createCaller();
     const events: SSEEvent[] = [];
-    const iterable = await caller.analysis.stream({
-      analysisId: "550e8400-e29b-41d4-a716-446655440000",
-    });
-    for await (const event of iterable) {
-      events.push(event as SSEEvent);
-    }
+
+    // Start consuming events (will block on 5s poll interval)
+    const collectPromise = (async () => {
+      const iterable = await caller.analysis.stream({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      });
+      for await (const event of iterable) {
+        events.push(event as SSEEvent);
+      }
+    })();
+
+    // Advance past the 5s poll interval
+    await vi.advanceTimersByTimeAsync(6_000);
+    await collectPromise;
 
     expect(events.some((e) => e.type === "status")).toBe(true);
+    expect(events.some((e) => e.type === "clause_analysis")).toBe(true);
+    expect(events.some((e) => e.type === "summary")).toBe(true);
+
+    vi.useRealTimers();
   });
 
   it("runs pipeline for pending analysis after claiming", async () => {
