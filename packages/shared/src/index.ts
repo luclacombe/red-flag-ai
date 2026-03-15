@@ -24,6 +24,8 @@ export {
 export {
   type ClauseEvent,
   ClauseEventSchema,
+  type ClausePositionsEvent,
+  ClausePositionsEventSchema,
   type ErrorEvent,
   ErrorEventSchema,
   type SSEEvent,

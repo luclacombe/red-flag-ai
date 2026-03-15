@@ -15,7 +15,8 @@ Leaf package — all other packages import from here, this imports nothing inter
 |--------|------|---------|
 | ClauseAnalysisSchema | `schemas/clause.ts` | Shape of a single analyzed clause |
 | SummarySchema | `schemas/summary.ts` | Overall analysis summary with risk score |
-| SSEEventSchema | `schemas/events.ts` | Discriminated union of all streamed event types |
+| SSEEventSchema | `schemas/events.ts` | Discriminated union of all streamed event types (status, clause_positions, clause_analysis, summary, error) |
+| ClausePositionsEventSchema | `schemas/events.ts` | **NEW (Phase 1):** Skeleton card event — `{ totalClauses, clauses: ParsedClause[] }`. Emitted after heuristic parse for instant UI feedback. |
 | KnowledgePatternSchema | `schemas/knowledge.ts` | RAG knowledge base entry (no embedding field) |
 | GateResultSchema | `schemas/gate.ts` | Relevance gate output |
 | ParsedClauseSchema, PositionedClauseSchema | `schemas/parse.ts` | Parse agent output (text + position) and orchestrator-enriched version (with startIndex/endIndex) |
