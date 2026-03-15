@@ -10,7 +10,7 @@ import {
 } from "@redflag/shared";
 import { parseClauses } from "./parse";
 import { rewriteClause } from "./rewrite";
-import { analyzeClause, type RiskAnalysisResult } from "./risk";
+import { analyzeClause } from "./risk";
 import { summarize } from "./summary";
 
 /** Similarity threshold for considering a knowledge pattern as "matched" */
@@ -81,7 +81,7 @@ async function updateAnalysisStatus(
  * Event sequence:
  *   status → status → clause_analysis (×N) → status → summary
  *
- * Each clause is processed sequentially:
+ * Clauses are processed in parallel batches of 5:
  *   findSimilarPatterns → analyzeClause → rewriteClause (if flagged) → persist → yield
  */
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
@@ -167,98 +167,106 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       ragDegraded = true;
     }
 
-    // ── Step 3: Process each clause ───────────────────────────
+    // ── Step 3: Process clauses in parallel batches ──────────
+    const CLAUSE_CONCURRENCY = 5;
     const allAnalyses: ClauseAnalysis[] = [];
 
-    for (const [i, clause] of positionedClauses.entries()) {
-      // 3a. Retrieve similar patterns (skip if Voyage failed)
-      let patterns: SimilarPattern[] = [];
-      const clauseEmbedding = embeddings?.[i];
-      if (clauseEmbedding) {
-        try {
-          patterns = await findSimilarPatterns(clauseEmbedding, {
-            topK: 5,
-            contractType,
-          });
-        } catch {
-          // DB query failed — continue without patterns for this clause
+    for (
+      let batchStart = 0;
+      batchStart < positionedClauses.length;
+      batchStart += CLAUSE_CONCURRENCY
+    ) {
+      const batch = positionedClauses.slice(batchStart, batchStart + CLAUSE_CONCURRENCY);
+
+      const batchResults = await Promise.allSettled(
+        batch.map(async (clause, batchIdx) => {
+          const i = batchStart + batchIdx;
+
+          // Retrieve similar patterns (skip if Voyage failed)
+          let patterns: SimilarPattern[] = [];
+          const clauseEmbedding = embeddings?.[i];
+          if (clauseEmbedding) {
+            try {
+              patterns = await findSimilarPatterns(clauseEmbedding, {
+                topK: 5,
+                contractType,
+              });
+            } catch {
+              // DB query failed — continue without patterns
+            }
+          }
+
+          // Risk analysis
+          const riskResult = await analyzeClause(clause, patterns, language);
+
+          // Rewrite (only for red/yellow)
+          let saferAlternative: string | null = null;
+          if (riskResult.riskLevel !== "green") {
+            try {
+              saferAlternative = await rewriteClause(
+                clause.text,
+                riskResult.riskLevel,
+                riskResult.explanation,
+                language,
+              );
+            } catch {
+              // Not critical — continue with null alternative
+            }
+          }
+
+          // Build analysis
+          const matchedPatterns = patterns
+            .filter((p) => p.similarity >= PATTERN_MATCH_THRESHOLD)
+            .map((p) => p.id);
+
+          return {
+            clauseText: clause.text,
+            startIndex: Math.max(0, clause.startIndex),
+            endIndex: Math.max(1, clause.endIndex),
+            position: clause.position,
+            riskLevel: riskResult.riskLevel,
+            explanation: ragDegraded
+              ? `${riskResult.explanation} (Note: analysis performed without knowledge base reference)`
+              : riskResult.explanation,
+            saferAlternative,
+            category: riskResult.category,
+            matchedPatterns,
+          } satisfies ClauseAnalysis;
+        }),
+      );
+
+      // Yield results from this batch, persist to DB
+      for (const [batchIdx, result] of batchResults.entries()) {
+        if (result.status === "fulfilled") {
+          const clauseAnalysis = result.value;
+
+          try {
+            await db.insert(clauses).values({
+              analysisId,
+              clauseText: clauseAnalysis.clauseText,
+              startIndex: clauseAnalysis.startIndex,
+              endIndex: clauseAnalysis.endIndex,
+              position: clauseAnalysis.position,
+              riskLevel: clauseAnalysis.riskLevel,
+              explanation: clauseAnalysis.explanation,
+              saferAlternative: clauseAnalysis.saferAlternative,
+              category: clauseAnalysis.category,
+              matchedPatterns: clauseAnalysis.matchedPatterns,
+            });
+          } catch {
+            // DB insert failed — still yield the event to the client
+          }
+
+          allAnalyses.push(clauseAnalysis);
+          yield { type: "clause_analysis", data: clauseAnalysis };
+        } else {
+          yield {
+            type: "error",
+            message: `Failed to analyze clause ${batchStart + batchIdx + 1}. Skipping.`,
+            recoverable: true,
+          };
         }
       }
-
-      // 3b. Run risk analysis
-      let riskResult: RiskAnalysisResult;
-      try {
-        riskResult = await analyzeClause(clause, patterns, language);
-      } catch {
-        yield {
-          type: "error",
-          message: `Failed to analyze clause ${i + 1}. Skipping.`,
-          recoverable: true,
-        };
-        continue;
-      }
-
-      // 3c. Run rewrite (only for red/yellow)
-      let saferAlternative: string | null = null;
-      if (riskResult.riskLevel !== "green") {
-        try {
-          saferAlternative = await rewriteClause(
-            clause.text,
-            riskResult.riskLevel,
-            riskResult.explanation,
-            language,
-          );
-        } catch {
-          // Rewrite failed — not critical, continue with null alternative
-        }
-      }
-
-      // 3d. Compute matched pattern IDs (programmatic, not Claude-reported)
-      const matchedPatterns = patterns
-        .filter((p) => p.similarity >= PATTERN_MATCH_THRESHOLD)
-        .map((p) => p.id);
-
-      // 3e. Clamp positions (handle indexOf = -1 case)
-      const startIndex = Math.max(0, clause.startIndex);
-      const endIndex = Math.max(1, clause.endIndex);
-
-      // 3f. Build final ClauseAnalysis
-      const clauseAnalysis: ClauseAnalysis = {
-        clauseText: clause.text,
-        startIndex,
-        endIndex,
-        position: clause.position,
-        riskLevel: riskResult.riskLevel,
-        explanation: ragDegraded
-          ? `${riskResult.explanation} (Note: analysis performed without knowledge base reference)`
-          : riskResult.explanation,
-        saferAlternative,
-        category: riskResult.category,
-        matchedPatterns,
-      };
-
-      // 3g. Persist to DB
-      try {
-        await db.insert(clauses).values({
-          analysisId,
-          clauseText: clauseAnalysis.clauseText,
-          startIndex: clauseAnalysis.startIndex,
-          endIndex: clauseAnalysis.endIndex,
-          position: clauseAnalysis.position,
-          riskLevel: clauseAnalysis.riskLevel,
-          explanation: clauseAnalysis.explanation,
-          saferAlternative: clauseAnalysis.saferAlternative,
-          category: clauseAnalysis.category,
-          matchedPatterns: clauseAnalysis.matchedPatterns,
-        });
-      } catch {
-        // DB insert failed — still yield the event to the client
-      }
-
-      allAnalyses.push(clauseAnalysis);
-
-      // 3h. Stream to client
-      yield { type: "clause_analysis", data: clauseAnalysis };
     }
 
     // ── Step 4: Generate summary ──────────────────────────────
