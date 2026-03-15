@@ -1,5 +1,3 @@
-// Schemas
-
 // Constants
 export {
   MAX_FILE_SIZE_BYTES,
@@ -7,6 +5,11 @@ export {
   RATE_LIMIT_PER_DAY,
   VOYAGE_DIMENSIONS,
 } from "./constants";
+
+// Logger
+export { logger } from "./logger";
+
+// Schemas
 export { type ClauseAnalysis, ClauseAnalysisSchema } from "./schemas/clause";
 export {
   type AnalysisStatus,

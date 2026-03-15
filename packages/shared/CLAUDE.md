@@ -6,6 +6,7 @@ Leaf package — all other packages import from here, this imports nothing inter
 
 - `src/schemas/` — Zod schemas for all data shapes crossing package boundaries
 - `src/constants.ts` — Shared constants (MAX_PAGES, RATE_LIMIT_PER_DAY, VOYAGE_DIMENSIONS, MAX_FILE_SIZE_BYTES)
+- `src/logger.ts` — Structured JSON logger (`logger.info/warn/error`). Uses `console.log` + `JSON.stringify` — Vercel captures natively.
 - `src/index.ts` — Barrel export (Biome enforces alphabetical import ordering)
 
 ## Schemas
