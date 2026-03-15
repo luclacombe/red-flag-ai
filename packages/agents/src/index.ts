@@ -14,8 +14,5 @@ export {
   analyzeContract,
   computeClausePositions,
 } from "./orchestrator";
-export { parseClauses } from "./parse";
-export { rewriteClause } from "./rewrite";
-export { analyzeClause, type RiskAnalysisResult } from "./risk";
 export { isSuspiciousResult, parseClausesSmart } from "./smart-parse";
 export { summarize } from "./summary";
