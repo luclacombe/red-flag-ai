@@ -230,17 +230,12 @@ describe("analyzeAllClauses", () => {
     expect(clause?.type === "clause_analysis" && clause.data.endIndex).toBe(50);
   });
 
-  it("sets strict and eager_input_streaming on all 3 tool definitions", () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(3);
+  it("sets strict and eager_input_streaming on tool definitions", () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(2);
     for (const tool of TOOL_DEFINITIONS) {
       expect(tool.strict).toBe(true);
       expect(tool.eager_input_streaming).toBe(true);
     }
-    expect(TOOL_DEFINITIONS.map((t) => t.name)).toEqual([
-      "report_clause",
-      "report_safe_clauses",
-      "report_summary",
-    ]);
   });
 
   it("handles stop_reason: max_tokens — yields error for missing clauses", async () => {
@@ -574,152 +569,5 @@ describe("analyzeAllClauses", () => {
     expect(clauseEvents).toHaveLength(2);
     expect(clauseEvents[0]?.type === "clause_analysis" && clauseEvents[0].data.position).toBe(1);
     expect(clauseEvents[1]?.type === "clause_analysis" && clauseEvents[1].data.position).toBe(2);
-  });
-
-  it("yields clause_analysis events from report_safe_clauses batch", async () => {
-    // Batch 2 green clauses, then 1 red individual, then summary
-    const events: Record<string, unknown>[] = [
-      {
-        type: "message_start",
-        message: { id: "msg_1", type: "message", role: "assistant", content: [] },
-      },
-      ...toolCallEvents(0, "report_safe_clauses", {
-        safeClauses: [
-          { position: 1, category: "payment", note: "Standard monthly rent clause." },
-          { position: 2, category: "maintenance", note: "Standard repair obligations." },
-        ],
-      }),
-      ...toolCallEvents(1, "report_clause", {
-        position: 0,
-        riskLevel: "red",
-        explanation: "Entry without notice is illegal.",
-        category: "entry_rights",
-        saferAlternative: "Landlord must give 48h notice.",
-      }),
-      ...toolCallEvents(2, "report_summary", {
-        overallRiskScore: 55,
-        recommendation: "caution",
-        topConcerns: ["Entry without notice"],
-      }),
-      {
-        type: "message_delta",
-        delta: { stop_reason: "end_turn", stop_sequence: null },
-        usage: { output_tokens: 300 },
-      },
-      { type: "message_stop" },
-    ];
-
-    mockStream.mockReturnValue(createMockStream(events));
-    const result = await collectEvents(analyzeAllClauses(defaultParams));
-
-    const clauseEvents = result.filter((e) => e.type === "clause_analysis");
-    const summaryEvents = result.filter((e) => e.type === "summary");
-
-    expect(clauseEvents).toHaveLength(3);
-    expect(summaryEvents).toHaveLength(1);
-
-    // Green clauses from batch
-    const green1 = clauseEvents[0];
-    expect(green1?.type === "clause_analysis" && green1.data.riskLevel).toBe("green");
-    expect(green1?.type === "clause_analysis" && green1.data.position).toBe(1);
-    expect(green1?.type === "clause_analysis" && green1.data.explanation).toBe(
-      "Standard monthly rent clause.",
-    );
-    expect(green1?.type === "clause_analysis" && green1.data.saferAlternative).toBeNull();
-    expect(green1?.type === "clause_analysis" && green1.data.clauseText).toBe(
-      "Rent shall be paid monthly on the first day.",
-    );
-
-    // Red clause from individual report
-    const red = clauseEvents[2];
-    expect(red?.type === "clause_analysis" && red.data.riskLevel).toBe("red");
-    expect(red?.type === "clause_analysis" && red.data.position).toBe(0);
-
-    // Summary includes correct breakdown
-    const summary = summaryEvents[0];
-    expect(summary?.type === "summary" && summary.data.clauseBreakdown).toEqual({
-      red: 1,
-      yellow: 0,
-      green: 2,
-    });
-  });
-
-  it("handles report_safe_clauses with invalid positions gracefully", async () => {
-    const events: Record<string, unknown>[] = [
-      {
-        type: "message_start",
-        message: { id: "msg_1", type: "message", role: "assistant", content: [] },
-      },
-      ...toolCallEvents(0, "report_safe_clauses", {
-        safeClauses: [
-          { position: 0, category: "general", note: "Standard clause." },
-          { position: 99, category: "general", note: "Invalid position." },
-        ],
-      }),
-      ...toolCallEvents(1, "report_summary", {
-        overallRiskScore: 10,
-        recommendation: "sign",
-        topConcerns: [],
-      }),
-      {
-        type: "message_delta",
-        delta: { stop_reason: "end_turn", stop_sequence: null },
-        usage: { output_tokens: 100 },
-      },
-      { type: "message_stop" },
-    ];
-
-    mockStream.mockReturnValue(createMockStream(events));
-    const result = await collectEvents(
-      analyzeAllClauses({ ...defaultParams, clauses: [firstClause] }),
-    );
-
-    const clauseEvents = result.filter((e) => e.type === "clause_analysis");
-    expect(clauseEvents).toHaveLength(1);
-    expect(clauseEvents[0]?.type === "clause_analysis" && clauseEvents[0].data.position).toBe(0);
-  });
-
-  it("handles all-safe contract with only report_safe_clauses", async () => {
-    const events: Record<string, unknown>[] = [
-      {
-        type: "message_start",
-        message: { id: "msg_1", type: "message", role: "assistant", content: [] },
-      },
-      ...toolCallEvents(0, "report_safe_clauses", {
-        safeClauses: [
-          { position: 0, category: "entry_rights", note: "Standard entry notice clause." },
-          { position: 1, category: "payment", note: "Standard rent payment." },
-          { position: 2, category: "maintenance", note: "Fair repair terms." },
-        ],
-      }),
-      ...toolCallEvents(1, "report_summary", {
-        overallRiskScore: 5,
-        recommendation: "sign",
-        topConcerns: [],
-      }),
-      {
-        type: "message_delta",
-        delta: { stop_reason: "end_turn", stop_sequence: null },
-        usage: { output_tokens: 200 },
-      },
-      { type: "message_stop" },
-    ];
-
-    mockStream.mockReturnValue(createMockStream(events));
-    const result = await collectEvents(analyzeAllClauses(defaultParams));
-
-    const clauseEvents = result.filter((e) => e.type === "clause_analysis");
-    const summaryEvents = result.filter((e) => e.type === "summary");
-
-    expect(clauseEvents).toHaveLength(3);
-    expect(
-      clauseEvents.every((e) => e.type === "clause_analysis" && e.data.riskLevel === "green"),
-    ).toBe(true);
-    expect(summaryEvents).toHaveLength(1);
-    expect(summaryEvents[0]?.type === "summary" && summaryEvents[0].data.clauseBreakdown).toEqual({
-      red: 0,
-      yellow: 0,
-      green: 3,
-    });
   });
 });

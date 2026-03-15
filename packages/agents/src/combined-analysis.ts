@@ -51,43 +51,6 @@ const REPORT_CLAUSE_TOOL: Anthropic.Messages.Tool = {
   },
 };
 
-const REPORT_SAFE_CLAUSES_TOOL: Anthropic.Messages.Tool = {
-  name: "report_safe_clauses",
-  description: "Batch report all standard/safe clauses that pose no unusual risk",
-  strict: true,
-  eager_input_streaming: true,
-  input_schema: {
-    type: "object",
-    properties: {
-      safeClauses: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            position: {
-              type: "integer",
-              description: "Zero-based clause position from the [N] label",
-            },
-            category: {
-              type: "string",
-              description: "Clause category (e.g. rent, termination, maintenance)",
-            },
-            note: {
-              type: "string",
-              description: "One-sentence explanation of what this clause covers (max 20 words)",
-            },
-          },
-          required: ["position", "category", "note"],
-          additionalProperties: false,
-        },
-        description: "All safe/green clauses with categories and brief notes",
-      },
-    },
-    required: ["safeClauses"],
-    additionalProperties: false,
-  },
-};
-
 const REPORT_SUMMARY_TOOL: Anthropic.Messages.Tool = {
   name: "report_summary",
   description: "Report overall contract risk summary after analyzing all clauses",
@@ -117,7 +80,7 @@ const REPORT_SUMMARY_TOOL: Anthropic.Messages.Tool = {
 };
 
 /** Exported for test assertions */
-export const TOOL_DEFINITIONS = [REPORT_CLAUSE_TOOL, REPORT_SAFE_CLAUSES_TOOL, REPORT_SUMMARY_TOOL];
+export const TOOL_DEFINITIONS = [REPORT_CLAUSE_TOOL, REPORT_SUMMARY_TOOL];
 
 // ── Internal Zod Schemas (defense-in-depth alongside strict: true) ─
 
@@ -127,16 +90,6 @@ const ReportClauseInputSchema = z.object({
   explanation: z.string(),
   category: z.string(),
   saferAlternative: z.string(),
-});
-
-const ReportSafeClausesInputSchema = z.object({
-  safeClauses: z.array(
-    z.object({
-      position: z.number().int().nonnegative(),
-      category: z.string(),
-      note: z.string(),
-    }),
-  ),
 });
 
 const ReportSummaryInputSchema = z.object({
@@ -156,7 +109,7 @@ export interface CombinedAnalysisParams {
 
 /**
  * Estimate max output tokens based on clause count.
- * ~300 tokens per clause average: green clauses use ~30 tokens via batch tool,
+ * ~300 tokens per clause average: green clauses use ~50 tokens (brief explanation),
  * red/yellow use ~600 tokens (concise explanation + rewrite).
  * + 4096 buffer for summary + inter-tool text.
  * Cap at 64000 (Sonnet 4.6 max output tokens).
@@ -271,13 +224,6 @@ async function* analyzeAllClausesInternal(
 
         if (tool.name === "report_clause") {
           yield* handleReportClause(tool.jsonBuf, clauseMap, analyzedPositions, clauseRiskLevels);
-        } else if (tool.name === "report_safe_clauses") {
-          yield* handleReportSafeClauses(
-            tool.jsonBuf,
-            clauseMap,
-            analyzedPositions,
-            clauseRiskLevels,
-          );
         } else if (tool.name === "report_summary") {
           yield* handleReportSummary(
             tool.jsonBuf,
@@ -370,61 +316,6 @@ function* handleReportClause(
   });
 
   yield { type: "clause_analysis", data: analysis };
-}
-
-function* handleReportSafeClauses(
-  jsonBuf: string,
-  clauseMap: Map<number, PositionedClause>,
-  analyzedPositions: Set<number>,
-  clauseRiskLevels: string[],
-): Generator<SSEEvent> {
-  let input: z.infer<typeof ReportSafeClausesInputSchema>;
-  try {
-    const parsed = JSON.parse(jsonBuf) as unknown;
-    input = ReportSafeClausesInputSchema.parse(parsed);
-  } catch (error) {
-    logger.error("Failed to parse report_safe_clauses input", {
-      error: error instanceof Error ? error.message : String(error),
-      jsonBuf: jsonBuf.slice(0, 200),
-    });
-    return;
-  }
-
-  logger.info("Batch safe clauses received", { count: input.safeClauses.length });
-
-  for (const entry of input.safeClauses) {
-    const clause = clauseMap.get(entry.position);
-    if (!clause) {
-      logger.warn("Invalid safe clause position from Claude", {
-        position: entry.position,
-        validPositions: [...clauseMap.keys()],
-      });
-      continue;
-    }
-
-    analyzedPositions.add(entry.position);
-    clauseRiskLevels.push("green");
-
-    const analysis: ClauseAnalysis = {
-      clauseText: clause.text,
-      startIndex: Math.max(0, clause.startIndex),
-      endIndex: Math.max(1, clause.endIndex),
-      position: clause.position,
-      riskLevel: "green",
-      explanation: entry.note,
-      category: entry.category,
-      saferAlternative: null,
-      matchedPatterns: [],
-    };
-
-    logger.info("Clause analyzed", {
-      position: clause.position,
-      riskLevel: "green",
-      category: entry.category,
-    });
-
-    yield { type: "clause_analysis", data: analysis };
-  }
 }
 
 function* handleReportSummary(
