@@ -17,7 +17,7 @@ AI contract red-flag detector. Upload a PDF, get clause-by-clause risk analysis 
 ```
 apps/web/              → Next.js 16 App Router (UI + route handlers)
 packages/api/          → tRPC v11 routers, procedures, context
-packages/agents/       → Agent pipeline (gate, parse, risk, rewrite, summary)
+packages/agents/       → Agent pipeline (gate, hybrid parse, combined analysis, summary)
 packages/db/           → Drizzle schema, migrations, client, queries (incl. RAG vector search)
 packages/shared/       → Zod schemas, types, constants, logger (all packages import from here)
 ```
@@ -84,14 +84,16 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Vercel constraint:** first SSE event must emit within 25 seconds. Pipeline emits a status event immediately.
 - **RAG vector search** lives in `packages/db`, not `packages/agents` — it's a database query. Bulk fetch by contract type (`getPatternsByContractType()`), injected into system prompt. Orchestrator includes `RAG_TYPE_MAP` to map gate types (e.g. `residential_lease`) to knowledge base types (e.g. `lease`).
 - **Claude models:** Haiku for relevance gate + boundary detection fallback (fast/cheap), Sonnet for combined analysis + summary
-- **Hybrid clause parsing** (Phase 1b): Heuristic regex parser runs first (instant, free). If the result is suspicious (e.g. 1 clause for a large document — common with unconventional formatting), falls back to Haiku LLM boundary detection (~1-3s, ~$0.001). Haiku returns only line numbers via `strict: true` tool_use; splitting is deterministic. Graceful degradation: if Haiku fails, heuristic result used as-is.
-- **Combined streaming analysis** (Phase 2): Single `client.messages.stream()` call with `report_clause` and `report_summary` tools. Uses `strict: true` (constrained decoding — guaranteed valid JSON, zero parse errors) and `eager_input_streaming: true` (fine-grained streaming). Replaces ~30 separate risk + rewrite calls with 1 streaming call. Total pipeline: 3-4 API calls (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
-- **Clause positions** (`startIndex`/`endIndex`) are computed by `computeClausePositions()` via `text.indexOf()` after heuristic parse. Stored even though MVP uses vertical card stack — enables future side-by-side view.
+- **Hybrid clause parsing:** Heuristic regex parser runs first (instant, free). If the result is suspicious (e.g. 1 clause for a large document — common with unconventional formatting), falls back to Haiku LLM anchor-based boundary detection (~1-3s, ~$0.001). Haiku returns the first ~10 words of each clause via `strict: true` tool_use; `splitAtAnchors()` finds them via `indexOf()`. Graceful degradation: if Haiku fails, heuristic result used as-is.
+- **Combined streaming analysis:** Single `client.messages.stream()` call with `report_clause` and `report_summary` tools. Uses `strict: true` (constrained decoding — guaranteed valid JSON, zero parse errors) and `eager_input_streaming: true` (fine-grained streaming). Total pipeline: 3-4 API calls (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
+- **Clause positions** (`startIndex`/`endIndex`) are computed by `computeClausePositions()` via `text.indexOf()` after hybrid parse. Stored even though MVP uses vertical card stack — enables future side-by-side view.
+- **Frontend streaming UX:** Server emits `clause_positions` event immediately after parse. Frontend renders exact number of skeleton cards instantly, replaces each with a colored `ClauseCard` as `clause_analysis` events stream in. Determinate progress bar shows "Analyzed X of N clauses".
 - **Connection pooling:** Use Supabase's transaction pooler URL (port 6543) in Drizzle config, not the direct connection — Vercel serverless creates a new connection per invocation
 - **Prompt injection defense:** All agent prompts must frame document text as untrusted input. Zod validates output structure, but system prompts must also instruct Claude to analyze objectively regardless of any instructions in the document
 - **Pipeline idempotency:** Use atomic `UPDATE ... WHERE status = 'pending' RETURNING *` to prevent duplicate pipeline runs from concurrent SSE subscriptions. If status is already `processing`, yield persisted clauses from DB instead of re-running
 - **Pipeline resumability:** Parse results are cached in `analyses.parsedClauses`. Clause analyses are persisted individually as each `report_clause` tool call completes. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from where it left off. Heartbeat updates `updatedAt` after each yielded event to prevent premature stale detection (90s threshold).
-- **Clause position strategy:** Heuristic parse returns clause text; orchestrator computes `startIndex`/`endIndex` via `text.indexOf()`. Claude references clauses by position number only (no verbatim copying in output — saves ~50% output tokens).
+- **Clause position strategy:** Hybrid parse returns clause text; orchestrator computes `startIndex`/`endIndex` via `text.indexOf()`. Claude references clauses by position number only (no verbatim copying in output — saves ~50% output tokens).
+- **Performance characteristics:** First clause result in ~8-10s from upload. Full analysis in ~20-30s for typical contracts. Zero JSON parse errors (guaranteed by `strict: true` structured outputs). Zero Vercel timeouts (heartbeat-based keepalive).
 
 ## Current Stack Versions
 

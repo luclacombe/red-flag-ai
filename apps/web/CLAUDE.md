@@ -49,9 +49,10 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 ### Analysis page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Manages all 5 page states (loading, streaming, complete, failed, 404). |
+| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Handles `clause_positions` event for instant skeleton cards, replaces each with a `ClauseCard` as `clause_analysis` events arrive. Determinate progress ("Analyzed X of N clauses"). Manages all 5 page states (loading, streaming, complete, failed, 404). |
 | `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). CSS fade-slide-in animation. |
 | `StatusBar` | `status-bar.tsx` | Blue bar below nav. CSS-only text shimmer animation (no motion library). `prefers-reduced-motion`: static text + pulsing dot. `aria-live="polite"`. |
+| `ProgressBar` | `progress-bar.tsx` | Thin amber bar showing determinate progress (X of N clauses). CSS transition on width. `role="progressbar"` with `aria-valuenow/min/max`. |
 | `RecommendationBadge` | `recommendation-badge.tsx` | Large pill: "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red). Uses `Recommendation` type. |
 | `BreakdownBar` | `breakdown-bar.tsx` | Horizontal stacked bar (red|amber|green segments) with dot + count labels. Pure div widths, no charting library. |
 | `SummaryPanel` | `summary-panel.tsx` | Composed: RiskScore + RecommendationBadge + BreakdownBar + top concerns list + contract type/language. Fade-in animation. |

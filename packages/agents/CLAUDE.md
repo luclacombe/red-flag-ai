@@ -10,16 +10,13 @@ Agent pipeline — pure async functions for each step of contract analysis.
 - `src/boundary-detect.ts` — **Anchor-based** clause boundary detection (`detectClauseBoundaries(text, contractType, language)` → `ParsedClause[]`). Uses Haiku with `strict: true` tool_use. Haiku returns the first ~10 words of each clause copied verbatim; `splitAtAnchors()` finds them via `indexOf()` with whitespace-normalized fallback. Works regardless of PDF line structure. Also exports `findAnchorPosition()` and `splitAtAnchors()`.
 - `src/smart-parse.ts` — Hybrid parse wrapper (`parseClausesSmart(text, contractType, language)` → `Promise<ParsedClause[]>`). Runs heuristic parser first; if result is suspicious (too few clauses for document size), falls back to Haiku boundary detection. Also exports `isSuspiciousResult()` for testing.
 - `src/prompts/boundary-detect.ts` — System prompt + user message builder for Haiku anchor-based boundary detection. Raw document text (no line numbering), untrusted input framing.
-- `src/combined-analysis.ts` — **NEW (Phase 2):** Single streaming Claude call with `report_clause` + `report_summary` tools. `analyzeAllClauses(params)` → async generator yielding `SSEEvent`. Uses `strict: true` (guaranteed valid JSON) and `eager_input_streaming: true` (fine-grained streaming). Replaces separate risk + rewrite agents.
-- `src/prompts/combined-analysis.ts` — **NEW (Phase 2):** Combined system prompt + user message builder for the streaming analysis call. Merges risk analysis + rewrite + summary instructions. RAG patterns injected into system prompt.
+- `src/combined-analysis.ts` — Single streaming Claude call with `report_clause` + `report_summary` tools. `analyzeAllClauses(params)` → async generator yielding `SSEEvent`. Uses `strict: true` (guaranteed valid JSON) and `eager_input_streaming: true` (fine-grained streaming).
+- `src/prompts/combined-analysis.ts` — Combined system prompt + user message builder for the streaming analysis call. Merges risk analysis + rewrite + summary instructions. RAG patterns injected into system prompt.
 - `src/format-patterns.ts` — RAG pattern formatting (`formatPatternsForPrompt(patterns)` → `string`) and in-memory cosine similarity (`findTopMatchesInMemory(clauseText, embedding, patterns, topK)` → `{ patternId, similarity }[]`).
 - `src/compute-matched-patterns.ts` — Batch embed + in-memory similarity (`computeMatchedPatterns(clauses, patterns)` → `Map<number, string[]>`). One Voyage call for all clauses, then cosine similarity against pre-fetched patterns.
 - `src/summary.ts` — Summary agent (`summarize(analyses, contractType, language)` → `Omit<Summary, "clauseBreakdown">`). Used as fallback when `report_summary` tool is not called by the combined analysis.
 - `src/orchestrator.ts` — Pipeline orchestrator (`analyzeContract(params)` async generator → `SSEEvent`). Chains smart parse (hybrid heuristic + LLM) → bulk RAG → combined streaming analysis → summary fallback. Also exports `computeClausePositions()`.
-- `src/parse.ts` — **OLD:** LLM-based parse agent. Retained for reference, no longer imported by orchestrator.
-- `src/risk.ts` — **OLD:** Per-clause risk agent. Retained for reference, no longer imported by orchestrator.
-- `src/rewrite.ts` — **OLD:** Per-clause rewrite agent. Retained for reference, no longer imported by orchestrator.
-- `src/prompts/` — System prompts + user message builders (gate, boundary-detect, combined-analysis, summary, and old: parse, risk, rewrite)
+- `src/prompts/` — System prompts + user message builders (gate, boundary-detect, combined-analysis, summary)
 - `src/__tests__/` — Unit tests for all agents, orchestrator, heuristic parser, boundary detection, smart parse, combined analysis, pattern formatting, matched patterns
 - `src/__tests__/fixtures/generate-pdf.ts` — Minimal valid PDF generator for tests (no deps)
 

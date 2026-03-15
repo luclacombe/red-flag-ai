@@ -2,7 +2,7 @@
 
 > This plan restructures the agent pipeline from ~40 API calls (4-5 min) to 3 API calls (~20-30 sec).
 > Each phase = one focused Claude Code session.
-> Start each session: `"Read docs/PERF_BUILD_PLAN.md, begin Phase N"`
+> Start each session: `"Read docs/BUILD_PLAN_V2.md, begin Phase N"`
 > End each session: quality gate passes → update checkboxes → commit
 
 ---
@@ -124,7 +124,7 @@ Decisions from `BUILD_PLAN.md` still hold unless overridden here.
 
 **Entry criteria:** Current MVP pipeline works (even if slow). All packages build. Knowledge base seeded.
 
-**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file), `CLAUDE.md`, and the current code:
+**Context for this session:** Read `docs/BUILD_PLAN_V2.md` (this file), `CLAUDE.md`, and the current code:
 - `packages/agents/src/parse.ts` — current LLM parse (being replaced)
 - `packages/agents/src/orchestrator.ts` — current orchestrator (will use new parse)
 - `packages/agents/src/prompts/parse.ts` — current parse prompt (will be unused)
@@ -311,7 +311,7 @@ pnpm turbo lint type-check test build
 
 **Entry criteria:** Phase 1 + Phase 2 complete. Heuristic parser, bulk RAG, and combined analysis all working. The issue is specifically that the heuristic parser produces poor results on unconventional documents.
 
-**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file — especially this Phase 1b section), `CLAUDE.md`, and:
+**Context for this session:** Read `docs/BUILD_PLAN_V2.md` (this file — especially this Phase 1b section), `CLAUDE.md`, and:
 - `packages/agents/src/heuristic-parse.ts` — current heuristic parser (being wrapped, NOT replaced)
 - `packages/agents/src/orchestrator.ts` — current orchestrator (calls `parseClausesHeuristic` — will call the new smart wrapper instead)
 - `packages/agents/src/client.ts` — Anthropic client factory + model constants (`MODELS.haiku`)
@@ -508,7 +508,7 @@ Why this is better:
 
 **Entry criteria:** Phase 1b + Phase 2 complete. The hybrid parse triggers LLM fallback correctly but produces poor splits. Combined analysis works but runs out of tokens.
 
-**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file — especially this Phase 2b section), `CLAUDE.md`, and:
+**Context for this session:** Read `docs/BUILD_PLAN_V2.md` (this file — especially this Phase 2b section), `CLAUDE.md`, and:
 - `packages/agents/src/boundary-detect.ts` — current line-number-based detection (being rewritten to anchor-based)
 - `packages/agents/src/prompts/boundary-detect.ts` — current prompt (being updated)
 - `packages/agents/src/smart-parse.ts` — smart parse wrapper (no changes needed)
@@ -655,7 +655,7 @@ pnpm turbo lint type-check test build
 
 **Entry criteria:** Phase 1 complete. Heuristic parser and bulk RAG query working and tested.
 
-**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file), `CLAUDE.md`, and:
+**Context for this session:** Read `docs/BUILD_PLAN_V2.md` (this file), `CLAUDE.md`, and:
 - `packages/agents/src/heuristic-parse.ts` — new heuristic parser (Phase 1)
 - `packages/agents/src/format-patterns.ts` — pattern formatting + in-memory similarity (Phase 1)
 - `packages/agents/src/compute-matched-patterns.ts` — batch embed + similarity (Phase 1)
@@ -945,7 +945,7 @@ pnpm turbo lint type-check test build
 
 **Entry criteria:** Phases 1, 1b/2b, and 2 complete. Pipeline works locally: hybrid parse (heuristic + Haiku fallback) → bulk RAG → single streaming combined analysis → summary. The `clause_positions` SSE event is emitted by the server but NOT yet handled by the frontend.
 
-**Context for this session:** Read `docs/PERF_BUILD_PLAN.md` (this file), `CLAUDE.md`, and:
+**Context for this session:** Read `docs/BUILD_PLAN_V2.md` (this file), `CLAUDE.md`, and:
 - `apps/web/src/components/analysis-view.tsx` — main analysis page client component (**key file: does NOT handle `clause_positions` yet**)
 - `apps/web/src/components/clause-card.tsx` — clause card component
 - `apps/web/src/components/clause-skeleton.tsx` — skeleton loader
@@ -961,43 +961,43 @@ pnpm turbo lint type-check test build
 
 #### 3.1 — Handle `clause_positions` event in frontend
 
-- [ ] Update `apps/web/src/components/analysis-view.tsx` to handle the `clause_positions` SSE event:
+- [x] Update `apps/web/src/components/analysis-view.tsx` to handle the `clause_positions` SSE event:
   - Add a `"clause_positions"` case to the event switch statement
   - When received, store `totalClauses` and the clause position list in component state
   - Immediately render skeleton cards for ALL clauses (one per position)
   - Each skeleton card should show the clause number and occupy the correct vertical space
   - This gives users an instant structural preview of the document
-- [ ] The skeleton cards should use the existing `ClauseSkeleton` component
-- [ ] As `clause_analysis` events arrive, replace the corresponding skeleton with a real `ClauseCard`:
+- [x] The skeleton cards should use the existing `ClauseSkeleton` component
+- [x] As `clause_analysis` events arrive, replace the corresponding skeleton with a real `ClauseCard`:
   - Match by `position` field
   - Animate the transition: skeleton → colored card (CSS fade/slide, matching existing `fade-slide-in` animation)
-- [ ] Replace the current hardcoded skeleton logic (1-3 skeletons based on `streamClauses.length`) with position-aware skeletons driven by `clause_positions` data
-- [ ] Update the progress indicator to show: `"Analyzed 3 of 18 clauses..."` with a determinate progress bar (since total is known from `clause_positions`)
+- [x] Replace the current hardcoded skeleton logic (1-3 skeletons based on `streamClauses.length`) with position-aware skeletons driven by `clause_positions` data
+- [x] Update the progress indicator to show: `"Analyzed 3 of 18 clauses..."` with a determinate progress bar (since total is known from `clause_positions`)
 
 #### 3.2 — Improve streaming UX
 
-- [ ] The `StatusBar` should update more meaningfully now:
+- [x] The `StatusBar` should update more meaningfully now:
   - After `clause_positions`: `"Found 18 clauses. Analyzing..."`
   - During streaming: `"Analyzing clause 3 of 18..."` (update as each clause arrives)
   - Before summary: `"Generating summary..."`
-- [ ] Consider adding a determinate progress bar below the status bar (thin colored bar that fills as clauses complete)
-- [ ] The perceived speed improvement should be dramatic: instant skeleton cards, then results filling in within seconds
-- [ ] Verify `prefers-reduced-motion` is respected for all animations
+- [x] Consider adding a determinate progress bar below the status bar (thin colored bar that fills as clauses complete)
+- [x] The perceived speed improvement should be dramatic: instant skeleton cards, then results filling in within seconds
+- [x] Verify `prefers-reduced-motion` is respected for all animations
 
 #### 3.3 — Remove old agent code
 
 **Files to DELETE** (deprecated, not imported anywhere):
-- [ ] `packages/agents/src/parse.ts` (replaced by `heuristic-parse.ts` + `smart-parse.ts`)
-- [ ] `packages/agents/src/prompts/parse.ts` (no longer used)
-- [ ] `packages/agents/src/risk.ts` (replaced by `combined-analysis.ts`)
-- [ ] `packages/agents/src/prompts/risk.ts` (replaced by `prompts/combined-analysis.ts`)
-- [ ] `packages/agents/src/rewrite.ts` (replaced by `combined-analysis.ts`)
-- [ ] `packages/agents/src/prompts/rewrite.ts` (replaced by `prompts/combined-analysis.ts`)
+- [x] `packages/agents/src/parse.ts` (replaced by `heuristic-parse.ts` + `smart-parse.ts`)
+- [x] `packages/agents/src/prompts/parse.ts` (no longer used)
+- [x] `packages/agents/src/risk.ts` (replaced by `combined-analysis.ts`)
+- [x] `packages/agents/src/prompts/risk.ts` (replaced by `prompts/combined-analysis.ts`)
+- [x] `packages/agents/src/rewrite.ts` (replaced by `combined-analysis.ts`)
+- [x] `packages/agents/src/prompts/rewrite.ts` (replaced by `prompts/combined-analysis.ts`)
 
 **Test files to DELETE:**
-- [ ] `packages/agents/src/__tests__/parse.test.ts` → replaced by `heuristic-parse.test.ts` + `smart-parse.test.ts`
-- [ ] `packages/agents/src/__tests__/risk.test.ts` → replaced by `combined-analysis.test.ts`
-- [ ] `packages/agents/src/__tests__/rewrite.test.ts` → replaced by `combined-analysis.test.ts`
+- [x] `packages/agents/src/__tests__/parse.test.ts` → replaced by `heuristic-parse.test.ts` + `smart-parse.test.ts`
+- [x] `packages/agents/src/__tests__/risk.test.ts` → replaced by `combined-analysis.test.ts`
+- [x] `packages/agents/src/__tests__/rewrite.test.ts` → replaced by `combined-analysis.test.ts`
 
 **Files to KEEP** (active, do NOT delete):
 - `heuristic-parse.ts`, `smart-parse.ts`, `boundary-detect.ts` — hybrid parse chain
@@ -1009,19 +1009,19 @@ pnpm turbo lint type-check test build
 - `__tests__/heuristic-parse.test.ts`, `heuristic-parse-validation.test.ts`, `smart-parse.test.ts`, `boundary-detect.test.ts`, `combined-analysis.test.ts`, `compute-matched-patterns.test.ts`, `format-patterns.test.ts`, `orchestrator.test.ts`
 
 **After deletion:**
-- [ ] Update `packages/agents/src/index.ts` — remove old exports if any remain, verify new exports are present
-- [ ] Verify all imports across the codebase still resolve: `pnpm turbo type-check`
-- [ ] Run `npx biome check --write` to fix any import ordering issues
+- [x] Update `packages/agents/src/index.ts` — remove old exports if any remain, verify new exports are present
+- [x] Verify all imports across the codebase still resolve: `pnpm turbo type-check`
+- [x] Run `npx biome check --write` to fix any import ordering issues
 
 #### 3.4 — Update shared types if needed
 
-- [ ] Verify `ClauseAnalysis`, `Summary`, `SSEEvent` types are still correct
-- [ ] The combined analysis returns `saferAlternative: ""` for green clauses (tool schema requires string). The handler in `combined-analysis.ts` normalizes `""` → `null`. Verify the frontend correctly handles both `null` and empty string for `saferAlternative`.
-- [ ] Verify the `clause_positions` event type in `packages/shared/src/schemas/events.ts` matches what the orchestrator emits
+- [x] Verify `ClauseAnalysis`, `Summary`, `SSEEvent` types are still correct
+- [x] The combined analysis returns `saferAlternative: ""` for green clauses (tool schema requires string). The handler in `combined-analysis.ts` normalizes `""` → `null`. Verify the frontend correctly handles both `null` and empty string for `saferAlternative`.
+- [x] Verify the `clause_positions` event type in `packages/shared/src/schemas/events.ts` matches what the orchestrator emits
 
 #### 3.5 — Production deployment and validation
 
-- [ ] Run full quality gate: `pnpm turbo lint type-check test build`
+- [x] Run full quality gate: `pnpm turbo lint type-check test build`
 - [ ] Deploy to Vercel (or let auto-deploy on push)
 - [ ] **Performance smoke test on production** — test with documents from `test-documents/`:
 
@@ -1064,11 +1064,11 @@ pnpm turbo lint type-check test build
 
 #### 3.6 — Update documentation
 
-- [ ] Update `packages/agents/CLAUDE.md`:
+- [x] Update `packages/agents/CLAUDE.md`:
   - Remove references to deleted files (`parse.ts`, `risk.ts`, `rewrite.ts` and their prompts)
   - Remove "**OLD:**" labels — these files no longer exist
   - Finalize documentation for hybrid parse chain: `smart-parse.ts` → `heuristic-parse.ts` + `boundary-detect.ts`
-- [ ] Update root `CLAUDE.md`:
+- [x] Update root `CLAUDE.md`:
   - Update pipeline description to: `Gate → Hybrid Parse (heuristic + Haiku fallback) → Bulk RAG → Combined Streaming Analysis (tool_use) → [Summary fallback]`
   - Remove "Parallel clause processing in batches of 5" note (replaced by single streaming call)
   - Update "Pipeline resumability" to reflect new architecture (cached parse + per-event heartbeat)
@@ -1093,17 +1093,17 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Frontend renders skeleton cards immediately after parse (driven by `clause_positions` event)
-- [ ] Clause cards fill in progressively with smooth animation
-- [ ] Progress indicator shows determinate progress (X of N)
-- [ ] Old agent code (parse.ts, risk.ts, rewrite.ts and their prompts/tests) deleted
-- [ ] All imports resolve, no dead code
+- [x] Frontend renders skeleton cards immediately after parse (driven by `clause_positions` event)
+- [x] Clause cards fill in progressively with smooth animation
+- [x] Progress indicator shows determinate progress (X of N)
+- [x] Old agent code (parse.ts, risk.ts, rewrite.ts and their prompts/tests) deleted
+- [x] All imports resolve, no dead code
 - [ ] Production deployment works — no Vercel timeouts
 - [ ] Performance validated: <60 seconds total for Dutch test PDF, first clause in <15 seconds
 - [ ] Zero JSON parse errors on production
 - [ ] All smoke tests pass
-- [ ] All documentation updated (agents CLAUDE.md, root CLAUDE.md, README)
-- [ ] Quality gate passes
+- [x] All documentation updated (agents CLAUDE.md, root CLAUDE.md, README)
+- [x] Quality gate passes
 - [ ] Commit: `perf: frontend streaming UX, cleanup dead code, validate performance improvement`
 
 ---
@@ -1136,7 +1136,7 @@ pnpm turbo lint type-check test build
 
 ### Starting a phase
 ```
-Read docs/PERF_BUILD_PLAN.md, begin Phase N
+Read docs/BUILD_PLAN_V2.md, begin Phase N
 ```
 
 ### During a phase
