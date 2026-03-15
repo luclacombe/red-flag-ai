@@ -684,54 +684,63 @@ pnpm turbo lint type-check test build
 
 **Entry criteria:** Phase 3 complete. Pipeline streams events. tRPC subscription works.
 
+**UI Spec:** Read `docs/UI_SPEC.md` + `design-system/redflag-ai/MASTER.md` + `design-system/redflag-ai/pages/landing.md` before starting. These define the design direction, component inventory, and 21st.dev source URLs. The spec is guidance — use the tools (UI/UX Pro Max skill, Magic MCP, WebFetch) during implementation and update the spec files if you deviate.
+
 ### Tasks
 
-#### 4.1 — Design direction
-- [ ] Use **UI/UX Pro Max skill** to define design direction:
-  - Industry: legal tech / fintech / general
-  - Mood: trustworthy, clean, professional, modern
-  - Get: color palette, font pairing, UI style recommendation
-- [ ] Configure Tailwind theme with chosen design tokens (colors, fonts, spacing)
-- [ ] Install chosen fonts (Google Fonts via `next/font`)
+#### 4.1 — Design direction + theme setup
+- [x] Read `design-system/redflag-ai/MASTER.md` — design direction is already defined (Bold + Warm, Flat Design, hybrid dark/light)
+- [x] Use **UI/UX Pro Max skill** to validate and supplement decisions as needed:
+  - Run `--domain ux` for specific UX questions that arise
+  - Run `--domain style` if something feels off visually
+  - Update `MASTER.md` if you change any design tokens
+- [x] Configure Tailwind theme with design tokens from `MASTER.md` (colors, fonts, spacing)
+- [x] Install fonts via `next/font/google`: Space Grotesk (headings) + DM Sans (body)
+- [x] Install `motion` in `apps/web` (needed for BackgroundPaths + TextShimmer)
 
 #### 4.2 — Layout + shared components
-- [ ] App layout: clean nav bar (logo + "RedFlag AI" text), footer with legal disclaimer link
-- [ ] Use **21st.dev Magic MCP** for component generation where appropriate
-- [ ] Build shared components:
-  - `RiskBadge` — colored pill (red/yellow/green) with label
-  - `RiskScore` — circular progress indicator (0-100) with color
-  - `LoadingSkeleton` — pulse animation matching clause card shape
-  - `ErrorState` — friendly error display with retry option
-  - `LegalDisclaimer` — prominent, unavoidable disclaimer banner/modal
+- [x] App layout: dark nav bar (`slate-900`, logo text "RedFlag AI" in Space Grotesk 600), footer with legal disclaimer
+- [x] **Fetch 21st.dev component code via WebFetch** for components listed in `docs/UI_SPEC.md` § "21st.dev Component References". Do NOT guess the code — fetch from the URLs, then adapt.
+- [x] Build shared components (see `docs/UI_SPEC.md` § "Components Inventory" for full specs):
+  - `RiskBadge` — adapt from 21st.dev `arihantcodes/status-badge` (URL in UI_SPEC). Lucide icon + colored pill, 3 risk variants.
+  - `RiskScore` — adapt from 21st.dev `magicui/animated-circular-progress-bar` (URL in UI_SPEC). SVG gauge, CSS animated count-up, color by score range.
+  - `ClauseSkeleton` — pulse animation matching clause card shape (custom, CSS only)
+  - `ErrorState` — friendly error display with retry option (custom)
+  - `LegalDisclaimer` — footer text, not dismissable (custom)
+  - `ProcessingLoader` — adapt dots variant from 21st.dev `erikx/loader` (URL in UI_SPEC). Pure CSS.
+- [x] Install shadcn/ui primitives: `npx shadcn@latest add badge button card collapsible separator skeleton`
 
 #### 4.3 — Landing page (`/`)
-- [ ] Hero section:
-  - Headline: clear value prop
-  - Subheadline: one sentence explanation
-  - Visual element (illustration or icon set, not stock photos)
-- [ ] Upload zone below the fold:
+- [x] Read `design-system/redflag-ai/pages/landing.md` for layout and section order
+- [x] Hero section (dark bg, `slate-900`):
+  - `BackgroundPaths` component: **fetch from URL** in UI_SPEC, then modify (thicker strokes, risk colors, fewer paths). See modification notes in UI_SPEC.
+  - Bold headline (Space Grotesk 700): clear value prop
+  - Subheadline (DM Sans, `slate-300`): one sentence explanation. Optionally wrap in `TextShimmer` (fetch from URL in UI_SPEC).
+  - CTA button (`amber-500`): anchors to upload section
+- [x] Upload zone below hero (light bg, `slate-50`):
   - **Native HTML5 drag-and-drop** + `<input type="file" accept=".pdf">` — no `react-dropzone` dependency
   - File type validation (PDF only) with clear feedback
-  - Upload progress indicator
-  - Error states: wrong file type, too large, scanned PDF, not a contract
-- [ ] How it works section (3 steps, icons)
-- [ ] Legal disclaimer visible on this page (footer or inline)
-- [ ] Mobile-first, responsive
+  - Upload progress bar
+  - States: idle, drag-over (amber border), uploading, processing (ProcessingLoader + "Checking document..."), error, rejection
+- [x] How it works section (3 steps, Lucide icons, numbered). Horizontal on desktop, vertical on mobile.
+- [x] Legal disclaimer in footer
+- [x] Mobile-first, responsive (375px base, scale up)
 
 #### 4.4 — Upload flow + navigation
-- [ ] On file drop/select:
-  1. Show upload progress
+- [x] On file drop/select:
+  1. Show filename + size, progress bar fills
   2. POST to `/api/upload`
-  3. Handle responses:
+  3. ProcessingLoader with "Checking document..." during gate check
+  4. Handle responses:
      - Success (is contract) → navigate to `/analysis/[analysisId]`
-     - Rejection (not contract) → show inline message with reason
+     - Rejection (not contract) → show inline message with reason (red text, AlertCircle icon)
      - Error → show error state with retry
-- [ ] Rate limit check before upload (optional: pre-check via tRPC query, or handle 429 response)
+- [x] Rate limit check before upload (optional: pre-check via tRPC query, or handle 429 response)
 
 ### MCP Usage
-- **UI/UX Pro Max skill**: Design direction, color palette, font pairing
-- **21st.dev Magic MCP**: Generate polished UI components from descriptions
-- **Context7**: shadcn/ui component API, Tailwind v4 utility classes, Next.js App Router navigation
+- **UI/UX Pro Max skill**: Validate design decisions, run `--domain ux`/`--domain style` for specific questions. Script: `.claude/skills/ui-ux-pro-max-skill/src/ui-ux-pro-max/scripts/search.py`
+- **21st.dev Magic MCP**: Search for additional component inspiration via `mcp__magic__21st_magic_component_inspiration`. Fetch specific component code via WebFetch on 21st.dev URLs.
+- **Context7**: shadcn/ui component API, Tailwind v4 utility classes, Next.js App Router navigation, `motion` library API
 
 ### Quality Gate
 ```bash
@@ -739,12 +748,12 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Landing page looks professional and explains the product in 5 seconds
-- [ ] Upload flow works: drop PDF → upload completes → navigates to results page
-- [ ] Error states displayed for: wrong file type, too large, scanned PDF, not a contract
-- [ ] Mobile responsive (tested at 375px and 768px widths)
-- [ ] Legal disclaimer visible
-- [ ] Quality gate passes
+- [x] Landing page looks professional and explains the product in 5 seconds
+- [x] Upload flow works: drop PDF → upload completes → navigates to results page
+- [x] Error states displayed for: wrong file type, too large, scanned PDF, not a contract
+- [x] Mobile responsive (tested at 375px and 768px widths)
+- [x] Legal disclaimer visible
+- [x] Quality gate passes
 - [ ] Commit: `feat: landing page with upload flow and shared UI components`
 
 ---
@@ -755,54 +764,52 @@ pnpm turbo lint type-check test build
 
 **Entry criteria:** Phase 4 complete. Landing page and upload flow working.
 
+**UI Spec:** Read `docs/UI_SPEC.md` + `design-system/redflag-ai/MASTER.md` + `design-system/redflag-ai/pages/analysis.md` before starting. These define the streaming UX, clause card anatomy, summary panel spec, and all page states. The spec is guidance — use the tools and update the spec files if you deviate.
+
 ### Tasks
 
 #### 5.1 — Results page (`/analysis/[id]`)
+- [ ] Read `design-system/redflag-ai/pages/analysis.md` for full layout and state specs
 - [ ] Page logic (dual path):
   - Fetch analysis status via tRPC query
   - If `pending` or `processing` → subscribe to SSE, show streaming UI
-  - If `complete` → load clauses + summary from DB, render immediately
+  - If `complete` → load clauses + summary from DB, render immediately (no animation)
   - If `failed` → show error state with message
   - If not found → 404 page
 - [ ] Streaming UI:
-  - Status message bar at top (shows current pipeline step)
-  - Clause cards appear one at a time as events arrive
-  - Loading skeleton for upcoming clauses
-  - Summary panel appears last after all clauses
-- [ ] Clause card component:
-  - Left border color: red/yellow/green
-  - Clause text (collapsible if long)
-  - Risk badge
+  - `StatusBar` at top: `TextShimmer`-wrapped status text (fetch component from URL in UI_SPEC). Blue bg (`blue-50`), shows current pipeline step.
+  - Clause cards appear one at a time with CSS fade-in + slide-up (200ms ease-out, 30ms stagger)
+  - 2-3 `ClauseSkeleton` cards visible below last real card (pulse animation matching card shape)
+  - `SummaryPanel` appears last after all clauses
+- [ ] `ClauseCard` component (see `analysis.md` for full anatomy):
+  - 4px left border in risk color (`border-l-red-600` / `border-l-amber-600` / `border-l-green-600`)
+  - Category tag (`text-xs uppercase tracking-wide`)
+  - `RiskBadge` (built in Phase 4)
+  - Clause text (`text-sm font-mono` — monospace to look like contract text). Collapsible if > 3 lines.
   - Explanation paragraph
-  - Safer alternative (expandable section, only for red/yellow)
-  - Category tag
-- [ ] Summary panel:
-  - Overall risk score (large, colored number or gauge)
-  - Recommendation badge: "Safe to Sign" / "Proceed with Caution" / "Do Not Sign"
-  - Top concerns list (bulleted)
-  - Clause breakdown: X red, Y yellow, Z green (visual bar)
+  - Safer alternative: collapsible section (shadcn `Collapsible`), green-tinted bg when expanded, chevron toggle. Only for red/yellow clauses.
+- [ ] `SummaryPanel` component:
+  - `RiskScore` gauge (built in Phase 4) — animated count-up on appearance
+  - `RecommendationBadge`: large pill — "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red)
+  - `BreakdownBar`: horizontal stacked bar (red | yellow | green segments) with counts
+  - Top concerns: bulleted list
   - Contract type + language detected
-- [ ] Legal disclaimer: persistent banner at bottom or top of results
+- [ ] Legal disclaimer: persistent text at bottom of results
 
 #### 5.2 — States and edge cases
-- [ ] Loading state: skeleton cards + status message
-- [ ] Empty state: contract with all green clauses (celebratory message)
-- [ ] Error state: pipeline failure (show what succeeded + error message)
-- [ ] Rate limit exceeded state: friendly message explaining the limit + when they can try again
-- [ ] 404 state: analysis not found
+- [ ] See `analysis.md` § "Page States" for all 5 states with full specs
+- [ ] Loading/streaming state: `StatusBar` + skeleton cards
+- [ ] All green state: positive summary message, "Safe to Sign", green gauge, still show all clause cards
+- [ ] Error state: show any persisted clauses + error message with what failed
+- [ ] Rate limit exceeded state: friendly message + reset time
+- [ ] 404 state: simple centered "Analysis not found" + home link
 
 #### 5.3 — Visual QA
-- [ ] Use **Playwright MCP** to screenshot each page/state:
-  - Landing page (desktop + mobile)
-  - Upload in progress
-  - Upload error states
-  - Results page: streaming in progress
-  - Results page: complete with mixed red/yellow/green
-  - Results page: all green
-  - Results page: error state
-  - Rate limit exceeded
-- [ ] Review screenshots, iterate on spacing, colors, typography
+- [ ] Use **Playwright MCP** to screenshot each page/state (see `docs/UI_SPEC.md` § "Visual QA Plan" for the full list of 10 screenshots)
+- [ ] Review each screenshot against `MASTER.md` § "Pre-Delivery Checklist"
+- [ ] Use **UI/UX Pro Max skill** `--domain ux` to validate any UX decisions that feel uncertain
 - [ ] Fix any visual issues found
+- [ ] Iterate on spacing, colors, typography until polished
 
 #### 5.4 — Tests
 - [ ] No component unit tests for MVP (visual QA via Playwright screenshots is sufficient)
@@ -810,9 +817,10 @@ pnpm turbo lint type-check test build
 - [ ] Manual test: full end-to-end flow with a real PDF
 
 ### MCP Usage
-- **21st.dev Magic MCP**: Generate polished UI components from descriptions
-- **Playwright MCP**: Screenshot every page state for visual QA
-- **Context7**: shadcn/ui component API, Tailwind v4 utility classes
+- **UI/UX Pro Max skill**: Run `--domain ux` for UX validation, pre-delivery checklist from MASTER.md. Script: `.claude/skills/ui-ux-pro-max-skill/src/ui-ux-pro-max/scripts/search.py`
+- **21st.dev Magic MCP**: Search for additional component inspiration. Fetch code via WebFetch from URLs in UI_SPEC — do NOT guess component code.
+- **Playwright MCP**: Screenshot every page state for visual QA (10 screenshots defined in UI_SPEC)
+- **Context7**: shadcn/ui component API, Tailwind v4 utility classes, `motion` library API
 
 ### Quality Gate
 ```bash
