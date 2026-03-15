@@ -109,3 +109,49 @@
         opacity: 1;
     }
 }
+
+/* Clause card entrance animation */
+@keyframes fade-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status bar text shimmer (CSS-only, no motion library) */
+@keyframes text-shimmer {
+    from {
+        background-position: 200% center;
+    }
+    to {
+        background-position: -200% center;
+    }
+}
+
+.text-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgb(29, 78, 216) 0%,
+        rgb(29, 78, 216) 40%,
+        rgb(30, 64, 175) 50%,
+        rgb(29, 78, 216) 60%,
+        rgb(29, 78, 216) 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: text-shimmer 3s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .text-shimmer {
+        animation: none;
+        background: none;
+        color: rgb(29, 78, 216);
+    }
+}

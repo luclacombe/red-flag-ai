@@ -6,7 +6,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 
 - `app/` — App Router pages and route handlers
 - `app/fonts.ts` — Google Fonts: Space Grotesk (headings) + DM Sans (body)
-- `app/globals.css` — Tailwind v4 theme tokens, shadcn colors, custom keyframes
+- `app/globals.css` — Tailwind v4 theme tokens, shadcn colors, custom keyframes (`bounce-dots`, `fade-slide-in`, `text-shimmer`), `.text-shimmer` class with `prefers-reduced-motion` fallback
 - `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST)
 - `app/api/upload/route.ts` — PDF upload handler (POST, multipart/form-data)
 - `app/api/upload/__tests__/route.test.ts` — Upload route tests (10 tests)
@@ -20,7 +20,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | Route | Type | Purpose |
 |-------|------|---------|
 | `/` | Static | Landing page: hero, upload zone, how it works, footer |
-| `/analysis/[id]` | Dynamic | Analysis results page |
+| `/analysis/[id]` | Dynamic | Analysis results page. Server component passes id to `AnalysisView` client component. Dual path: SSE streaming for pending/processing, DB render for complete/failed. |
 | `/api/trpc/[trpc]` | API | tRPC endpoint |
 | `/api/upload` | API | PDF upload → validate → extract → gate → create records |
 
@@ -45,6 +45,16 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `ProcessingLoader` | `processing-loader.tsx` | Bouncing dots (CSS keyframes). Amber dots + configurable text. |
 | `ClauseSkeleton` | `clause-skeleton.tsx` | Pulse animation matching clause card shape. CSS only. |
 | `ErrorState` | `error-state.tsx` | AlertCircle icon + message + optional retry button. |
+
+### Analysis page components
+| Component | File | Notes |
+|-----------|------|-------|
+| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Manages all 5 page states (loading, streaming, complete, failed, 404). |
+| `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). CSS fade-slide-in animation. |
+| `StatusBar` | `status-bar.tsx` | Blue bar below nav. CSS-only text shimmer animation (no motion library). `prefers-reduced-motion`: static text + pulsing dot. `aria-live="polite"`. |
+| `RecommendationBadge` | `recommendation-badge.tsx` | Large pill: "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red). Uses `Recommendation` type. |
+| `BreakdownBar` | `breakdown-bar.tsx` | Horizontal stacked bar (red|amber|green segments) with dot + count labels. Pure div widths, no charting library. |
+| `SummaryPanel` | `summary-panel.tsx` | Composed: RiskScore + RecommendationBadge + BreakdownBar + top concerns list + contract type/language. Fade-in animation. |
 
 ## Upload Route (`POST /api/upload`)
 

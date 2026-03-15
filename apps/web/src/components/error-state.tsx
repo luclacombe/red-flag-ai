@@ -23,7 +23,7 @@ export function ErrorState({ message, onRetry, className }: ErrorStateProps) {
         <button
           type="button"
           onClick={onRetry}
-          className="cursor-pointer rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-50"
+          className="cursor-pointer rounded-lg border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1"
         >
           Try again
         </button>

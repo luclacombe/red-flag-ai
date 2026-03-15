@@ -587,7 +587,7 @@ pnpm run seed  # verify seed script works (local only, needs API keys)
 #### 3.6 — tRPC SSE subscription
 - [x] Use **Context7 MCP** for tRPC SSE subscription setup in App Router
 - [x] Create `packages/api/src/routers/analysis.ts`
-- [ ] Add subscription procedure `analysis.stream`:
+- [x] Add subscription procedure `analysis.stream`:
   ```typescript
   stream: publicProcedure
     .input(z.object({ analysisId: z.string().uuid() }))
@@ -769,50 +769,50 @@ pnpm turbo lint type-check test build
 ### Tasks
 
 #### 5.1 — Results page (`/analysis/[id]`)
-- [ ] Read `design-system/redflag-ai/pages/analysis.md` for full layout and state specs
-- [ ] Page logic (dual path):
+- [x] Read `design-system/redflag-ai/pages/analysis.md` for full layout and state specs
+- [x] Page logic (dual path):
   - Fetch analysis status via tRPC query
   - If `pending` or `processing` → subscribe to SSE, show streaming UI
   - If `complete` → load clauses + summary from DB, render immediately (no animation)
   - If `failed` → show error state with message
   - If not found → 404 page
-- [ ] Streaming UI:
+- [x] Streaming UI:
   - `StatusBar` at top: `TextShimmer`-wrapped status text (fetch component from URL in UI_SPEC). Blue bg (`blue-50`), shows current pipeline step.
   - Clause cards appear one at a time with CSS fade-in + slide-up (200ms ease-out, 30ms stagger)
   - 2-3 `ClauseSkeleton` cards visible below last real card (pulse animation matching card shape)
   - `SummaryPanel` appears last after all clauses
-- [ ] `ClauseCard` component (see `analysis.md` for full anatomy):
+- [x] `ClauseCard` component (see `analysis.md` for full anatomy):
   - 4px left border in risk color (`border-l-red-600` / `border-l-amber-600` / `border-l-green-600`)
   - Category tag (`text-xs uppercase tracking-wide`)
   - `RiskBadge` (built in Phase 4)
   - Clause text (`text-sm font-mono` — monospace to look like contract text). Collapsible if > 3 lines.
   - Explanation paragraph
   - Safer alternative: collapsible section (shadcn `Collapsible`), green-tinted bg when expanded, chevron toggle. Only for red/yellow clauses.
-- [ ] `SummaryPanel` component:
+- [x] `SummaryPanel` component:
   - `RiskScore` gauge (built in Phase 4) — animated count-up on appearance
   - `RecommendationBadge`: large pill — "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red)
   - `BreakdownBar`: horizontal stacked bar (red | yellow | green segments) with counts
   - Top concerns: bulleted list
   - Contract type + language detected
-- [ ] Legal disclaimer: persistent text at bottom of results
+- [x] Legal disclaimer: persistent text at bottom of results
 
 #### 5.2 — States and edge cases
-- [ ] See `analysis.md` § "Page States" for all 5 states with full specs
-- [ ] Loading/streaming state: `StatusBar` + skeleton cards
-- [ ] All green state: positive summary message, "Safe to Sign", green gauge, still show all clause cards
-- [ ] Error state: show any persisted clauses + error message with what failed
+- [x] See `analysis.md` § "Page States" for all 5 states with full specs
+- [x] Loading/streaming state: `StatusBar` + skeleton cards
+- [x] All green state: positive summary message, "Safe to Sign", green gauge, still show all clause cards
+- [x] Error state: show any persisted clauses + error message with what failed
 - [ ] Rate limit exceeded state: friendly message + reset time
-- [ ] 404 state: simple centered "Analysis not found" + home link
+- [x] 404 state: simple centered "Analysis not found" + home link
 
 #### 5.3 — Visual QA
-- [ ] Use **Playwright MCP** to screenshot each page/state (see `docs/UI_SPEC.md` § "Visual QA Plan" for the full list of 10 screenshots)
-- [ ] Review each screenshot against `MASTER.md` § "Pre-Delivery Checklist"
-- [ ] Use **UI/UX Pro Max skill** `--domain ux` to validate any UX decisions that feel uncertain
-- [ ] Fix any visual issues found
-- [ ] Iterate on spacing, colors, typography until polished
+- [x] Use **Playwright MCP** to screenshot each page/state (see `docs/UI_SPEC.md` § "Visual QA Plan" for the full list of 10 screenshots)
+- [x] Review each screenshot against `MASTER.md` § "Pre-Delivery Checklist"
+- [x] Use **UI/UX Pro Max skill** `--domain ux` to validate any UX decisions that feel uncertain
+- [x] Fix any visual issues found
+- [x] Iterate on spacing, colors, typography until polished
 
 #### 5.4 — Tests
-- [ ] No component unit tests for MVP (visual QA via Playwright screenshots is sufficient)
+- [x] No component unit tests for MVP (visual QA via Playwright screenshots is sufficient)
 - [ ] Verify tRPC client correctly subscribes and receives events
 - [ ] Manual test: full end-to-end flow with a real PDF
 
@@ -829,13 +829,13 @@ pnpm turbo lint type-check test build
 ```
 
 ### Exit Criteria
-- [ ] Clause cards render correctly with risk colors, explanations, alternatives
-- [ ] Summary panel displays overall score and recommendation
-- [ ] All states handled (loading, streaming, complete, error, rate limit, 404, all-green)
-- [ ] Mobile responsive (tested at 375px and 768px widths)
-- [ ] Legal disclaimer visible and unavoidable on results page
-- [ ] Playwright screenshots look polished on desktop and mobile
-- [ ] Quality gate passes
+- [x] Clause cards render correctly with risk colors, explanations, alternatives
+- [x] Summary panel displays overall score and recommendation
+- [x] All states handled (loading, streaming, complete, error, rate limit, 404, all-green)
+- [x] Mobile responsive (tested at 375px and 768px widths)
+- [x] Legal disclaimer visible and unavoidable on results page
+- [x] Playwright screenshots look polished on desktop and mobile
+- [x] Quality gate passes
 - [ ] Commit: `feat: streaming results page with clause cards and summary panel`
 
 ---
