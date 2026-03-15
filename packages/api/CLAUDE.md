@@ -8,6 +8,7 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 - `src/root.ts` — Root router combining all sub-routers
 - `src/routers/health.ts` — Health check router (`health.check` query)
 - `src/routers/analysis.ts` — Analysis router: `analysis.stream` (SSE subscription) + `analysis.get` (query)
+- `src/rateLimit.ts` — IP-based rate limiting: `checkRateLimit(ip)` → `{ limited, resetAt }`. Uses atomic UPSERT on `rate_limits` table. Exported via `@redflag/api/rateLimit`.
 - `src/index.ts` — Barrel export: `appRouter`, `AppRouter` type, `createTRPCContext`, `createCallerFactory`
 
 ## tRPC v11 Patterns

@@ -1,5 +1,6 @@
 import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
+import { logger } from "@redflag/shared";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 
@@ -40,6 +41,8 @@ export const analysisRouter = router({
     .subscription(async function* ({ input }) {
       const db = getDb();
 
+      logger.info("SSE subscription started", { analysisId: input.analysisId });
+
       const analysisRows = await db
         .select()
         .from(analyses)
@@ -47,9 +50,12 @@ export const analysisRouter = router({
       const analysis = analysisRows[0];
 
       if (!analysis) {
+        logger.warn("Analysis not found", { analysisId: input.analysisId });
         yield { type: "error" as const, message: "Analysis not found.", recoverable: false };
         return;
       }
+
+      logger.info("Analysis status", { analysisId: input.analysisId, status: analysis.status });
 
       // ── COMPLETE → replay from DB ──────────────────────────
       if (analysis.status === "complete") {
@@ -147,6 +153,7 @@ export const analysisRouter = router({
       // ── PENDING / STALE → claim and run pipeline ───────────
       const claimed = await claimAnalysis(input.analysisId);
       if (!claimed) {
+        logger.info("Analysis already claimed", { analysisId: input.analysisId });
         yield { type: "status" as const, message: "Analysis already in progress." };
         return;
       }
@@ -159,6 +166,10 @@ export const analysisRouter = router({
       const doc = docRows[0];
 
       if (!doc) {
+        logger.warn("Document not found", {
+          analysisId: input.analysisId,
+          documentId: analysis.documentId,
+        });
         yield {
           type: "error" as const,
           message: "Document not found.",
@@ -166,6 +177,14 @@ export const analysisRouter = router({
         };
         return;
       }
+
+      logger.info("Running pipeline", {
+        analysisId: input.analysisId,
+        documentId: doc.id,
+        textLen: doc.extractedText.length,
+        contractType: doc.contractType,
+        language: doc.language,
+      });
 
       // Run the pipeline, forwarding all events to the client
       for await (const event of analyzeContract({
@@ -176,6 +195,7 @@ export const analysisRouter = router({
       })) {
         yield event;
       }
+      logger.info("Pipeline stream complete", { analysisId: input.analysisId });
     }),
 
   /**
