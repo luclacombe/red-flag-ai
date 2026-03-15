@@ -1,5 +1,6 @@
+import { logger } from "@redflag/shared";
 import { z } from "zod";
-import { getAnthropicClient, MODELS } from "./client";
+import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildRewriteUserMessage, REWRITE_SYSTEM_PROMPT } from "./prompts/rewrite";
 
 const RewriteResponseSchema = z.object({
@@ -26,8 +27,11 @@ export async function rewriteClause(
   const client = getAnthropicClient();
   let lastError: unknown;
 
+  logger.info("Rewrite starting", { riskLevel, language });
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (attempt > 0) logger.info("Rewrite retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.sonnet,
         max_tokens: 1024,
@@ -45,10 +49,17 @@ export async function rewriteClause(
         throw new Error("No text content in Claude response");
       }
 
-      const parsed = JSON.parse(textBlock.text) as unknown;
+      const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = RewriteResponseSchema.parse(parsed);
+      logger.info("Rewrite complete", { resultLen: result.saferAlternative.length });
       return result.saferAlternative;
     } catch (error) {
+      logger.error("Rewrite attempt failed", {
+        step: "rewrite",
+        attempt: attempt + 1,
+        error: error instanceof Error ? error.message : String(error),
+        retried: attempt === 0,
+      });
       lastError = error;
       if (attempt === 0) continue;
     }

@@ -1,11 +1,12 @@
 import type { SimilarPattern } from "@redflag/db";
 import { analyses, clauses, embedTexts, eq, findSimilarPatterns, getDb } from "@redflag/db";
-import type {
-  ClauseAnalysis,
-  ParsedClause,
-  PositionedClause,
-  SSEEvent,
-  Summary,
+import {
+  type ClauseAnalysis,
+  logger,
+  type ParsedClause,
+  type PositionedClause,
+  type SSEEvent,
+  type Summary,
 } from "@redflag/shared";
 import { parseClauses } from "./parse";
 import { rewriteClause } from "./rewrite";
@@ -88,6 +89,8 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
   const language = params.language || "en";
   const db = getDb();
 
+  logger.info("Pipeline starting", { analysisId, contractType, language, textLen: text.length });
+
   try {
     // ── Step 1: Parse contract into clauses ────────────────────
     yield { type: "status", message: "Parsing contract clauses..." };
@@ -95,7 +98,11 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     let rawClauses: ParsedClause[];
     try {
       rawClauses = await parseClauses(text, contractType, language);
-    } catch {
+    } catch (parseErr) {
+      logger.error("Parse failed", {
+        step: "parse",
+        error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+      });
       yield {
         type: "error",
         message: "Failed to parse contract clauses. Please try again.",
@@ -118,6 +125,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     // Compute positions via indexOf
     const positionedClauses = computeClausePositions(text, rawClauses);
 
+    logger.info("Clauses parsed", { clauseCount: positionedClauses.length });
     yield {
       type: "status",
       message: `Found ${positionedClauses.length} clauses. Analyzing...`,
@@ -129,8 +137,12 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
 
     try {
       embeddings = await batchEmbed(positionedClauses.map((c) => c.text));
-    } catch {
-      // Voyage AI down — degrade gracefully, continue without RAG
+      logger.info("Embeddings complete", { vectorCount: embeddings.length });
+    } catch (embedErr) {
+      logger.warn("Embeddings failed, degrading gracefully", {
+        step: "embed",
+        error: embedErr instanceof Error ? embedErr.message : String(embedErr),
+      });
       ragDegraded = true;
     }
 
@@ -289,9 +301,19 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       // DB update failed — still yield the summary to the client
     }
 
+    logger.info("Pipeline complete", {
+      overallRiskScore: summary.overallRiskScore,
+      recommendation: summary.recommendation,
+      totalClauses: allAnalyses.length,
+      clauseBreakdown: summary.clauseBreakdown,
+    });
     yield { type: "summary", data: summary };
   } catch (error) {
     // Unrecoverable error
+    logger.error("Pipeline unrecoverable error", {
+      step: "pipeline",
+      error: error instanceof Error ? error.message : String(error),
+    });
     yield {
       type: "error",
       message: "An unexpected error occurred during analysis.",

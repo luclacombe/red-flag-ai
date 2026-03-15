@@ -7,7 +7,8 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { create: mockCreate },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-5-20250514" },
+  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  stripCodeFences: (t: string) => t,
 }));
 
 const { parseClauses } = await import("../parse");

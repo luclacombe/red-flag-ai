@@ -1,5 +1,5 @@
-import { ParseClausesResponseSchema, type ParsedClause } from "@redflag/shared";
-import { getAnthropicClient, MODELS } from "./client";
+import { logger, ParseClausesResponseSchema, type ParsedClause } from "@redflag/shared";
+import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildParseUserMessage, PARSE_SYSTEM_PROMPT } from "./prompts/parse";
 
 /**
@@ -20,8 +20,11 @@ export async function parseClauses(
   const client = getAnthropicClient();
   let lastError: unknown;
 
+  logger.info("Parse starting", { contractType, language, textLen: text.length });
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (attempt > 0) logger.info("Parse retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.sonnet,
         max_tokens: 4096,
@@ -34,10 +37,19 @@ export async function parseClauses(
         throw new Error("No text content in Claude response");
       }
 
-      const parsed = JSON.parse(textBlock.text) as unknown;
+      logger.info("Parse response received", { responseLen: textBlock.text.length });
+
+      const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = ParseClausesResponseSchema.parse(parsed);
+      logger.info("Parse complete", { clauseCount: result.clauses.length });
       return result.clauses;
     } catch (error) {
+      logger.error("Parse attempt failed", {
+        step: "parse",
+        attempt: attempt + 1,
+        error: error instanceof Error ? error.message : String(error),
+        retried: attempt === 0,
+      });
       lastError = error;
       if (attempt === 0) continue;
     }

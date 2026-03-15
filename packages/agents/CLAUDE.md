@@ -37,6 +37,7 @@ Upload → [Relevance Gate] → [Parse Agent] → [Risk Agent + RAG] → [Rewrit
 - **Batch embedding**: Orchestrator embeds all clause texts in one Voyage API call (chunks of 128).
 - **Position clamping**: `computeClausePositions` returns -1 for unfound text; orchestrator clamps to 0/1 before DB insert.
 - **RAG degradation**: If Voyage API is down, orchestrator skips RAG and appends note to explanations.
+- **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared` — JSON-structured logs with `timestamp`, `level`, `message`, metadata fields. No raw `console.log`.
 
 ## Rules
 

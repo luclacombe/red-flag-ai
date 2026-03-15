@@ -1,6 +1,6 @@
-import { RecommendationSchema, type Summary } from "@redflag/shared";
+import { logger, RecommendationSchema, type Summary } from "@redflag/shared";
 import { z } from "zod";
-import { getAnthropicClient, MODELS } from "./client";
+import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildSummaryUserMessage, SUMMARY_SYSTEM_PROMPT } from "./prompts/summary";
 
 // What Claude returns — no clauseBreakdown (computed by orchestrator)
@@ -37,8 +37,11 @@ export async function summarize(
   const client = getAnthropicClient();
   let lastError: unknown;
 
+  logger.info("Summary starting", { clauseCount: analyses.length, contractType, language });
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (attempt > 0) logger.info("Summary retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.sonnet,
         max_tokens: 1024,
@@ -56,9 +59,21 @@ export async function summarize(
         throw new Error("No text content in Claude response");
       }
 
-      const parsed = JSON.parse(textBlock.text) as unknown;
-      return SummaryResponseSchema.parse(parsed);
+      const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
+      const result = SummaryResponseSchema.parse(parsed);
+      logger.info("Summary complete", {
+        overallRiskScore: result.overallRiskScore,
+        recommendation: result.recommendation,
+        concernCount: result.topConcerns.length,
+      });
+      return result;
     } catch (error) {
+      logger.error("Summary attempt failed", {
+        step: "summary",
+        attempt: attempt + 1,
+        error: error instanceof Error ? error.message : String(error),
+        retried: attempt === 0,
+      });
       lastError = error;
       if (attempt === 0) continue;
     }

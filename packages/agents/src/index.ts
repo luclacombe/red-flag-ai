@@ -1,4 +1,4 @@
-export { getAnthropicClient, MODELS } from "./client";
+export { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 export { relevanceGate } from "./gate";
 export {
   type AnalyzeContractParams,

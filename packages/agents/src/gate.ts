@@ -1,5 +1,5 @@
-import { type GateResult, GateResultSchema } from "@redflag/shared";
-import { getAnthropicClient, MODELS } from "./client";
+import { type GateResult, GateResultSchema, logger } from "@redflag/shared";
+import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildGateUserMessage, GATE_SYSTEM_PROMPT } from "./prompts/gate";
 
 /** Max chars of extracted text to send to the gate agent */
@@ -17,10 +17,12 @@ export async function relevanceGate(text: string): Promise<GateResult> {
   const truncated = text.slice(0, GATE_TEXT_LIMIT);
   const client = getAnthropicClient();
 
+  logger.info("Gate starting", { textLen: truncated.length });
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (attempt > 0) logger.info("Gate retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.haiku,
         max_tokens: 256,
@@ -33,17 +35,26 @@ export async function relevanceGate(text: string): Promise<GateResult> {
         throw new Error("No text content in Claude response");
       }
 
-      const parsed = JSON.parse(textBlock.text) as unknown;
+      const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = GateResultSchema.parse(parsed);
+      logger.info("Gate result", {
+        isContract: result.isContract,
+        contractType: result.contractType,
+        language: result.language,
+      });
       return result;
     } catch (error) {
+      logger.error("Gate attempt failed", {
+        step: "gate",
+        attempt: attempt + 1,
+        error: error instanceof Error ? error.message : String(error),
+        retried: attempt === 0,
+      });
       lastError = error;
-      // Retry once on any error (API error or malformed response)
       if (attempt === 0) continue;
     }
   }
 
-  // Both attempts failed — return a clear rejection
   const message = lastError instanceof Error ? lastError.message : "Unknown error";
   throw new Error(`Relevance gate failed after 2 attempts: ${message}`);
 }

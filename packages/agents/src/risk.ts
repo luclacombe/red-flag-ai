@@ -1,7 +1,7 @@
 import type { SimilarPattern } from "@redflag/db";
-import { type PositionedClause, RiskLevelSchema } from "@redflag/shared";
+import { logger, type PositionedClause, RiskLevelSchema } from "@redflag/shared";
 import { z } from "zod";
-import { getAnthropicClient, MODELS } from "./client";
+import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildRiskUserMessage, RISK_SYSTEM_PROMPT } from "./prompts/risk";
 
 // Internal schema — what Claude returns (no positions, no saferAlternative, no matchedPatterns)
@@ -31,8 +31,15 @@ export async function analyzeClause(
   const client = getAnthropicClient();
   let lastError: unknown;
 
+  logger.info("Risk analysis starting", {
+    position: clause.position,
+    ragPatternsFound: patterns.length,
+    language,
+  });
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
+      if (attempt > 0) logger.info("Risk retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.sonnet,
         max_tokens: 1024,
@@ -47,9 +54,21 @@ export async function analyzeClause(
         throw new Error("No text content in Claude response");
       }
 
-      const parsed = JSON.parse(textBlock.text) as unknown;
-      return RiskAnalysisResultSchema.parse(parsed);
+      const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
+      const result = RiskAnalysisResultSchema.parse(parsed);
+      logger.info("Clause analyzed", {
+        position: clause.position,
+        riskLevel: result.riskLevel,
+        category: result.category,
+      });
+      return result;
     } catch (error) {
+      logger.error("Risk attempt failed", {
+        step: "risk",
+        attempt: attempt + 1,
+        error: error instanceof Error ? error.message : String(error),
+        retried: attempt === 0,
+      });
       lastError = error;
       if (attempt === 0) continue;
     }
