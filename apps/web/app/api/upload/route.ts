@@ -1,9 +1,13 @@
 import { relevanceGate } from "@redflag/agents";
+import { checkRateLimit } from "@redflag/api/rateLimit";
 import { analyses, db, documents, eq } from "@redflag/db";
-import { type GateResult, MAX_FILE_SIZE_BYTES, MAX_PAGES } from "@redflag/shared";
+import { type GateResult, logger, MAX_FILE_SIZE_BYTES, MAX_PAGES } from "@redflag/shared";
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractText, getDocumentProxy } from "unpdf";
+
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 /** Minimum text length to consider a PDF as having readable content */
 const MIN_TEXT_LENGTH = 50;
@@ -26,6 +30,25 @@ function getSupabaseClient() {
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limit check ────────────────────────────────────────
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+
+    try {
+      const { limited, resetAt } = await checkRateLimit(ip);
+      if (limited) {
+        return NextResponse.json(
+          { error: "Daily analysis limit reached. Try again tomorrow.", resetAt },
+          { status: 429 },
+        );
+      }
+    } catch (rateLimitErr) {
+      logger.error("Rate limit check failed", {
+        step: "rate_limit",
+        error: rateLimitErr instanceof Error ? rateLimitErr.message : String(rateLimitErr),
+      });
+    }
+
     // ── Parse multipart form data ──────────────────────────────
     const formData = await request.formData();
     const file = formData.get("file");
@@ -40,8 +63,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Read file bytes ────────────────────────────────────────
+    // Copy the buffer — unpdf/pdf.js detaches the original ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
+    const bytesForStorage = new Uint8Array(bytes);
 
     // ── Magic bytes check ──────────────────────────────────────
     if (bytes.length < 5 || !PDF_MAGIC_BYTES.every((b, i) => bytes[i] === b)) {
@@ -65,7 +90,12 @@ export async function POST(request: NextRequest) {
       pageCount = pdf.numPages;
       const { text } = await extractText(pdf, { mergePages: true });
       extractedText = String(text);
-    } catch {
+    } catch (extractErr) {
+      logger.error("PDF extraction failed", {
+        step: "extract",
+        filename: file.name,
+        error: extractErr instanceof Error ? extractErr.message : String(extractErr),
+      });
       return errorResponse("We couldn't read this file. Try re-exporting it as a PDF.", 422);
     }
 
@@ -90,18 +120,26 @@ export async function POST(request: NextRequest) {
       return errorResponse("This document doesn't contain enough text to analyze.", 422);
     }
 
+    logger.info("Upload received", {
+      filename: file.name,
+      pageCount,
+      fileSize: bytes.length,
+      textLen: trimmedText.length,
+    });
+
     // ── Upload to Supabase Storage ─────────────────────────────
     const supabase = getSupabaseClient();
     const storagePath = `uploads/${crypto.randomUUID()}/${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("contracts")
-      .upload(storagePath, bytes, {
+      .upload(storagePath, bytesForStorage, {
         contentType: "application/pdf",
         upsert: false,
       });
 
     if (uploadError) {
+      logger.error("Storage upload failed", { step: "storage", error: uploadError.message });
       return errorResponse("Failed to store the uploaded file.", 500);
     }
 
@@ -124,8 +162,11 @@ export async function POST(request: NextRequest) {
     let gateResult: GateResult;
     try {
       gateResult = await relevanceGate(trimmedText);
-    } catch {
-      // Gate failure — clean up and return error
+    } catch (gateErr) {
+      logger.error("Gate failed", {
+        step: "gate",
+        error: gateErr instanceof Error ? gateErr.message : String(gateErr),
+      });
       return errorResponse(
         "Analysis temporarily unavailable. Please try again in a few minutes.",
         503,
@@ -169,7 +210,11 @@ export async function POST(request: NextRequest) {
       contractType: gateResult.contractType,
       language: gateResult.language,
     });
-  } catch {
+  } catch (err) {
+    logger.error("Upload unexpected error", {
+      step: "upload",
+      error: err instanceof Error ? err.message : String(err),
+    });
     return errorResponse("An unexpected error occurred. Please try again.", 500);
   }
 }

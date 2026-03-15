@@ -40,6 +40,11 @@ vi.mock("unpdf", () => ({
   extractText: vi.fn(),
 }));
 
+const mockCheckRateLimit = vi.fn();
+vi.mock("@redflag/api/rateLimit", () => ({
+  checkRateLimit: mockCheckRateLimit,
+}));
+
 // Import after mocks
 const { POST } = await import("../route");
 const unpdf = await import("unpdf");
@@ -108,6 +113,8 @@ describe("POST /api/upload", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-key");
     vi.resetAllMocks();
+    // Default: not rate-limited
+    mockCheckRateLimit.mockResolvedValue({ limited: false, resetAt: "2026-03-16T00:00:00.000Z" });
   });
 
   describe("validation", () => {
@@ -280,6 +287,69 @@ describe("POST /api/upload", () => {
 
       expect(res.status).toBe(503);
       expect(body.error).toContain("temporarily unavailable");
+    });
+  });
+
+  describe("rate limiting", () => {
+    it("returns 429 when rate-limited", async () => {
+      mockCheckRateLimit.mockResolvedValue({
+        limited: true,
+        resetAt: "2026-03-16T00:00:00.000Z",
+      });
+
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(429);
+      expect(body.error).toContain("limit");
+      expect(body.resetAt).toBe("2026-03-16T00:00:00.000Z");
+    });
+
+    it("continues processing when not rate-limited", async () => {
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "This is an NDA.",
+      });
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.isContract).toBe(true);
+    });
+
+    it("continues processing when rate limit check fails", async () => {
+      mockCheckRateLimit.mockRejectedValue(new Error("DB connection failed"));
+
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "lease",
+        language: "en",
+        reason: "Lease.",
+      });
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      // Should not block user — graceful degradation
+      expect(res.status).toBe(200);
+      expect(body.isContract).toBe(true);
     });
   });
 });

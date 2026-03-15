@@ -7,9 +7,9 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 - `app/` — App Router pages and route handlers
 - `app/fonts.ts` — Google Fonts: Space Grotesk (headings) + DM Sans (body)
 - `app/globals.css` — Tailwind v4 theme tokens, shadcn colors, custom keyframes (`bounce-dots`, `fade-slide-in`, `text-shimmer`), `.text-shimmer` class with `prefers-reduced-motion` fallback
-- `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST)
-- `app/api/upload/route.ts` — PDF upload handler (POST, multipart/form-data)
-- `app/api/upload/__tests__/route.test.ts` — Upload route tests (10 tests)
+- `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST). `runtime = "nodejs"`, `maxDuration = 300`.
+- `app/api/upload/route.ts` — PDF upload handler (POST, multipart/form-data). Rate limiting via `checkRateLimit`. `runtime = "nodejs"`, `maxDuration = 300`.
+- `app/api/upload/__tests__/route.test.ts` — Upload route tests (13 tests — validation, gate, rate limiting)
 - `src/trpc/` — Client-side tRPC setup (provider, query client)
 - `src/lib/utils.ts` — shadcn/ui utility (`cn` function)
 - `src/components/ui/` — shadcn/ui primitives: badge, button, card, collapsible, separator, skeleton
@@ -58,9 +58,11 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 
 ## Upload Route (`POST /api/upload`)
 
-Validation order: MIME type → magic bytes (`%PDF-`) → file size (≤10MB) → extract text (unpdf) → page count (≤30) → empty text check → min text length (50 chars).
+Order: **rate limit check** → MIME type → magic bytes (`%PDF-`) → file size (≤10MB) → extract text (unpdf) → page count (≤30) → empty text check → min text length (50 chars).
 
 After validation: upload to Supabase Storage → create document record → run relevance gate → if contract: update document + create analysis record.
+
+Rate limit uses `checkRateLimit(ip)` from `@redflag/api/rateLimit`. If DB fails, degrades gracefully (continues without rate limiting).
 
 Returns:
 - Not contract: `{ isContract: false, reason: "..." }`
@@ -87,8 +89,9 @@ Returns:
 - `motion` — Animation library for BackgroundPaths + TextShimmer (landing page only)
 - `@supabase/supabase-js` — Supabase Storage uploads (service role key)
 - `@redflag/agents` — Relevance gate (`relevanceGate`)
+- `@redflag/api` — Rate limiting (`checkRateLimit` via `@redflag/api/rateLimit`)
 - `@redflag/db` — Database inserts/updates (documents, analyses tables)
-- `@redflag/shared` — Zod schemas, constants, `RiskLevel` type
+- `@redflag/shared` — Zod schemas, constants, `RiskLevel` type, `logger`
 
 ## Config
 
