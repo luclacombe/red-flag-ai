@@ -231,7 +231,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
         {showSkeletons && (
           <>
             <ClauseSkeleton />
-            <ClauseSkeleton />
+            {streamClauses.length < 2 && <ClauseSkeleton />}
             {streamClauses.length === 0 && <ClauseSkeleton />}
           </>
         )}

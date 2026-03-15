@@ -39,6 +39,10 @@ export const analyses = pgTable(
     recommendation: text("recommendation"),
     topConcerns: jsonb("top_concerns").$type<string[]>(),
     summaryText: text("summary_text"),
+    parsedClauses:
+      jsonb("parsed_clauses").$type<
+        Array<{ text: string; position: number; startIndex: number; endIndex: number }>
+      >(),
     errorMessage: text("error_message"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

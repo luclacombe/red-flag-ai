@@ -1,0 +1,1 @@
+ALTER TABLE "analyses" ADD COLUMN "parsed_clauses" jsonb;

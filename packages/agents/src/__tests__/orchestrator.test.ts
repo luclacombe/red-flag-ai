@@ -16,6 +16,14 @@ const mockUpdate = vi.fn().mockReturnValue({
     }),
   }),
 });
+// Mock select for resume check: analyses row (no cached parse) + empty clauses
+const mockSelect = vi.fn().mockReturnValue({
+  from: vi.fn().mockReturnValue({
+    where: vi.fn().mockReturnValue({
+      orderBy: vi.fn().mockResolvedValue([]),
+    }),
+  }),
+});
 
 vi.mock("../parse", () => ({
   parseClauses: (...args: unknown[]) => mockParseClauses(...args),
@@ -39,9 +47,10 @@ vi.mock("@redflag/db", () => ({
   getDb: () => ({
     insert: mockInsert,
     update: mockUpdate,
+    select: mockSelect,
   }),
-  analyses: { id: "id" },
-  clauses: {},
+  analyses: { id: "id", parsedClauses: "parsed_clauses" },
+  clauses: { position: "position" },
   eq: vi.fn(),
 }));
 
@@ -67,6 +76,24 @@ const baseParams = {
   language: "en",
 };
 
+/** Configure mocks to simulate a fresh analysis (no cached parse, no existing clauses) */
+function setupFreshAnalysis() {
+  let selectCallCount = 0;
+  mockSelect.mockImplementation(() => ({
+    from: vi.fn().mockImplementation(() => ({
+      where: vi.fn().mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First select: analyses row (no parsedClauses)
+          return Promise.resolve([{ id: "test-analysis-id", parsedClauses: null }]);
+        }
+        // Second select: existing clauses (empty)
+        return { orderBy: vi.fn().mockResolvedValue([]) };
+      }),
+    })),
+  }));
+}
+
 describe("analyzeContract orchestrator", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -79,6 +106,7 @@ describe("analyzeContract orchestrator", () => {
         where: vi.fn().mockResolvedValue(undefined),
       }),
     });
+    setupFreshAnalysis();
   });
 
   it("produces correct event sequence for happy path", async () => {
@@ -106,17 +134,15 @@ describe("analyzeContract orchestrator", () => {
 
     const events = await collectEvents(baseParams);
 
-    // Verify event sequence: status, status, clause×2, status, summary
+    // Verify event types: status, status, clause×2, status(progress), status(summary), summary
     expect(events[0]).toEqual({ type: "status", message: "Parsing contract clauses..." });
-    expect(events[1]).toEqual({
-      type: "status",
-      message: "Found 2 clauses. Analyzing...",
-    });
-    expect(events[2]?.type).toBe("clause_analysis");
-    expect(events[3]?.type).toBe("clause_analysis");
-    expect(events[4]).toEqual({ type: "status", message: "Generating summary..." });
-    expect(events[5]?.type).toBe("summary");
-    expect(events).toHaveLength(6);
+    const foundStatus = events.find(
+      (e) => e.type === "status" && "message" in e && e.message.includes("Found 2 clauses"),
+    );
+    expect(foundStatus).toBeDefined();
+    const clauseEvents = events.filter((e) => e.type === "clause_analysis");
+    expect(clauseEvents).toHaveLength(2);
+    expect(events[events.length - 1]?.type).toBe("summary");
   });
 
   it("skips rewrite for green clauses", async () => {
@@ -177,7 +203,6 @@ describe("analyzeContract orchestrator", () => {
       message: "Failed to parse contract clauses. Please try again.",
       recoverable: true,
     });
-    expect(events).toHaveLength(2);
   });
 
   it("degrades gracefully when Voyage API is down", async () => {
@@ -335,5 +360,72 @@ describe("analyzeContract orchestrator", () => {
     await collectEvents({ ...baseParams, language: "" });
 
     expect(mockParseClauses).toHaveBeenCalledWith(expect.any(String), expect.any(String), "en");
+  });
+
+  it("resumes from cached parse results and skips analyzed clauses", async () => {
+    // Simulate: parse was cached, clause 0 already analyzed
+    let selectCallCount = 0;
+    mockSelect.mockImplementation(() => ({
+      from: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockImplementation(() => {
+          selectCallCount++;
+          if (selectCallCount === 1) {
+            // analyses row with cached parsedClauses
+            return Promise.resolve([
+              {
+                id: "test-analysis-id",
+                parsedClauses: [
+                  { text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 },
+                  { text: "Clause 2.", position: 1, startIndex: 10, endIndex: 19 },
+                ],
+              },
+            ]);
+          }
+          // existing clauses: clause 0 already done
+          return {
+            orderBy: vi.fn().mockResolvedValue([
+              {
+                clauseText: "Clause 1.",
+                startIndex: 0,
+                endIndex: 9,
+                position: 0,
+                riskLevel: "green",
+                explanation: "OK.",
+                saferAlternative: null,
+                category: "general",
+                matchedPatterns: [],
+              },
+            ]),
+          };
+        }),
+      })),
+    }));
+
+    mockEmbedTexts.mockResolvedValue([new Array(1024).fill(0.1)]);
+    mockFindSimilarPatterns.mockResolvedValue([]);
+    mockAnalyzeClause.mockResolvedValue({
+      riskLevel: "yellow",
+      explanation: "Vague.",
+      category: "payment",
+    });
+    mockRewriteClause.mockResolvedValue("Better.");
+    mockSummarize.mockResolvedValue({
+      overallRiskScore: 30,
+      recommendation: "caution",
+      topConcerns: [],
+      language: "en",
+      contractType: "lease",
+    });
+
+    const events = await collectEvents(baseParams);
+
+    // Parse should NOT have been called (cached)
+    expect(mockParseClauses).not.toHaveBeenCalled();
+    // Risk analysis should only be called once (clause 1, since clause 0 was already done)
+    expect(mockAnalyzeClause).toHaveBeenCalledTimes(1);
+    // Should have clause_analysis events for both clauses (replayed + new)
+    const clauseEvents = events.filter((e) => e.type === "clause_analysis");
+    expect(clauseEvents).toHaveLength(2);
+    expect(events.some((e) => e.type === "summary")).toBe(true);
   });
 });

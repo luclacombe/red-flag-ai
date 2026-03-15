@@ -75,14 +75,49 @@ async function updateAnalysisStatus(
     .where(eq(analyses.id, analysisId));
 }
 
+/** Heartbeat — update updatedAt to signal liveness and prevent stale reclaim */
+async function heartbeat(analysisId: string): Promise<void> {
+  const db = getDb();
+  await db.update(analyses).set({ updatedAt: new Date() }).where(eq(analyses.id, analysisId));
+}
+
+/** Map a DB clause row to a ClauseAnalysis event payload */
+function clauseRowToAnalysis(row: {
+  clauseText: string;
+  startIndex: number;
+  endIndex: number;
+  position: number;
+  riskLevel: string;
+  explanation: string;
+  saferAlternative: string | null;
+  category: string;
+  matchedPatterns: unknown;
+}): ClauseAnalysis {
+  return {
+    clauseText: row.clauseText,
+    startIndex: row.startIndex,
+    endIndex: row.endIndex,
+    position: row.position,
+    riskLevel: row.riskLevel as ClauseAnalysis["riskLevel"],
+    explanation: row.explanation,
+    saferAlternative: row.saferAlternative ?? null,
+    category: row.category,
+    matchedPatterns: (row.matchedPatterns as string[]) ?? [],
+  };
+}
+
 /**
  * Pipeline orchestrator — chains all agents and yields typed SSE events.
  *
- * Event sequence:
- *   status → status → clause_analysis (×N) → status → summary
+ * RESUMABLE: Caches parse results in analyses.parsedClauses and checks for
+ * already-analyzed clauses in the DB. If the function was killed mid-pipeline
+ * (e.g. Vercel 300s timeout), the next invocation picks up where it left off.
  *
- * Clauses are processed in parallel batches of 5:
- *   findSimilarPatterns → analyzeClause → rewriteClause (if flagged) → persist → yield
+ * HEARTBEAT: Updates analyses.updatedAt after each batch to prevent premature
+ * stale detection while actively processing.
+ *
+ * Event sequence:
+ *   status → [clause_analysis (×already done)] → status → clause_analysis (×remaining) → status → summary
  */
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
   const { analysisId, text, contractType } = params;
@@ -92,99 +127,159 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
   logger.info("Pipeline starting", { analysisId, contractType, language, textLen: text.length });
 
   try {
-    // ── Step 1: Parse contract into clauses ────────────────────
-    yield { type: "status", message: "Parsing contract clauses..." };
+    // ── Check for existing progress ──────────────────────────
+    const analysisRows = await db.select().from(analyses).where(eq(analyses.id, analysisId));
+    const analysisRow = analysisRows[0];
+    const cachedParsed = analysisRow?.parsedClauses as PositionedClause[] | null | undefined;
 
-    let rawClauses: ParsedClause[];
-    try {
-      // Parse with keepalive — send status events every 15s to prevent SSE timeout
-      const parsePromise = parseClauses(text, contractType, language);
-      for (;;) {
-        const result = await Promise.race([
-          parsePromise.then(
-            (value) => ({ status: "fulfilled" as const, value }),
-            (error: unknown) => ({ status: "rejected" as const, error }),
-          ),
-          new Promise<{ status: "pending" }>((r) =>
-            setTimeout(() => r({ status: "pending" }), 15_000),
-          ),
-        ]);
+    const existingClauses = await db
+      .select()
+      .from(clauses)
+      .where(eq(clauses.analysisId, analysisId))
+      .orderBy(clauses.position);
 
-        if (result.status === "fulfilled") {
-          rawClauses = result.value;
-          break;
-        }
-        if (result.status === "rejected") {
-          throw result.error;
-        }
-        yield { type: "status", message: "Still parsing contract clauses..." };
-      }
-    } catch (parseErr) {
-      logger.error("Parse failed", {
-        step: "parse",
-        error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+    const analyzedPositions = new Set(existingClauses.map((c) => c.position));
+
+    let positionedClauses: PositionedClause[];
+
+    // ── Step 1: Parse (or resume from cache) ─────────────────
+    if (cachedParsed && cachedParsed.length > 0) {
+      // Resume: parse already completed in a previous invocation
+      positionedClauses = cachedParsed;
+      logger.info("Resuming from cached parse", {
+        clauseCount: positionedClauses.length,
+        alreadyAnalyzed: existingClauses.length,
       });
+
+      // Replay already-analyzed clauses to the client
+      for (const row of existingClauses) {
+        yield { type: "clause_analysis", data: clauseRowToAnalysis(row) };
+      }
+
+      const remaining = positionedClauses.length - existingClauses.length;
+      if (remaining > 0) {
+        yield {
+          type: "status",
+          message: `Resuming: ${existingClauses.length} of ${positionedClauses.length} clauses done. Analyzing ${remaining} remaining...`,
+        };
+      }
+    } else {
+      // Fresh parse
+      yield { type: "status", message: "Parsing contract clauses..." };
+
+      let rawClauses: ParsedClause[];
+      try {
+        const parsePromise = parseClauses(text, contractType, language);
+        for (;;) {
+          const result = await Promise.race([
+            parsePromise.then(
+              (value) => ({ status: "fulfilled" as const, value }),
+              (error: unknown) => ({ status: "rejected" as const, error }),
+            ),
+            new Promise<{ status: "pending" }>((r) =>
+              setTimeout(() => r({ status: "pending" }), 15_000),
+            ),
+          ]);
+
+          if (result.status === "fulfilled") {
+            rawClauses = result.value;
+            break;
+          }
+          if (result.status === "rejected") {
+            throw result.error;
+          }
+          yield { type: "status", message: "Still parsing contract clauses..." };
+        }
+      } catch (parseErr) {
+        logger.error("Parse failed", {
+          step: "parse",
+          error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+        });
+        yield {
+          type: "error",
+          message: "Failed to parse contract clauses. Please try again.",
+          recoverable: true,
+        };
+        await updateAnalysisStatus(analysisId, "failed", "Parse agent failed");
+        return;
+      }
+
+      if (rawClauses.length === 0) {
+        yield {
+          type: "error",
+          message: "No clauses could be identified in this document.",
+          recoverable: false,
+        };
+        await updateAnalysisStatus(analysisId, "failed", "No clauses found");
+        return;
+      }
+
+      positionedClauses = computeClausePositions(text, rawClauses);
+
+      // Cache parse results immediately so they survive function timeout
+      try {
+        await db
+          .update(analyses)
+          .set({ parsedClauses: positionedClauses, updatedAt: new Date() })
+          .where(eq(analyses.id, analysisId));
+      } catch {
+        // Non-fatal — we can re-parse if needed
+      }
+
+      logger.info("Clauses parsed and cached", { clauseCount: positionedClauses.length });
       yield {
-        type: "error",
-        message: "Failed to parse contract clauses. Please try again.",
-        recoverable: true,
+        type: "status",
+        message: `Found ${positionedClauses.length} clauses. Analyzing...`,
       };
-      await updateAnalysisStatus(analysisId, "failed", "Parse agent failed");
-      return;
     }
 
-    if (rawClauses.length === 0) {
-      yield {
-        type: "error",
-        message: "No clauses could be identified in this document.",
-        recoverable: false,
-      };
-      await updateAnalysisStatus(analysisId, "failed", "No clauses found");
-      return;
+    // ── Step 2: Determine remaining work ─────────────────────
+    const remainingClauses = positionedClauses.filter((c) => !analyzedPositions.has(c.position));
+    const allAnalyses: ClauseAnalysis[] = existingClauses.map(clauseRowToAnalysis);
+
+    if (remainingClauses.length === 0 && allAnalyses.length > 0) {
+      // All clauses already analyzed — just need summary
+      logger.info("All clauses already analyzed, generating summary", {
+        clauseCount: allAnalyses.length,
+      });
     }
 
-    // Compute positions via indexOf
-    const positionedClauses = computeClausePositions(text, rawClauses);
-
-    logger.info("Clauses parsed", { clauseCount: positionedClauses.length });
-    yield {
-      type: "status",
-      message: `Found ${positionedClauses.length} clauses. Analyzing...`,
-    };
-
-    // ── Step 2: Batch embed all clause texts ──────────────────
+    // ── Step 3: Batch embed remaining clause texts ───────────
     let embeddings: number[][] | null = null;
     let ragDegraded = false;
 
-    try {
-      embeddings = await batchEmbed(positionedClauses.map((c) => c.text));
-      logger.info("Embeddings complete", { vectorCount: embeddings.length });
-    } catch (embedErr) {
-      logger.warn("Embeddings failed, degrading gracefully", {
-        step: "embed",
-        error: embedErr instanceof Error ? embedErr.message : String(embedErr),
-      });
-      ragDegraded = true;
+    if (remainingClauses.length > 0) {
+      try {
+        embeddings = await batchEmbed(remainingClauses.map((c) => c.text));
+        logger.info("Embeddings complete", { vectorCount: embeddings.length });
+      } catch (embedErr) {
+        logger.warn("Embeddings failed, degrading gracefully", {
+          step: "embed",
+          error: embedErr instanceof Error ? embedErr.message : String(embedErr),
+        });
+        ragDegraded = true;
+      }
+
+      await heartbeat(analysisId);
     }
 
-    // ── Step 3: Process clauses in parallel batches ──────────
+    // ── Step 4: Process remaining clauses in batches ─────────
     const CLAUSE_CONCURRENCY = 5;
-    const allAnalyses: ClauseAnalysis[] = [];
+    const totalClauses = positionedClauses.length;
 
     for (
       let batchStart = 0;
-      batchStart < positionedClauses.length;
+      batchStart < remainingClauses.length;
       batchStart += CLAUSE_CONCURRENCY
     ) {
-      const batch = positionedClauses.slice(batchStart, batchStart + CLAUSE_CONCURRENCY);
+      const batch = remainingClauses.slice(batchStart, batchStart + CLAUSE_CONCURRENCY);
 
       const batchResults = await Promise.allSettled(
         batch.map(async (clause, batchIdx) => {
-          const i = batchStart + batchIdx;
+          const i = batchIdx;
 
-          // Retrieve similar patterns (skip if Voyage failed)
           let patterns: SimilarPattern[] = [];
-          const clauseEmbedding = embeddings?.[i];
+          const clauseEmbedding = embeddings?.[batchStart + i];
           if (clauseEmbedding) {
             try {
               patterns = await findSimilarPatterns(clauseEmbedding, {
@@ -196,10 +291,8 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
             }
           }
 
-          // Risk analysis
           const riskResult = await analyzeClause(clause, patterns, language);
 
-          // Rewrite (only for red/yellow)
           let saferAlternative: string | null = null;
           if (riskResult.riskLevel !== "green") {
             try {
@@ -214,7 +307,6 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
             }
           }
 
-          // Build analysis
           const matchedPatterns = patterns
             .filter((p) => p.similarity >= PATTERN_MATCH_THRESHOLD)
             .map((p) => p.id);
@@ -235,7 +327,6 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         }),
       );
 
-      // Yield results from this batch, persist to DB
       for (const [batchIdx, result] of batchResults.entries()) {
         if (result.status === "fulfilled") {
           const clauseAnalysis = result.value;
@@ -267,9 +358,19 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
           };
         }
       }
+
+      // Heartbeat after each batch + progress status
+      await heartbeat(analysisId);
+      const doneCount = allAnalyses.length;
+      if (doneCount < totalClauses) {
+        yield {
+          type: "status",
+          message: `Analyzed ${doneCount} of ${totalClauses} clauses...`,
+        };
+      }
     }
 
-    // ── Step 4: Generate summary ──────────────────────────────
+    // ── Step 5: Generate summary ──────────────────────────────
     if (allAnalyses.length === 0) {
       yield {
         type: "error",
@@ -295,7 +396,6 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         language,
       );
 
-      // Compute clause breakdown deterministically
       const clauseBreakdown = {
         red: allAnalyses.filter((a) => a.riskLevel === "red").length,
         yellow: allAnalyses.filter((a) => a.riskLevel === "yellow").length,
@@ -313,7 +413,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       return;
     }
 
-    // ── Step 5: Persist summary + mark complete ───────────────
+    // ── Step 6: Persist summary + mark complete ───────────────
     try {
       await db
         .update(analyses)
@@ -338,7 +438,6 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     });
     yield { type: "summary", data: summary };
   } catch (error) {
-    // Unrecoverable error
     logger.error("Pipeline unrecoverable error", {
       step: "pipeline",
       error: error instanceof Error ? error.message : String(error),

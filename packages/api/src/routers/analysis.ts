@@ -1,17 +1,17 @@
 import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
-import { logger } from "@redflag/shared";
+import { type ClauseAnalysis, logger } from "@redflag/shared";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 
-/** 10 minutes in milliseconds */
-const STALE_THRESHOLD_MS = 10 * 60 * 1000;
+/** 90 seconds — fast recovery from dead functions while heartbeat keeps active ones alive */
+const STALE_THRESHOLD_MS = 90 * 1000;
 
 /**
  * Atomically claim an analysis for processing.
  * Returns the analysis row if claimed, null if already claimed by another consumer.
  *
- * Handles both pending analyses and stale processing ones (stuck > 10 min).
+ * Handles both pending analyses and stale processing ones (stuck > 90s without heartbeat).
  */
 async function claimAnalysis(analysisId: string) {
   const db = getDb();
@@ -19,11 +19,36 @@ async function claimAnalysis(analysisId: string) {
     .update(analyses)
     .set({ status: "processing", updatedAt: new Date() })
     .where(
-      sql`${analyses.id} = ${analysisId} AND (${analyses.status} = 'pending' OR (${analyses.status} = 'processing' AND ${analyses.updatedAt} < now() - interval '10 minutes'))`,
+      sql`${analyses.id} = ${analysisId} AND (${analyses.status} = 'pending' OR (${analyses.status} = 'processing' AND ${analyses.updatedAt} < now() - interval '90 seconds'))`,
     )
     .returning();
 
   return result[0] ?? null;
+}
+
+/** Map a DB clause row to a ClauseAnalysis event payload */
+function clauseRowToAnalysis(row: {
+  clauseText: string;
+  startIndex: number;
+  endIndex: number;
+  position: number;
+  riskLevel: string;
+  explanation: string;
+  saferAlternative: string | null;
+  category: string;
+  matchedPatterns: unknown;
+}): ClauseAnalysis {
+  return {
+    clauseText: row.clauseText,
+    startIndex: row.startIndex,
+    endIndex: row.endIndex,
+    position: row.position,
+    riskLevel: row.riskLevel as ClauseAnalysis["riskLevel"],
+    explanation: row.explanation,
+    saferAlternative: row.saferAlternative ?? null,
+    category: row.category,
+    matchedPatterns: (row.matchedPatterns as string[]) ?? [],
+  };
 }
 
 export const analysisRouter = router({
@@ -32,8 +57,8 @@ export const analysisRouter = router({
    *
    * Dual path:
    * - Complete → replay from DB
-   * - Processing (not stale) → yield existing clauses, return
-   * - Pending / stale processing → claim and run pipeline
+   * - Processing (not stale) → replay existing clauses, poll for new ones
+   * - Pending / stale processing → claim and run pipeline (resumable)
    * - Failed → yield error
    */
   stream: publicProcedure
@@ -66,20 +91,7 @@ export const analysisRouter = router({
           .orderBy(clauses.position);
 
         for (const clause of existingClauses) {
-          yield {
-            type: "clause_analysis" as const,
-            data: {
-              clauseText: clause.clauseText,
-              startIndex: clause.startIndex,
-              endIndex: clause.endIndex,
-              position: clause.position,
-              riskLevel: clause.riskLevel,
-              explanation: clause.explanation,
-              saferAlternative: clause.saferAlternative ?? null,
-              category: clause.category,
-              matchedPatterns: (clause.matchedPatterns as string[]) ?? [],
-            },
-          };
+          yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
         }
 
         yield {
@@ -113,42 +125,50 @@ export const analysisRouter = router({
         return;
       }
 
-      // ── PROCESSING → wait for completion or reclaim if stale ─
+      // ── PROCESSING → replay existing clauses, poll for progress ─
       if (analysis.status === "processing") {
         const isStale = Date.now() - analysis.updatedAt.getTime() > STALE_THRESHOLD_MS;
         if (!isStale) {
-          // Another connection is actively processing — poll DB until it finishes
-          yield { type: "status" as const, message: "Analysis in progress..." };
+          // Another connection is actively processing — replay existing + poll for new
+          let lastYieldedCount = 0;
+
+          // Immediately replay any already-analyzed clauses
+          const existingClauses = await db
+            .select()
+            .from(clauses)
+            .where(eq(clauses.analysisId, input.analysisId))
+            .orderBy(clauses.position);
+
+          for (const clause of existingClauses) {
+            yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+            lastYieldedCount++;
+          }
+
+          if (lastYieldedCount > 0) {
+            yield {
+              type: "status" as const,
+              message: `${lastYieldedCount} clauses analyzed. Waiting for more...`,
+            };
+          } else {
+            yield { type: "status" as const, message: "Analysis in progress..." };
+          }
 
           for (;;) {
-            await new Promise((r) => setTimeout(r, 5_000));
+            await new Promise((r) => setTimeout(r, 3_000));
             const rows = await db.select().from(analyses).where(eq(analyses.id, input.analysisId));
             const current = rows[0];
             if (!current) return;
 
             if (current.status === "complete") {
-              // Replay results from DB
+              // Fetch all clauses and yield any we haven't sent yet
               const completedClauses = await db
                 .select()
                 .from(clauses)
                 .where(eq(clauses.analysisId, input.analysisId))
                 .orderBy(clauses.position);
 
-              for (const clause of completedClauses) {
-                yield {
-                  type: "clause_analysis" as const,
-                  data: {
-                    clauseText: clause.clauseText,
-                    startIndex: clause.startIndex,
-                    endIndex: clause.endIndex,
-                    position: clause.position,
-                    riskLevel: clause.riskLevel,
-                    explanation: clause.explanation,
-                    saferAlternative: clause.saferAlternative ?? null,
-                    category: clause.category,
-                    matchedPatterns: (clause.matchedPatterns as string[]) ?? [],
-                  },
-                };
+              for (const clause of completedClauses.slice(lastYieldedCount)) {
+                yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
               }
 
               yield {
@@ -181,11 +201,27 @@ export const analysisRouter = router({
               return;
             }
 
+            // Check for newly analyzed clauses
+            const latestClauses = await db
+              .select()
+              .from(clauses)
+              .where(eq(clauses.analysisId, input.analysisId))
+              .orderBy(clauses.position);
+
+            for (const clause of latestClauses.slice(lastYieldedCount)) {
+              yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+              lastYieldedCount++;
+            }
+
             // Check if it became stale while we were polling
             const nowStale = Date.now() - current.updatedAt.getTime() > STALE_THRESHOLD_MS;
             if (nowStale) break; // Fall through to claim stale analysis
 
-            yield { type: "status" as const, message: "Analysis in progress..." };
+            const total = (current.parsedClauses as unknown[] | null)?.length;
+            const progress = total
+              ? `Analyzing clauses (${lastYieldedCount} of ${total} done)...`
+              : `Analyzing clauses (${lastYieldedCount} done)...`;
+            yield { type: "status" as const, message: progress };
           }
         }
         // Fall through to claim stale analysis

@@ -198,6 +198,7 @@ describe("analysis.stream", () => {
       id: "a1",
       status: "processing",
       updatedAt: new Date(), // Just now — not stale
+      parsedClauses: null,
     };
     const completedAnalysis = {
       id: "a1",
@@ -206,6 +207,7 @@ describe("analysis.stream", () => {
       overallRiskScore: 30,
       recommendation: "sign",
       topConcerns: [],
+      parsedClauses: null,
     };
     const dbClause = {
       clauseText: "Clause 1.",
@@ -227,10 +229,14 @@ describe("analysis.stream", () => {
         return { from: () => ({ where: () => Promise.resolve([analysis]) }) };
       }
       if (callCount === 2) {
+        // Initial existing clauses check (empty)
+        return { from: () => ({ where: () => ({ orderBy: () => Promise.resolve([]) }) }) };
+      }
+      if (callCount === 3) {
         // First poll → complete
         return { from: () => ({ where: () => Promise.resolve([completedAnalysis]) }) };
       }
-      // Clause replay
+      // Clause replay after completion
       return {
         from: () => ({
           where: () => ({
@@ -243,7 +249,7 @@ describe("analysis.stream", () => {
     const caller = await createCaller();
     const events: SSEEvent[] = [];
 
-    // Start consuming events (will block on 5s poll interval)
+    // Start consuming events (will block on 3s poll interval)
     const collectPromise = (async () => {
       const iterable = await caller.analysis.stream({
         analysisId: "550e8400-e29b-41d4-a716-446655440000",
@@ -253,8 +259,8 @@ describe("analysis.stream", () => {
       }
     })();
 
-    // Advance past the 5s poll interval
-    await vi.advanceTimersByTimeAsync(6_000);
+    // Advance past the 3s poll interval
+    await vi.advanceTimersByTimeAsync(4_000);
     await collectPromise;
 
     expect(events.some((e) => e.type === "status")).toBe(true);

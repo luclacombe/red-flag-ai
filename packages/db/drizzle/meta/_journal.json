@@ -8,6 +8,13 @@
       "when": 1773504772312,
       "tag": "0000_bent_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773574158390,
+      "tag": "0001_fuzzy_slayback",
+      "breakpoints": true
     }
   ]
 }
