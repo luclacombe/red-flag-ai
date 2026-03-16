@@ -194,8 +194,8 @@ Must pass before committing. No exceptions.
 
 ### Exit Criteria
 - [x] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Can upload a .docx file → full analysis pipeline runs successfully
-- [ ] Can upload a .txt file → full analysis pipeline runs successfully
+- [x] Can upload a .docx file → full analysis pipeline runs successfully
+- [x] Can upload a .txt file → full analysis pipeline runs successfully
 - [x] Invalid file types rejected with clear error message
 - [x] Documentation updated
 
@@ -411,21 +411,21 @@ Must pass before committing. No exceptions.
 - [x] Unit test: tRPC `protectedProcedure` rejects null user
 - [x] Unit test: upload route sets userId when authenticated
 - [x] Unit test: rate limit uses userId for auth users, IP for anon
-- [ ] Unit test: auth callback exchanges code for session
+- [x] Unit test: auth callback exchanges code for session
 - [x] Update all existing tests that mock tRPC context to include `user: null`
 
 #### 4.11 — Documentation
 - [x] Update CLAUDE.md: add `@supabase/ssr` dep, middleware pattern, auth file structure, RLS notes, protectedProcedure
-- [ ] Update PROJECT.md: mark auth as complete, update constraints section
+- [x] Update PROJECT.md: mark auth as complete, update constraints section
 - [x] Update `.env.example` with `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ### Exit Criteria
 - [x] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Can create account with email/password → redirects to home → NavBar shows user
-- [ ] Can sign in with magic link → email received (check Supabase dashboard or Mailpit if local)
-- [ ] Authenticated user can upload → analysis is linked to their account
-- [ ] Anonymous user can still upload (2/day limit), authenticated gets 10/day
-- [ ] Shared analysis pages (`/analysis/[id]`) work without auth
+- [x] Can create account with email/password → redirects to home → NavBar shows user
+- [x] Can sign in with magic link → email received (check Supabase dashboard or Mailpit if local)
+- [x] Authenticated user can upload → analysis is linked to their account
+- [x] Anonymous user can still upload (2/day limit), authenticated gets 10/day
+- [x] Shared analysis pages (`/analysis/[id]`) work without auth
 - [x] RLS policies active — verify with Supabase MCP `execute_sql`
 - [x] Documentation updated
 
@@ -546,10 +546,10 @@ Must pass before committing. No exceptions.
 
 ### Exit Criteria
 - [x] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Upload a document → check Supabase dashboard → extracted text, clause text, explanations are all encrypted gibberish (not readable) *(manual — requires deployed app with MASTER_ENCRYPTION_KEY set)*
-- [ ] IP addresses in rate_limits are 64-char hex hashes, not raw IPs *(manual — requires deployed app)*
-- [ ] Analysis page still renders correctly (decryption works on the API read path) *(manual — requires deployed app)*
-- [ ] Cron endpoint responds correctly when called manually *(manual — requires deployed app)*
+- [x] Upload a document → check Supabase dashboard → extracted text, clause text, explanations are all encrypted gibberish (not readable) *(verified via Supabase MCP 2026-03-16)*
+- [x] IP addresses in rate_limits are 64-char hex hashes, not raw IPs *(verified via Supabase MCP 2026-03-16)*
+- [x] Analysis page still renders correctly (decryption works on the API read path) *(verified on live site)*
+- [x] Cron endpoint responds correctly when called manually *(verified on deployed app)*
 - [x] Documentation updated
 
 ---

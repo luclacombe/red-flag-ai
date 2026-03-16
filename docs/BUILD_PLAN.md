@@ -801,7 +801,7 @@ pnpm turbo lint type-check test build
 - [x] Loading/streaming state: `StatusBar` + skeleton cards
 - [x] All green state: positive summary message, "Safe to Sign", green gauge, still show all clause cards
 - [x] Error state: show any persisted clauses + error message with what failed
-- [ ] Rate limit exceeded state: friendly message + reset time (deferred to Phase 6 — rate limiting not yet implemented)
+- [x] Rate limit exceeded state: friendly message + reset time (implemented in Phase 6)
 - [x] 404 state: simple centered "Analysis not found" + home link
 
 #### 5.3 — Visual QA
