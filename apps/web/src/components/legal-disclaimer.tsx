@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface LegalDisclaimerProps {
@@ -12,6 +13,15 @@ export function LegalDisclaimer({ className }: LegalDisclaimerProps) {
         errors. Always consult a qualified legal professional before making decisions based on
         contract analysis. By using this service, you acknowledge that results are for informational
         purposes only.
+      </p>
+      <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-slate-400">
+        <Link href="/privacy" className="underline hover:text-slate-600">
+          Privacy Policy
+        </Link>
+        {" · "}
+        <Link href="/terms" className="underline hover:text-slate-600">
+          Terms of Service
+        </Link>
       </p>
     </footer>
   );
