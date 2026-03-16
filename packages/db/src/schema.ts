@@ -20,6 +20,7 @@ export const documents = pgTable("documents", {
   pageCount: integer("page_count").notNull(),
   storagePath: text("storage_path").notNull(),
   extractedText: text("extracted_text").notNull(),
+  fileType: text("file_type").notNull().default("pdf"),
   language: text("language"),
   contractType: text("contract_type"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

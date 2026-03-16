@@ -1,10 +1,14 @@
 // Constants
 export {
+  ACCEPTED_MIME_TYPES,
+  DOCX_MIME,
   MAX_FILE_SIZE_BYTES,
   MAX_PAGES,
+  MAX_TEXT_LENGTH,
   RATE_LIMIT_PER_DAY,
   SUPPORTED_LANGUAGES,
   type SupportedLanguageCode,
+  TXT_MIME,
   VOYAGE_DIMENSIONS,
 } from "./constants";
 

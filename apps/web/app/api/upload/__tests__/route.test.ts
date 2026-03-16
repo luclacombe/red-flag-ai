@@ -40,6 +40,13 @@ vi.mock("unpdf", () => ({
   extractText: vi.fn(),
 }));
 
+const mockExtractRawText = vi.fn();
+vi.mock("mammoth", () => ({
+  default: {
+    extractRawText: mockExtractRawText,
+  },
+}));
+
 const mockCheckRateLimit = vi.fn();
 vi.mock("@redflag/api/rateLimit", () => ({
   checkRateLimit: mockCheckRateLimit,
@@ -53,6 +60,16 @@ const unpdf = await import("unpdf");
 
 function makePdfFile(content: Uint8Array, name = "test.pdf", type = "application/pdf"): File {
   return new File([content.buffer as ArrayBuffer], name, { type });
+}
+
+function makeDocxFile(content: Uint8Array, name = "test.docx"): File {
+  return new File([content.buffer as ArrayBuffer], name, {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+}
+
+function makeTxtFile(content: string, name = "test.txt"): File {
+  return new File([content], name, { type: "text/plain" });
 }
 
 function makeRequest(file: File, responseLanguage?: string): Request {
@@ -77,6 +94,16 @@ function validPdfBytes(size = 100): Uint8Array {
   return bytes;
 }
 
+/** Valid DOCX magic bytes (PK ZIP header) */
+function validDocxBytes(size = 100): Uint8Array {
+  const bytes = new Uint8Array(size);
+  bytes[0] = 0x50; // P
+  bytes[1] = 0x4b; // K
+  bytes[2] = 0x03;
+  bytes[3] = 0x04;
+  return bytes;
+}
+
 function setupDefaultMocks() {
   // unpdf mocks
   vi.mocked(unpdf.getDocumentProxy).mockResolvedValue({
@@ -95,6 +122,50 @@ function setupDefaultMocks() {
   mockInsert.mockReturnValue({ values: mockValues });
   mockValues.mockReturnValue({ returning: mockReturning });
   mockReturning.mockResolvedValueOnce([{ id: "doc-123", filename: "test.pdf" }]);
+
+  // DB update chain
+  mockUpdate.mockReturnValue({ set: mockSet });
+  mockSet.mockReturnValue({ where: mockWhere });
+  mockWhere.mockResolvedValue(undefined);
+
+  // DB insert chain (analyses) — second call
+  mockReturning.mockResolvedValueOnce([
+    { id: "analysis-456", documentId: "doc-123", status: "pending" },
+  ]);
+}
+
+function setupDocxMocks() {
+  mockExtractRawText.mockResolvedValue({
+    value: "This is a residential lease agreement with sufficient text content for analysis.",
+  });
+
+  // Supabase upload
+  mockUpload.mockResolvedValue({ error: null });
+
+  // DB insert chain (documents)
+  mockInsert.mockReturnValue({ values: mockValues });
+  mockValues.mockReturnValue({ returning: mockReturning });
+  mockReturning.mockResolvedValueOnce([{ id: "doc-123", filename: "test.docx" }]);
+
+  // DB update chain
+  mockUpdate.mockReturnValue({ set: mockSet });
+  mockSet.mockReturnValue({ where: mockWhere });
+  mockWhere.mockResolvedValue(undefined);
+
+  // DB insert chain (analyses) — second call
+  mockReturning.mockResolvedValueOnce([
+    { id: "analysis-456", documentId: "doc-123", status: "pending" },
+  ]);
+}
+
+function setupTxtMocks() {
+  // Supabase upload
+  mockUpload.mockResolvedValue({ error: null });
+
+  // DB insert chain (documents)
+  mockInsert.mockReturnValue({ values: mockValues });
+  mockValues.mockReturnValue({ returning: mockReturning });
+  mockReturning.mockResolvedValueOnce([{ id: "doc-123", filename: "test.txt" }]);
 
   // DB update chain
   mockUpdate.mockReturnValue({ set: mockSet });
@@ -130,11 +201,11 @@ describe("POST /api/upload", () => {
       const body = await res.json();
 
       expect(res.status).toBe(400);
-      expect(body.error).toContain("No PDF file provided");
+      expect(body.error).toContain("No file provided");
     });
 
-    it("rejects non-PDF MIME type", async () => {
-      const file = new File(["hello"], "test.txt", { type: "text/plain" });
+    it("rejects unsupported MIME type", async () => {
+      const file = new File(["hello"], "test.jpg", { type: "image/jpeg" });
       const req = makeRequest(file);
 
       const res = await POST(req as never);
@@ -142,6 +213,7 @@ describe("POST /api/upload", () => {
 
       expect(res.status).toBe(400);
       expect(body.error).toContain("Invalid file type");
+      expect(body.error).toContain("PDF, DOCX, or TXT");
     });
 
     it("rejects files without PDF magic bytes", async () => {
@@ -154,6 +226,18 @@ describe("POST /api/upload", () => {
 
       expect(res.status).toBe(400);
       expect(body.error).toContain("not a valid PDF");
+    });
+
+    it("rejects DOCX files without PK magic bytes", async () => {
+      const fakeBytes = new Uint8Array([0x00, 0x01, 0x02, 0x03]);
+      const file = makeDocxFile(fakeBytes);
+      const req = makeRequest(file);
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error).toContain("not a valid DOCX");
     });
 
     it("rejects files exceeding 10MB", async () => {
@@ -227,6 +311,125 @@ describe("POST /api/upload", () => {
 
       expect(res.status).toBe(422);
       expect(body.error).toContain("enough text");
+    });
+
+    it("rejects DOCX exceeding character limit", async () => {
+      const bytes = validDocxBytes();
+      const file = makeDocxFile(bytes);
+      const req = makeRequest(file);
+
+      mockExtractRawText.mockResolvedValue({
+        value: "a".repeat(100_000),
+      });
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error).toContain("too long");
+      expect(body.error).toContain("90,000");
+    });
+
+    it("rejects TXT exceeding character limit", async () => {
+      const longText = "a".repeat(100_000);
+      const file = makeTxtFile(longText);
+      const req = makeRequest(file);
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error).toContain("too long");
+      expect(body.error).toContain("90,000");
+    });
+  });
+
+  describe("DOCX upload", () => {
+    it("extracts text from DOCX and runs pipeline", async () => {
+      const bytes = validDocxBytes();
+      const file = makeDocxFile(bytes);
+      const req = makeRequest(file);
+
+      setupDocxMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "residential_lease",
+        language: "en",
+        reason: "This is a lease agreement.",
+      });
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.isContract).toBe(true);
+      expect(body.analysisId).toBe("analysis-456");
+      expect(mockExtractRawText).toHaveBeenCalled();
+    });
+
+    it("sets fileType to docx in document record", async () => {
+      const bytes = validDocxBytes();
+      const file = makeDocxFile(bytes);
+      const req = makeRequest(file);
+
+      setupDocxMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      await POST(req as never);
+
+      const insertCalls = mockValues.mock.calls;
+      const docInsert = insertCalls[0]?.[0] as Record<string, unknown> | undefined;
+      expect(docInsert?.fileType).toBe("docx");
+    });
+  });
+
+  describe("TXT upload", () => {
+    it("extracts text from TXT and runs pipeline", async () => {
+      const text =
+        "This is a residential lease agreement with sufficient text content for analysis.";
+      const file = makeTxtFile(text);
+      const req = makeRequest(file);
+
+      setupTxtMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "residential_lease",
+        language: "en",
+        reason: "This is a lease agreement.",
+      });
+
+      const res = await POST(req as never);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.isContract).toBe(true);
+      expect(body.analysisId).toBe("analysis-456");
+    });
+
+    it("sets fileType to txt in document record", async () => {
+      const text =
+        "This is a residential lease agreement with sufficient text content for analysis.";
+      const file = makeTxtFile(text);
+      const req = makeRequest(file);
+
+      setupTxtMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      await POST(req as never);
+
+      const insertCalls = mockValues.mock.calls;
+      const docInsert = insertCalls[0]?.[0] as Record<string, unknown> | undefined;
+      expect(docInsert?.fileType).toBe("txt");
     });
   });
 

@@ -149,55 +149,55 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 2.1 — Install mammoth
-- [ ] `pnpm add mammoth --filter @redflag/web` (used in the upload route handler)
-- [ ] Verify it's pure JS (no native bindings) — it is, but confirm for Vercel compatibility
+- [x] `pnpm add mammoth --filter @redflag/web` (used in the upload route handler)
+- [x] Verify it's pure JS (no native bindings) — it is, but confirm for Vercel compatibility
 
 #### 2.2 — Shared constants
-- [ ] Add to `packages/shared/src/constants.ts`:
+- [x] Add to `packages/shared/src/constants.ts`:
   - `ACCEPTED_MIME_TYPES`: `['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']`
   - `MAX_TEXT_LENGTH = 90_000` (character limit for DOCX/TXT, equivalent to ~30 pages)
   - `DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'`
   - `TXT_MIME = 'text/plain'`
-- [ ] Export from barrel
+- [x] Export from barrel
 
 #### 2.3 — Upload route refactor
-- [ ] Refactor `apps/web/app/api/upload/route.ts` to support three file types:
+- [x] Refactor `apps/web/app/api/upload/route.ts` to support three file types:
   - **PDF path (existing):** MIME check → magic bytes (`%PDF-`) → unpdf extraction → page count check
   - **DOCX path (new):** MIME check → magic bytes (`PK\x03\x04`) → `mammoth.extractRawText()` → character count check
   - **TXT path (new):** MIME check → `Buffer.toString('utf-8')` → character count check
-- [ ] Unify post-extraction: empty text check (≥50 chars), then gate → store → analyze (same as PDF)
-- [ ] Update Storage path: keep `contracts/` bucket, use original file extension in storage path
-- [ ] Update error messages: "Upload a PDF, DOCX, or TXT file" instead of "Upload a PDF"
+- [x] Unify post-extraction: empty text check (≥50 chars), then gate → store → analyze (same as PDF)
+- [x] Update Storage path: keep `contracts/` bucket, use original file extension in storage path
+- [x] Update error messages: "Upload a PDF, DOCX, or TXT file" instead of "Upload a PDF"
 
 #### 2.4 — Frontend upload zone
-- [ ] Update `UploadZone` component `accept` attribute: `.pdf,.docx,.txt`
-- [ ] Update file type validation in the client-side check
-- [ ] Update drag-and-drop messaging and icons to reflect multi-format support
-- [ ] Update error messages for invalid file types
+- [x] Update `UploadZone` component `accept` attribute: `.pdf,.docx,.txt`
+- [x] Update file type validation in the client-side check
+- [x] Update drag-and-drop messaging and icons to reflect multi-format support
+- [x] Update error messages for invalid file types
 
 #### 2.5 — Document schema
-- [ ] Add `fileType` column to `documents` table: `text("file_type").notNull().default("pdf")`
-- [ ] Generate + apply Drizzle migration
-- [ ] Set `fileType` in the upload route based on detected MIME
+- [x] Add `fileType` column to `documents` table: `text("file_type").notNull().default("pdf")`
+- [x] Generate + apply Drizzle migration
+- [x] Set `fileType` in the upload route based on detected MIME
 
 #### 2.6 — Tests
-- [ ] Unit test: DOCX upload extracts text correctly (mock mammoth)
-- [ ] Unit test: TXT upload reads UTF-8 text
-- [ ] Unit test: DOCX magic bytes validation (PK header)
-- [ ] Unit test: Character count limit enforced for DOCX/TXT
-- [ ] Unit test: Rejects unsupported file types with clear error
-- [ ] Update existing upload tests to cover new file types
+- [x] Unit test: DOCX upload extracts text correctly (mock mammoth)
+- [x] Unit test: TXT upload reads UTF-8 text
+- [x] Unit test: DOCX magic bytes validation (PK header)
+- [x] Unit test: Character count limit enforced for DOCX/TXT
+- [x] Unit test: Rejects unsupported file types with clear error
+- [x] Update existing upload tests to cover new file types
 
 #### 2.7 — Documentation
-- [ ] Update CLAUDE.md: add mammoth dependency, DOCX/TXT support notes
-- [ ] Update PROJECT.md: "User uploads a contract (PDF, DOCX, or TXT)"
+- [x] Update CLAUDE.md: add mammoth dependency, DOCX/TXT support notes
+- [x] Update PROJECT.md: "User uploads a contract (PDF, DOCX, or TXT)"
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
 - [ ] Can upload a .docx file → full analysis pipeline runs successfully
 - [ ] Can upload a .txt file → full analysis pipeline runs successfully
-- [ ] Invalid file types rejected with clear error message
-- [ ] Documentation updated
+- [x] Invalid file types rejected with clear error message
+- [x] Documentation updated
 
 ---
 

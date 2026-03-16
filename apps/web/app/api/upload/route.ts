@@ -1,19 +1,33 @@
 import { relevanceGate } from "@redflag/agents";
 import { checkRateLimit } from "@redflag/api/rateLimit";
 import { analyses, db, documents, eq } from "@redflag/db";
-import { type GateResult, logger, MAX_FILE_SIZE_BYTES, MAX_PAGES } from "@redflag/shared";
+import {
+  DOCX_MIME,
+  type GateResult,
+  logger,
+  MAX_FILE_SIZE_BYTES,
+  MAX_PAGES,
+  MAX_TEXT_LENGTH,
+  TXT_MIME,
+} from "@redflag/shared";
 import { createClient } from "@supabase/supabase-js";
+import mammoth from "mammoth";
 import { type NextRequest, NextResponse } from "next/server";
 import { extractText, getDocumentProxy } from "unpdf";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-/** Minimum text length to consider a PDF as having readable content */
+/** Minimum text length to consider a document as having readable content */
 const MIN_TEXT_LENGTH = 50;
 
 /** Magic bytes for a valid PDF file */
 const PDF_MAGIC_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]); // %PDF-
+
+/** Magic bytes for a DOCX file (ZIP/PK header) */
+const DOCX_MAGIC_BYTES = new Uint8Array([0x50, 0x4b, 0x03, 0x04]); // PK\x03\x04
+
+type FileType = "pdf" | "docx" | "txt";
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -26,6 +40,96 @@ function getSupabaseClient() {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
   return createClient(url, key);
+}
+
+function detectFileType(mimeType: string): FileType | null {
+  if (mimeType === "application/pdf") return "pdf";
+  if (mimeType === DOCX_MIME) return "docx";
+  if (mimeType === TXT_MIME) return "txt";
+  return null;
+}
+
+function getContentType(fileType: FileType): string {
+  if (fileType === "pdf") return "application/pdf";
+  if (fileType === "docx") return DOCX_MIME;
+  return TXT_MIME;
+}
+
+async function extractPdfText(
+  bytes: Uint8Array,
+  filename: string,
+): Promise<{ text: string; pageCount: number } | Response> {
+  // Magic bytes check
+  if (bytes.length < 5 || !PDF_MAGIC_BYTES.every((b, i) => bytes[i] === b)) {
+    return errorResponse("Invalid file. The uploaded file is not a valid PDF.", 400);
+  }
+
+  try {
+    const pdf = await getDocumentProxy(bytes);
+    const pageCount = pdf.numPages;
+    const { text } = await extractText(pdf, { mergePages: true });
+
+    if (pageCount > MAX_PAGES) {
+      return errorResponse(
+        `This document has ${pageCount} pages. Maximum is ${MAX_PAGES} pages.`,
+        400,
+      );
+    }
+
+    return { text: String(text), pageCount };
+  } catch (extractErr) {
+    logger.error("PDF extraction failed", {
+      step: "extract",
+      filename,
+      error: extractErr instanceof Error ? extractErr.message : String(extractErr),
+    });
+    return errorResponse("We couldn't read this file. Try re-exporting it as a PDF.", 422);
+  }
+}
+
+async function extractDocxText(
+  bytes: Uint8Array,
+): Promise<{ text: string; pageCount: number } | Response> {
+  // Magic bytes check (PK ZIP header)
+  if (bytes.length < 4 || !DOCX_MAGIC_BYTES.every((b, i) => bytes[i] === b)) {
+    return errorResponse("Invalid file. The uploaded file is not a valid DOCX document.", 400);
+  }
+
+  try {
+    const result = await mammoth.extractRawText({ buffer: Buffer.from(bytes) });
+    const text = result.value;
+
+    if (text.length > MAX_TEXT_LENGTH) {
+      return errorResponse(
+        `This document is too long (${text.length.toLocaleString()} characters). Maximum is ${MAX_TEXT_LENGTH.toLocaleString()} characters.`,
+        400,
+      );
+    }
+
+    // Estimate page count from character count (~3000 chars/page)
+    const pageCount = Math.max(1, Math.ceil(text.length / 3000));
+    return { text, pageCount };
+  } catch (extractErr) {
+    logger.error("DOCX extraction failed", {
+      step: "extract",
+      error: extractErr instanceof Error ? extractErr.message : String(extractErr),
+    });
+    return errorResponse("We couldn't read this file. Make sure it's a valid DOCX document.", 422);
+  }
+}
+
+function extractTxtText(bytes: Uint8Array): { text: string; pageCount: number } | Response {
+  const text = Buffer.from(bytes).toString("utf-8");
+
+  if (text.length > MAX_TEXT_LENGTH) {
+    return errorResponse(
+      `This document is too long (${text.length.toLocaleString()} characters). Maximum is ${MAX_TEXT_LENGTH.toLocaleString()} characters.`,
+      400,
+    );
+  }
+
+  const pageCount = Math.max(1, Math.ceil(text.length / 3000));
+  return { text, pageCount };
 }
 
 export async function POST(request: NextRequest) {
@@ -55,24 +159,23 @@ export async function POST(request: NextRequest) {
     const responseLanguage = (formData.get("responseLanguage") as string) || "en";
 
     if (!file || !(file instanceof File)) {
-      return errorResponse("No PDF file provided", 400);
+      return errorResponse("No file provided", 400);
     }
 
     // ── MIME type check ────────────────────────────────────────
-    if (file.type !== "application/pdf") {
-      return errorResponse("Invalid file type. Please upload a PDF file.", 400);
+    const fileType = detectFileType(file.type);
+    if (!fileType) {
+      return errorResponse(
+        `Invalid file type. Please upload a PDF, DOCX, or TXT file. (Received: ${file.type || "unknown"})`,
+        400,
+      );
     }
 
     // ── Read file bytes ────────────────────────────────────────
-    // Copy the buffer — unpdf/pdf.js detaches the original ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
+    // Copy for storage — unpdf/pdf.js detaches the original ArrayBuffer
     const bytesForStorage = new Uint8Array(bytes);
-
-    // ── Magic bytes check ──────────────────────────────────────
-    if (bytes.length < 5 || !PDF_MAGIC_BYTES.every((b, i) => bytes[i] === b)) {
-      return errorResponse("Invalid file. The uploaded file is not a valid PDF.", 400);
-    }
 
     // ── File size check ────────────────────────────────────────
     if (bytes.length > MAX_FILE_SIZE_BYTES) {
@@ -82,39 +185,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Extract text using unpdf ───────────────────────────────
-    let extractedText: string;
-    let pageCount: number;
+    // ── Extract text based on file type ─────────────────────────
+    let extractionResult: { text: string; pageCount: number } | Response;
 
-    try {
-      const pdf = await getDocumentProxy(bytes);
-      pageCount = pdf.numPages;
-      const { text } = await extractText(pdf, { mergePages: true });
-      extractedText = String(text);
-    } catch (extractErr) {
-      logger.error("PDF extraction failed", {
-        step: "extract",
-        filename: file.name,
-        error: extractErr instanceof Error ? extractErr.message : String(extractErr),
-      });
-      return errorResponse("We couldn't read this file. Try re-exporting it as a PDF.", 422);
+    if (fileType === "pdf") {
+      extractionResult = await extractPdfText(bytes, file.name);
+    } else if (fileType === "docx") {
+      extractionResult = await extractDocxText(bytes);
+    } else {
+      extractionResult = extractTxtText(bytes);
     }
 
-    // ── Page count check ───────────────────────────────────────
-    if (pageCount > MAX_PAGES) {
-      return errorResponse(
-        `This document has ${pageCount} pages. Maximum is ${MAX_PAGES} pages.`,
-        400,
-      );
+    // If extraction returned an error response, return it
+    if (extractionResult instanceof Response) {
+      return extractionResult;
     }
 
-    // ── Empty text check (scanned/image PDFs) ──────────────────
+    const { text: extractedText, pageCount } = extractionResult;
+
+    // ── Empty text check ────────────────────────────────────────
     const trimmedText = extractedText.trim();
     if (trimmedText.length === 0) {
-      return errorResponse(
-        "This PDF appears to be a scanned image. Please upload a text-based PDF.",
-        422,
-      );
+      if (fileType === "pdf") {
+        return errorResponse(
+          "This PDF appears to be a scanned image. Please upload a text-based PDF.",
+          422,
+        );
+      }
+      return errorResponse("This document doesn't contain any text to analyze.", 422);
     }
 
     if (trimmedText.length < MIN_TEXT_LENGTH) {
@@ -123,6 +221,7 @@ export async function POST(request: NextRequest) {
 
     logger.info("Upload received", {
       filename: file.name,
+      fileType,
       pageCount,
       fileSize: bytes.length,
       textLen: trimmedText.length,
@@ -135,7 +234,7 @@ export async function POST(request: NextRequest) {
     const { error: uploadError } = await supabase.storage
       .from("contracts")
       .upload(storagePath, bytesForStorage, {
-        contentType: "application/pdf",
+        contentType: getContentType(fileType),
         upsert: false,
       });
 
@@ -149,6 +248,7 @@ export async function POST(request: NextRequest) {
       .insert(documents)
       .values({
         filename: file.name,
+        fileType,
         pageCount,
         storagePath,
         extractedText: trimmedText,

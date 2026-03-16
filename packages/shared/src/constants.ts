@@ -3,6 +3,15 @@ export const RATE_LIMIT_PER_DAY = 2;
 export const VOYAGE_DIMENSIONS = 1024;
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
+/** Maximum text length for DOCX/TXT files (~30 page equivalent at ~3000 chars/page) */
+export const MAX_TEXT_LENGTH = 90_000;
+
+export const DOCX_MIME =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" as const;
+export const TXT_MIME = "text/plain" as const;
+
+export const ACCEPTED_MIME_TYPES = ["application/pdf", DOCX_MIME, TXT_MIME] as const;
+
 /**
  * Languages supported for AI response output.
  * Tier 1-2 quality from Anthropic multilingual benchmarks.

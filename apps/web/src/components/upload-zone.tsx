@@ -35,11 +35,21 @@ export function UploadZone() {
 
   const handleFile = useCallback(
     async (file: File) => {
-      // Client-side validation: PDF only
-      if (file.type !== "application/pdf" && !file.name.endsWith(".pdf")) {
+      // Client-side validation: accepted file types
+      const acceptedTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/plain",
+      ];
+      const acceptedExtensions = [".pdf", ".docx", ".txt"];
+      const hasValidType = acceptedTypes.includes(file.type);
+      const hasValidExtension = acceptedExtensions.some((ext) =>
+        file.name.toLowerCase().endsWith(ext),
+      );
+      if (!hasValidType && !hasValidExtension) {
         setState({
           status: "rejection",
-          reason: "Please upload a PDF file. Other file formats are not supported.",
+          reason: "Please upload a PDF, DOCX, or TXT file. Other formats are not supported.",
         });
         return;
       }
@@ -204,7 +214,7 @@ export function UploadZone() {
         onDragLeave={handleDragLeave}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        aria-label="Upload PDF file"
+        aria-label="Upload contract file"
         aria-describedby={
           state.status === "error" || state.status === "rejection" ? "upload-message" : undefined
         }
@@ -223,7 +233,7 @@ export function UploadZone() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           onChange={handleInputChange}
           className="sr-only"
           aria-hidden="true"
@@ -235,12 +245,10 @@ export function UploadZone() {
           <>
             <Upload className="size-10 text-slate-400" strokeWidth={1.5} />
             <p className="mt-4 font-heading text-base font-semibold text-slate-700">
-              Drop your PDF here
+              Drop your contract here
             </p>
             <p className="mt-1 text-sm text-slate-500">or click to browse</p>
-            <p className="mt-3 text-xs text-slate-400">
-              PDF only &middot; Max 10MB &middot; Up to 30 pages
-            </p>
+            <p className="mt-3 text-xs text-slate-400">PDF, DOCX, or TXT &middot; Max 10MB</p>
           </>
         )}
 

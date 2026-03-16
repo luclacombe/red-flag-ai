@@ -79,6 +79,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 
 ## Key Architecture Notes
 
+- **Multi-format upload:** PDF (unpdf), DOCX (mammoth), TXT (Buffer UTF-8). PDF uses page count limit (≤30), DOCX/TXT use character count limit (≤90,000 chars). Magic bytes validated for PDF (`%PDF-`) and DOCX (`PK\x03\x04`). `fileType` column on documents table tracks format.
 - **File upload** uses a raw Next.js route handler (POST `/api/upload`), not tRPC — tRPC doesn't handle multipart
 - **Streaming** uses tRPC SSE subscriptions via `httpSubscriptionLink` — async generators yielding typed events
 - **Vercel constraint:** first SSE event must emit within 25 seconds. Pipeline emits a status event immediately.
@@ -109,6 +110,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | Biome | 2.4.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
 | Vitest | 4.1.0 | |
 | TypeScript | 5.9.3 | |
+| mammoth | 1.12.0 | DOCX text extraction (apps/web only) |
 | Turborepo | 2.8.17 | |
 
 ## Supabase

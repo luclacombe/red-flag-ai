@@ -60,7 +60,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 
 ## Upload Route (`POST /api/upload`)
 
-Order: **rate limit check** → MIME type → magic bytes (`%PDF-`) → file size (≤10MB) → extract text (unpdf) → page count (≤30) → empty text check → min text length (50 chars).
+Accepts PDF, DOCX, and TXT files. Order: **rate limit check** → MIME type (pdf/docx/txt) → file size (≤10MB) → type-specific extraction (PDF: magic bytes + unpdf + page count ≤30; DOCX: PK magic bytes + mammoth + char count ≤90k; TXT: UTF-8 decode + char count ≤90k) → empty text check → min text length (50 chars).
 
 After validation: upload to Supabase Storage → create document record → run relevance gate → if contract: update document + create analysis record.
 
@@ -88,6 +88,7 @@ Returns:
 ## Dependencies
 
 - `unpdf` — PDF text extraction (`getDocumentProxy` + `extractText`)
+- `mammoth` — DOCX text extraction (`mammoth.extractRawText()`)
 - `motion` — Animation library for BackgroundPaths + TextShimmer (landing page only)
 - `@supabase/supabase-js` — Supabase Storage uploads (service role key)
 - `@redflag/agents` — Relevance gate (`relevanceGate`)
