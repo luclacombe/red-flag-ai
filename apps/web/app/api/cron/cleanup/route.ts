@@ -76,8 +76,14 @@ export async function GET(request: Request) {
     rateCutoff.setDate(rateCutoff.getDate() - RATE_LIMIT_RETENTION_DAYS);
     const rateCutoffStr = rateCutoff.toISOString().slice(0, 10);
 
-    await db.delete(rateLimits).where(sql`${rateLimits.date} < ${rateCutoffStr}`);
-    const rateLimitsDeleted = -1; // Drizzle doesn't expose rowCount for deletes
+    const oldRateLimits = await db
+      .select({ ip: rateLimits.ipAddress })
+      .from(rateLimits)
+      .where(sql`${rateLimits.date} < ${rateCutoffStr}`);
+    if (oldRateLimits.length > 0) {
+      await db.delete(rateLimits).where(sql`${rateLimits.date} < ${rateCutoffStr}`);
+    }
+    const rateLimitsDeleted = oldRateLimits.length;
 
     logger.info("Cleanup complete", {
       docsDeleted,

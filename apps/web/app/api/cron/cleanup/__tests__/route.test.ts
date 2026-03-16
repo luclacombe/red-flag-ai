@@ -176,6 +176,6 @@ describe("GET /api/cron/cleanup", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.rateLimitsDeleted).toBe(-1);
+    expect(body.rateLimitsDeleted).toBe(0);
   });
 });
