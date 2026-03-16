@@ -10,6 +10,7 @@ import {
   MAX_TEXT_LENGTH,
   TXT_MIME,
 } from "@redflag/shared";
+import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import mammoth from "mammoth";
 import { type NextRequest, NextResponse } from "next/server";
@@ -134,12 +135,35 @@ function extractTxtText(bytes: Uint8Array): { text: string; pageCount: number } 
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Extract authenticated user (if any) ─────────────────────
+    let userId: string | null = null;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseAnonKey) {
+      const cookieHeader = request.headers.get("cookie") ?? "";
+      const supabaseAuth = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll: () =>
+            parseCookieHeader(cookieHeader).map((c) => ({
+              name: c.name,
+              value: c.value ?? "",
+            })),
+          setAll: () => {},
+        },
+      });
+      const {
+        data: { user },
+      } = await supabaseAuth.auth.getUser();
+      userId = user?.id ?? null;
+    }
+
     // ── Rate limit check ────────────────────────────────────────
     const forwarded = request.headers.get("x-forwarded-for");
     const ip = forwarded?.split(",")[0]?.trim() || "unknown";
 
     try {
-      const { limited, resetAt } = await checkRateLimit(ip);
+      const { limited, resetAt } = await checkRateLimit(userId ?? ip, !!userId);
       if (limited) {
         return NextResponse.json(
           { error: "Daily analysis limit reached. Try again tomorrow.", resetAt },
@@ -229,7 +253,8 @@ export async function POST(request: NextRequest) {
 
     // ── Upload to Supabase Storage ─────────────────────────────
     const supabase = getSupabaseClient();
-    const storagePath = `uploads/${crypto.randomUUID()}/${file.name}`;
+    const storagePrefix = userId ?? "anonymous";
+    const storagePath = `${storagePrefix}/${crypto.randomUUID()}/${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("contracts")
@@ -252,6 +277,7 @@ export async function POST(request: NextRequest) {
         pageCount,
         storagePath,
         extractedText: trimmedText,
+        userId,
       })
       .returning();
 

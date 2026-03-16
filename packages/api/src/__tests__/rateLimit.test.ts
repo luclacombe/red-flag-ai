@@ -24,6 +24,7 @@ vi.mock("@redflag/db", () => ({
 
 vi.mock("@redflag/shared", () => ({
   RATE_LIMIT_PER_DAY: 2,
+  RATE_LIMIT_AUTH_PER_DAY: 10,
 }));
 
 const { checkRateLimit } = await import("../rateLimit");
@@ -90,5 +91,23 @@ describe("checkRateLimit", () => {
     expect(resetDate.getUTCHours()).toBe(0);
     expect(resetDate.getUTCMinutes()).toBe(0);
     expect(resetDate.getUTCSeconds()).toBe(0);
+  });
+
+  it("uses higher limit (10/day) for authenticated users", async () => {
+    mockWhere.mockResolvedValue([{ count: 5 }]);
+
+    const result = await checkRateLimit("user-123", true);
+
+    expect(result.limited).toBe(false);
+    expect(mockInsert).toHaveBeenCalled();
+  });
+
+  it("blocks authenticated users at 10/day limit", async () => {
+    mockWhere.mockResolvedValue([{ count: 10 }]);
+
+    const result = await checkRateLimit("user-123", true);
+
+    expect(result.limited).toBe(true);
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

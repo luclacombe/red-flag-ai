@@ -52,6 +52,15 @@ vi.mock("@redflag/api/rateLimit", () => ({
   checkRateLimit: mockCheckRateLimit,
 }));
 
+// Mock @supabase/ssr for auth user extraction in upload route
+const mockGetUser = vi.fn();
+vi.mock("@supabase/ssr", () => ({
+  createServerClient: () => ({
+    auth: { getUser: mockGetUser },
+  }),
+  parseCookieHeader: () => [],
+}));
+
 // Import after mocks
 const { POST } = await import("../route");
 const unpdf = await import("unpdf");
@@ -183,10 +192,13 @@ function setupTxtMocks() {
 describe("POST /api/upload", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-key");
     vi.resetAllMocks();
     // Default: not rate-limited
     mockCheckRateLimit.mockResolvedValue({ limited: false, resetAt: "2026-03-16T00:00:00.000Z" });
+    // Default: not authenticated
+    mockGetUser.mockResolvedValue({ data: { user: null } });
   });
 
   describe("validation", () => {
@@ -597,6 +609,94 @@ describe("POST /api/upload", () => {
       // Should not block user — graceful degradation
       expect(res.status).toBe(200);
       expect(body.isContract).toBe(true);
+    });
+  });
+
+  describe("auth integration", () => {
+    it("sets userId on document when authenticated", async () => {
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: "user-abc-123" } },
+      });
+
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      const res = await POST(req as never);
+      expect(res.status).toBe(200);
+
+      const insertCalls = mockValues.mock.calls;
+      const docInsert = insertCalls[0]?.[0] as Record<string, unknown> | undefined;
+      expect(docInsert?.userId).toBe("user-abc-123");
+    });
+
+    it("sets userId to null when not authenticated", async () => {
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      const res = await POST(req as never);
+      expect(res.status).toBe(200);
+
+      const insertCalls = mockValues.mock.calls;
+      const docInsert = insertCalls[0]?.[0] as Record<string, unknown> | undefined;
+      expect(docInsert?.userId).toBeNull();
+    });
+
+    it("uses userId for rate limiting when authenticated", async () => {
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: "user-abc-123" } },
+      });
+
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      await POST(req as never);
+
+      expect(mockCheckRateLimit).toHaveBeenCalledWith("user-abc-123", true);
+    });
+
+    it("uses IP for rate limiting when not authenticated", async () => {
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "NDA.",
+      });
+
+      await POST(req as never);
+
+      expect(mockCheckRateLimit).toHaveBeenCalledWith("unknown", false);
     });
   });
 });

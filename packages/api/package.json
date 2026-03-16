@@ -11,6 +11,8 @@
     "@redflag/agents": "workspace:*",
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.99.1",
     "@trpc/client": "^11.12.0",
     "@trpc/server": "^11.12.0",
     "superjson": "^2.2.6",

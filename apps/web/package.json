@@ -18,6 +18,7 @@
     "@redflag/api": "workspace:*",
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
+    "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-query": "^5.90.21",

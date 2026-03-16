@@ -1,5 +1,5 @@
 import { getDb, rateLimits, sql } from "@redflag/db";
-import { RATE_LIMIT_PER_DAY } from "@redflag/shared";
+import { RATE_LIMIT_AUTH_PER_DAY, RATE_LIMIT_PER_DAY } from "@redflag/shared";
 
 export interface RateLimitResult {
   limited: boolean;
@@ -22,33 +22,40 @@ function nextMidnightUTC(): string {
 }
 
 /**
- * Check and increment rate limit for an IP address.
+ * Check and increment rate limit.
+ *
+ * @param identifier - IP address (anonymous) or user ID (authenticated)
+ * @param isAuthenticated - Whether the user is authenticated (10/day vs 2/day)
  *
  * Uses atomic UPSERT: INSERT ... ON CONFLICT DO UPDATE SET count = count + 1.
- * Returns whether the IP is rate-limited BEFORE incrementing — so the caller
+ * Returns whether the identifier is rate-limited BEFORE incrementing — so the caller
  * can reject the request without consuming a slot.
  */
-export async function checkRateLimit(ipAddress: string): Promise<RateLimitResult> {
+export async function checkRateLimit(
+  identifier: string,
+  isAuthenticated = false,
+): Promise<RateLimitResult> {
   const db = getDb();
   const today = todayUTC();
   const resetAt = nextMidnightUTC();
+  const limit = isAuthenticated ? RATE_LIMIT_AUTH_PER_DAY : RATE_LIMIT_PER_DAY;
 
   // Check current count
   const rows = await db
     .select({ count: rateLimits.count })
     .from(rateLimits)
-    .where(sql`${rateLimits.ipAddress} = ${ipAddress} AND ${rateLimits.date} = ${today}`);
+    .where(sql`${rateLimits.ipAddress} = ${identifier} AND ${rateLimits.date} = ${today}`);
 
   const currentCount = rows[0]?.count ?? 0;
 
-  if (currentCount >= RATE_LIMIT_PER_DAY) {
+  if (currentCount >= limit) {
     return { limited: true, resetAt };
   }
 
   // Under limit — UPSERT to increment
   await db
     .insert(rateLimits)
-    .values({ ipAddress, date: today, count: 1 })
+    .values({ ipAddress: identifier, date: today, count: 1 })
     .onConflictDoUpdate({
       target: [rateLimits.ipAddress, rateLimits.date],
       set: { count: sql`${rateLimits.count} + 1` },

@@ -19,6 +19,14 @@ vi.mock("@redflag/db", () => ({
   }),
 }));
 
+// Mock Supabase SSR (imported by trpc.ts context)
+vi.mock("@supabase/ssr", () => ({
+  createServerClient: () => ({
+    auth: { getUser: () => Promise.resolve({ data: { user: null } }) },
+  }),
+  parseCookieHeader: () => [],
+}));
+
 // Mock analyzeContract
 const mockAnalyzeContract = vi.fn();
 vi.mock("@redflag/agents", () => ({
@@ -27,9 +35,9 @@ vi.mock("@redflag/agents", () => ({
 
 const { appRouter, createCallerFactory, createTRPCContext } = await import("../index");
 
-async function createCaller() {
+async function createCaller(user: { id: string; email: string } | null = null) {
   const factory = createCallerFactory(appRouter);
-  return factory(await createTRPCContext());
+  return factory({ user } as Awaited<ReturnType<typeof createTRPCContext>>);
 }
 
 describe("analysis.get", () => {

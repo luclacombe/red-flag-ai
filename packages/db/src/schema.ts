@@ -13,18 +13,22 @@ import {
 
 // ── Documents ──────────────────────────────────────────────
 
-export const documents = pgTable("documents", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id"), // nullable — future auth
-  filename: text("filename").notNull(),
-  pageCount: integer("page_count").notNull(),
-  storagePath: text("storage_path").notNull(),
-  extractedText: text("extracted_text").notNull(),
-  fileType: text("file_type").notNull().default("pdf"),
-  language: text("language"),
-  contractType: text("contract_type"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const documents = pgTable(
+  "documents",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id"),
+    filename: text("filename").notNull(),
+    pageCount: integer("page_count").notNull(),
+    storagePath: text("storage_path").notNull(),
+    extractedText: text("extracted_text").notNull(),
+    fileType: text("file_type").notNull().default("pdf"),
+    language: text("language"),
+    contractType: text("contract_type"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("documents_user_id_idx").on(table.userId)],
+);
 
 // ── Analyses ───────────────────────────────────────────────
 
