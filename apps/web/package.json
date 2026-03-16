@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
+    "@react-pdf/renderer": "^4.3.2",
     "@redflag/agents": "workspace:*",
     "@redflag/api": "workspace:*",
     "@redflag/db": "workspace:*",

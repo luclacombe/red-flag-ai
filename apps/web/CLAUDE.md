@@ -20,9 +20,11 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | Route | Type | Purpose |
 |-------|------|---------|
 | `/` | Static | Landing page: hero, upload zone, how it works, footer |
-| `/analysis/[id]` | Dynamic | Analysis results page. Server component passes id to `AnalysisView` client component. Dual path: SSE streaming for pending/processing, DB render for complete/failed. |
+| `/analysis/[id]` | Dynamic | Analysis results page. `generateMetadata()` fetches analysis for dynamic OG tags. Server component passes id to `AnalysisView` client component. Dual path: SSE streaming for pending/processing, DB render for complete/failed. Share + Download PDF buttons appear when analysis is complete. |
 | `/api/trpc/[trpc]` | API | tRPC endpoint |
 | `/api/upload` | API | PDF upload → validate → extract → gate → create records |
+| `/api/report/[id]` | API (GET) | PDF report generation. Fetches analysis + clauses, renders PDF via `@react-pdf/renderer`, returns with `Content-Disposition: attachment`. `runtime = "nodejs"`, `maxDuration = 30`. |
+| `/api/og/[id]` | API (GET) | Dynamic OG image generation. Uses `next/og` `ImageResponse` to render risk score circle + recommendation badge + clause breakdown. `runtime = "edge"`. |
 
 ## Components
 
@@ -50,7 +52,8 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 ### Analysis page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Handles `clause_positions` event for instant skeleton cards, replaces each with a `ClauseCard` as `clause_analysis` events arrive. Determinate progress ("Analyzed X of N clauses"). Manages all 5 page states (loading, streaming, complete, failed, 404). |
+| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Handles `clause_positions` event for instant skeleton cards, replaces each with a `ClauseCard` as `clause_analysis` events arrive. Determinate progress ("Analyzed X of N clauses"). Manages all 5 page states (loading, streaming, complete, failed, 404). Shows `AnalysisActions` (Share + Download PDF) when analysis is complete. |
+| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`). Appears in complete state (from DB) and after streaming finishes. |
 | `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). CSS fade-slide-in animation. |
 | `StatusBar` | `status-bar.tsx` | Blue bar below nav. CSS-only text shimmer animation (no motion library). `prefers-reduced-motion`: static text + pulsing dot. `aria-live="polite"`. |
 | `ProgressBar` | `progress-bar.tsx` | Thin amber bar showing determinate progress (X of N clauses). CSS transition on width. `role="progressbar"` with `aria-valuenow/min/max`. |
@@ -89,6 +92,7 @@ Returns:
 
 - `unpdf` — PDF text extraction (`getDocumentProxy` + `extractText`)
 - `mammoth` — DOCX text extraction (`mammoth.extractRawText()`)
+- `@react-pdf/renderer` — Server-side PDF report generation (`renderToBuffer`). Used in `/api/report/[id]`.
 - `motion` — Animation library for BackgroundPaths + TextShimmer (landing page only)
 - `@supabase/supabase-js` — Supabase Storage uploads (service role key)
 - `@redflag/agents` — Relevance gate (`relevanceGate`)

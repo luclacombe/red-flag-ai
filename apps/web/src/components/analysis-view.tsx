@@ -5,6 +5,7 @@ import { Home } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { trpc } from "@/trpc/react";
+import { AnalysisActions } from "./analysis-actions";
 import { ClauseCard } from "./clause-card";
 import { ClauseSkeleton } from "./clause-skeleton";
 import { ErrorState } from "./error-state";
@@ -174,7 +175,10 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       <div className="flex min-h-screen flex-col bg-slate-50">
         <NavBar hideHowItWorks />
         <main className="mx-auto w-full max-w-3xl flex-1 space-y-4 px-4 py-8">
-          <h1 className="sr-only">Contract analysis results</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="sr-only">Contract analysis results</h1>
+            <AnalysisActions analysisId={id} />
+          </div>
           {dbClauses.map((clause) => (
             <ClauseCard key={clause.position} clause={clause} />
           ))}
@@ -277,8 +281,15 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           </>
         )}
 
-        {/* Summary panel */}
-        {showSummary && <SummaryPanel summary={streamSummary} animate className="mt-8" />}
+        {/* Summary panel + actions */}
+        {showSummary && (
+          <>
+            <SummaryPanel summary={streamSummary} animate className="mt-8" />
+            <div className="flex justify-end">
+              <AnalysisActions analysisId={id} />
+            </div>
+          </>
+        )}
 
         {/* Stream error */}
         {streamError && (

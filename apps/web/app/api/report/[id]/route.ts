@@ -1,0 +1,82 @@
+import { analyses, clauses, documents, eq, getDb } from "@redflag/db";
+import { logger } from "@redflag/shared";
+import { renderReport } from "./report-document";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  try {
+    const db = getDb();
+
+    const analysisRows = await db.select().from(analyses).where(eq(analyses.id, id));
+    const analysis = analysisRows[0];
+
+    if (!analysis) {
+      return Response.json({ error: "Analysis not found" }, { status: 404 });
+    }
+
+    if (analysis.status !== "complete") {
+      return Response.json({ error: "Analysis is not yet complete" }, { status: 400 });
+    }
+
+    const docRows = await db.select().from(documents).where(eq(documents.id, analysis.documentId));
+    const doc = docRows[0];
+
+    if (!doc) {
+      return Response.json({ error: "Document not found" }, { status: 404 });
+    }
+
+    const clauseRows = await db
+      .select()
+      .from(clauses)
+      .where(eq(clauses.analysisId, id))
+      .orderBy(clauses.position);
+
+    const breakdown = {
+      red: clauseRows.filter((c) => c.riskLevel === "red").length,
+      yellow: clauseRows.filter((c) => c.riskLevel === "yellow").length,
+      green: clauseRows.filter((c) => c.riskLevel === "green").length,
+    };
+
+    const pdfBuffer = await renderReport({
+      contractType: doc.contractType ?? "unknown",
+      filename: doc.filename,
+      overallRiskScore: analysis.overallRiskScore ?? 0,
+      recommendation: analysis.recommendation ?? "caution",
+      topConcerns: (analysis.topConcerns as string[]) ?? [],
+      clauses: clauseRows.map((c) => ({
+        position: c.position,
+        clauseText: c.clauseText,
+        riskLevel: c.riskLevel,
+        explanation: c.explanation,
+        saferAlternative: c.saferAlternative,
+        category: c.category,
+      })),
+      generatedAt: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      breakdown,
+    });
+
+    const safeFilename = doc.filename.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    return new Response(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="redflag-report-${safeFilename}.pdf"`,
+        "Cache-Control": "private, max-age=3600",
+      },
+    });
+  } catch (error) {
+    logger.error("PDF report generation failed", {
+      analysisId: id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return Response.json({ error: "Failed to generate report" }, { status: 500 });
+  }
+}

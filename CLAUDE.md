@@ -96,6 +96,9 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Clause position strategy:** Hybrid parse returns clause text; orchestrator computes `startIndex`/`endIndex` via `text.indexOf()`. Claude references clauses by position number only (no verbatim copying in output — saves ~50% output tokens).
 - **Performance characteristics:** First clause result in ~8-10s from upload. Full analysis in ~20-30s for typical contracts. Zero JSON parse errors (guaranteed by `strict: true` structured outputs). Zero Vercel timeouts (heartbeat-based keepalive).
 - **Response language selection:** Users choose what language Claude writes explanations in, independent of the document language. 15 supported languages (Tier 1-2 from Anthropic benchmarks). `SUPPORTED_LANGUAGES` constant in `@redflag/shared`. System prompts stay in English. `saferAlternative` stays in the document's original language. `responseLanguage` stored on analysis record, threaded through orchestrator → combined analysis → summary. `LanguageSelector` component with `localStorage` persistence, defaults to `navigator.language`.
+- **Shareable URLs:** Analysis pages have dynamic OG meta tags via `generateMetadata()`. Tags include risk score, recommendation, contract type, and clause breakdown. Dynamic OG image at `/api/og/[id]` renders risk score circle + recommendation badge via `next/og` `ImageResponse` (edge runtime). Twitter card tags also included.
+- **PDF report export:** `GET /api/report/[id]` generates a downloadable PDF report using `@react-pdf/renderer`. Layout: branded header, summary section (score, recommendation, contract type, date, breakdown), top concerns, clause-by-clause analysis with risk badges and safer alternatives, legal disclaimer footer with page numbers. Returns `Content-Disposition: attachment`.
+- **Share + Download buttons:** `AnalysisActions` component shows Share (clipboard copy with "Copied!" feedback) and Download PDF buttons. Appears when analysis is complete (both DB render and post-streaming states).
 
 ## Current Stack Versions
 
@@ -111,6 +114,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | Vitest | 4.1.0 | |
 | TypeScript | 5.9.3 | |
 | mammoth | 1.12.0 | DOCX text extraction (apps/web only) |
+| @react-pdf/renderer | 4.3.2 | Server-side PDF report generation (apps/web only) |
 | Turborepo | 2.8.17 | |
 
 ## Supabase
