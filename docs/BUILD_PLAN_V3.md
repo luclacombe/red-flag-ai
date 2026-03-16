@@ -284,76 +284,76 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 4.1 — Install @supabase/ssr
-- [ ] `pnpm add @supabase/ssr --filter @redflag/web`
-- [ ] Add `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.example` and Vercel env vars (via Vercel MCP or dashboard)
+- [x] `pnpm add @supabase/ssr --filter @redflag/web`
+- [x] Add `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.example` and Vercel env vars (via Vercel MCP or dashboard)
 
 #### 4.2 — Supabase client utilities
-- [ ] Create `apps/web/src/lib/supabase/client.ts` — browser client using `createBrowserClient()` from `@supabase/ssr`
-- [ ] Create `apps/web/src/lib/supabase/server.ts` — server client using `createServerClient()` with cookie getAll/setAll from `next/headers`
-- [ ] Create `apps/web/src/lib/supabase/middleware.ts` — session refresh logic:
+- [x] Create `apps/web/src/lib/supabase/client.ts` — browser client using `createBrowserClient()` from `@supabase/ssr`
+- [x] Create `apps/web/src/lib/supabase/server.ts` — server client using `createServerClient()` with cookie getAll/setAll from `next/headers`
+- [x] Create `apps/web/src/lib/supabase/middleware.ts` — session refresh logic:
   - Creates Supabase server client with request/response cookie bridge
   - Calls `supabase.auth.getUser()` to refresh token
   - Redirects unauthenticated users to `/login` (except for public routes: `/`, `/login`, `/auth/*`, `/analysis/*`, `/api/*`)
   - **Critical:** No code between `createServerClient()` and `getUser()` — the refresh must happen immediately
 
 #### 4.3 — Next.js middleware
-- [ ] Create `apps/web/middleware.ts` (project root of apps/web):
+- [x] Create `apps/web/middleware.ts` (project root of apps/web):
   - Import and call `updateSession()` from the supabase middleware utility
   - Matcher excludes static assets, images, favicon
   - **Note:** Analysis pages (`/analysis/*`) and API routes (`/api/*`) are NOT gated — they must remain accessible for shared links and SSE subscriptions
 
 #### 4.4 — Auth pages
-- [ ] Create `apps/web/app/login/page.tsx`:
+- [x] Create `apps/web/app/login/page.tsx`:
   - Email + password form
   - "Sign in with magic link" option
   - "Create account" link → `/signup`
   - Redirect to `/` on success
   - Styled to match existing design (dark hero section aesthetic)
-- [ ] Create `apps/web/app/signup/page.tsx`:
+- [x] Create `apps/web/app/signup/page.tsx`:
   - Email + password registration form
   - "Already have an account?" link → `/login`
   - Redirect to `/` on success with confirmation message
-- [ ] Create `apps/web/app/auth/callback/route.ts`:
+- [x] Create `apps/web/app/auth/callback/route.ts`:
   - Exchange auth code for session (required for magic links + OAuth)
   - Redirect to `next` param or `/`
-- [ ] Create `apps/web/app/auth/confirm/route.ts`:
+- [x] Create `apps/web/app/auth/confirm/route.ts`:
   - Handle email confirmation redirect from Supabase
   - Exchange token hash for session
 
 #### 4.5 — tRPC context integration
-- [ ] Update `packages/api/src/context.ts` to extract user from request cookies:
-  - Parse cookies from request headers
+- [x] Update `packages/api/src/trpc.ts` to extract user from request cookies:
+  - Parse cookies from request headers via `@supabase/ssr` `parseCookieHeader`
   - Create Supabase server client
   - Call `getUser()` to get authenticated user (or null)
   - Return `{ user: User | null }` in context
-- [ ] Add `protectedProcedure` that throws `UNAUTHORIZED` if `!ctx.user`
-- [ ] Keep `publicProcedure` for unauthenticated access (viewing shared analyses)
-- [ ] `analysis.get` remains public (shared analysis pages)
-- [ ] `analysis.stream` checks auth for new analyses but allows replaying completed ones without auth
+- [x] Add `protectedProcedure` that throws `UNAUTHORIZED` if `!ctx.user`
+- [x] Keep `publicProcedure` for unauthenticated access (viewing shared analyses)
+- [x] `analysis.get` remains public (shared analysis pages)
+- [x] `analysis.stream` checks auth for new analyses but allows replaying completed ones without auth
 
 #### 4.6 — Upload route auth
-- [ ] Update `apps/web/app/api/upload/route.ts`:
+- [x] Update `apps/web/app/api/upload/route.ts`:
   - Create Supabase server client from request cookies
   - Call `getUser()` — if authenticated, set `userId` on document record
   - If not authenticated, continue with anonymous flow (IP-based rate limiting, nullable userId)
   - Authenticated users get higher rate limit (10/day vs 2/day)
-- [ ] Update Storage path to include user ID: `{userId}/{timestamp}-{filename}` for auth users, `anonymous/{timestamp}-{filename}` for anon
+- [x] Update Storage path to include user ID: `{userId}/{uuid}/{filename}` for auth users, `anonymous/{uuid}/{filename}` for anon
 
 #### 4.7 — Rate limit upgrade
-- [ ] Update `packages/api/src/rateLimit.ts`:
-  - Accept optional `userId` in addition to `ipAddress`
+- [x] Update `packages/api/src/rateLimit.ts`:
+  - Accept optional `isAuthenticated` param
   - If user is authenticated, rate limit by userId with 10/day limit
   - If anonymous, keep existing IP-based 2/day limit
-  - Update rate_limits table schema if needed (add optional `userId` column)
+  - Reuses existing `rate_limits` table (ipAddress column stores userId for auth users)
 
 #### 4.8 — NavBar auth state
-- [ ] Update `NavBar` component to show auth state:
+- [x] Update `NavBar` component to show auth state:
   - Unauthenticated: "Sign In" button → `/login`
-  - Authenticated: user email/avatar + "Sign Out" button
+  - Authenticated: user email + "Sign Out" button
   - Sign out calls `supabase.auth.signOut()` and redirects to `/`
 
 #### 4.9 — Row Level Security
-- [ ] Apply RLS policies via Supabase MCP `execute_sql`:
+- [x] Apply RLS policies via Supabase MCP `execute_sql`:
 
   **Documents table:**
   ```sql
@@ -404,30 +404,30 @@ Must pass before committing. No exceptions.
     USING (bucket_id = 'contracts' AND (storage.foldername(name))[1] = (select auth.uid())::text);
   ```
 
-- [ ] Add index on `documents.user_id`: `CREATE INDEX documents_user_id_idx ON documents(user_id);`
-- [ ] Verify with Supabase MCP `execute_sql`: `SELECT tablename, policyname FROM pg_policies;`
+- [x] Add index on `documents.user_id`: `CREATE INDEX documents_user_id_idx ON documents(user_id);`
+- [x] Verify with Supabase MCP `execute_sql`: `SELECT tablename, policyname FROM pg_policies;`
 
 #### 4.10 — Tests
-- [ ] Unit test: tRPC `protectedProcedure` rejects null user
-- [ ] Unit test: upload route sets userId when authenticated
-- [ ] Unit test: rate limit uses userId for auth users, IP for anon
+- [x] Unit test: tRPC `protectedProcedure` rejects null user
+- [x] Unit test: upload route sets userId when authenticated
+- [x] Unit test: rate limit uses userId for auth users, IP for anon
 - [ ] Unit test: auth callback exchanges code for session
-- [ ] Update all existing tests that mock tRPC context to include `user: null`
+- [x] Update all existing tests that mock tRPC context to include `user: null`
 
 #### 4.11 — Documentation
-- [ ] Update CLAUDE.md: add `@supabase/ssr` dep, middleware pattern, auth file structure, RLS notes, protectedProcedure
+- [x] Update CLAUDE.md: add `@supabase/ssr` dep, middleware pattern, auth file structure, RLS notes, protectedProcedure
 - [ ] Update PROJECT.md: mark auth as complete, update constraints section
-- [ ] Update `.env.example` with `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- [x] Update `.env.example` with `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
 - [ ] Can create account with email/password → redirects to home → NavBar shows user
 - [ ] Can sign in with magic link → email received (check Supabase dashboard or Mailpit if local)
 - [ ] Authenticated user can upload → analysis is linked to their account
 - [ ] Anonymous user can still upload (2/day limit), authenticated gets 10/day
 - [ ] Shared analysis pages (`/analysis/[id]`) work without auth
-- [ ] RLS policies active — verify with Supabase MCP `execute_sql`
-- [ ] Documentation updated
+- [x] RLS policies active — verify with Supabase MCP `execute_sql`
+- [x] Documentation updated
 
 ---
 

@@ -8,8 +8,16 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 - `app/fonts.ts` — Google Fonts: Space Grotesk (headings) + DM Sans (body)
 - `app/globals.css` — Tailwind v4 theme tokens, shadcn colors, custom keyframes (`bounce-dots`, `fade-slide-in`, `text-shimmer`), `.text-shimmer` class with `prefers-reduced-motion` fallback
 - `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST). `runtime = "nodejs"`, `maxDuration = 300`.
-- `app/api/upload/route.ts` — PDF upload handler (POST, multipart/form-data). Rate limiting via `checkRateLimit`. `runtime = "nodejs"`, `maxDuration = 300`.
-- `app/api/upload/__tests__/route.test.ts` — Upload route tests (13 tests — validation, gate, rate limiting)
+- `app/api/upload/route.ts` — Upload handler (POST, multipart/form-data). Auth-aware rate limiting (userId 10/day, IP 2/day). Sets `userId` on document when authenticated. `runtime = "nodejs"`, `maxDuration = 300`.
+- `app/api/upload/__tests__/route.test.ts` — Upload route tests (26 tests — validation, gate, rate limiting, auth)
+- `app/login/page.tsx` — Sign in page (email/password + magic link)
+- `app/signup/page.tsx` — Registration page (email/password)
+- `app/auth/callback/route.ts` — OAuth/magic link code exchange → session
+- `app/auth/confirm/route.ts` — Email OTP verification (token_hash + type)
+- `middleware.ts` — Next.js middleware: session refresh via `updateSession()`. Public routes: `/`, `/login`, `/signup`, `/auth/*`, `/analysis/*`, `/api/*`.
+- `src/lib/supabase/client.ts` — Browser Supabase client (`createBrowserClient`)
+- `src/lib/supabase/server.ts` — Server component Supabase client (`createServerClient` + `cookies()`)
+- `src/lib/supabase/middleware.ts` — Middleware session refresh (`updateSession()`)
 - `src/trpc/` — Client-side tRPC setup (provider, query client)
 - `src/lib/utils.ts` — shadcn/ui utility (`cn` function)
 - `src/components/ui/` — shadcn/ui primitives: badge, button, card, collapsible, separator, skeleton
@@ -25,13 +33,17 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/api/upload` | API | PDF upload → validate → extract → gate → create records |
 | `/api/report/[id]` | API (GET) | PDF report generation. Fetches analysis + clauses, renders PDF via `@react-pdf/renderer`, returns with `Content-Disposition: attachment`. `runtime = "nodejs"`, `maxDuration = 30`. |
 | `/api/og/[id]` | API (GET) | Dynamic OG image generation. Uses `next/og` `ImageResponse` to render risk score circle + recommendation badge + clause breakdown. `runtime = "edge"`. |
+| `/login` | Static | Email/password + magic link sign in. Redirects to `/` on success. |
+| `/signup` | Static | Registration form. Shows confirmation message on success. |
+| `/auth/callback` | API (GET) | Exchanges auth code for session (magic link + OAuth). |
+| `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
 
 ## Components
 
 ### Landing page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" anchor right |
+| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" anchor + auth state right. Client component: `getUser()` + `onAuthStateChange`. Shows "Sign in" link or user email + "Sign out" button. |
 | `HeroSection` | `hero-section.tsx` | Dark bg, BackgroundPaths + headline + TextShimmer subtitle + CTA |
 | `BackgroundPaths` | `background-paths.tsx` | Animated SVG paths in risk colors (motion library). 16 paths, 2-4px strokes. `prefers-reduced-motion` respected. |
 | `TextShimmer` | `text-shimmer.tsx` | Gradient text animation (motion library). `prefers-reduced-motion` respected. |
@@ -94,7 +106,8 @@ Returns:
 - `mammoth` — DOCX text extraction (`mammoth.extractRawText()`)
 - `@react-pdf/renderer` — Server-side PDF report generation (`renderToBuffer`). Used in `/api/report/[id]`.
 - `motion` — Animation library for BackgroundPaths + TextShimmer (landing page only)
-- `@supabase/supabase-js` — Supabase Storage uploads (service role key)
+- `@supabase/ssr` — Auth session management: browser client, server client, middleware
+- `@supabase/supabase-js` — Supabase Storage uploads (service role key), auth types
 - `@redflag/agents` — Relevance gate (`relevanceGate`)
 - `@redflag/api` — Rate limiting (`checkRateLimit` via `@redflag/api/rateLimit`)
 - `@redflag/db` — Database inserts/updates (documents, analyses tables)

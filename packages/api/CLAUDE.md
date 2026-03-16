@@ -4,17 +4,20 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 
 ## What's Here
 
-- `src/trpc.ts` — tRPC initialization, context factory, procedure helpers
+- `src/trpc.ts` — tRPC initialization, context factory (`createTRPCContext({ req })`), `publicProcedure`, `protectedProcedure`. Context extracts user from request cookies via `@supabase/ssr` `parseCookieHeader`.
+- `src/__tests__/auth.test.ts` — Auth context and protectedProcedure tests
 - `src/root.ts` — Root router combining all sub-routers
 - `src/routers/health.ts` — Health check router (`health.check` query)
 - `src/routers/analysis.ts` — Analysis router: `analysis.stream` (SSE subscription) + `analysis.get` (query)
-- `src/rateLimit.ts` — IP-based rate limiting: `checkRateLimit(ip)` → `{ limited, resetAt }`. Uses atomic UPSERT on `rate_limits` table. Exported via `@redflag/api/rateLimit`.
-- `src/index.ts` — Barrel export: `appRouter`, `AppRouter` type, `createTRPCContext`, `createCallerFactory`
+- `src/rateLimit.ts` — Auth-aware rate limiting: `checkRateLimit(identifier, isAuthenticated?)` → `{ limited, resetAt }`. Uses userId (10/day) or IP (2/day). Atomic UPSERT on `rate_limits` table. Exported via `@redflag/api/rateLimit`.
+- `src/index.ts` — Barrel export: `appRouter`, `AppRouter` type, `TRPCContext` type, `createTRPCContext`, `createCallerFactory`, `protectedProcedure`
 
 ## tRPC v11 Patterns
 
 - **NOT v10** — do not use v10 patterns (different transformer config, different subscription API)
-- Router uses `initTRPC.context<typeof createTRPCContext>().create({ transformer: superjson })`
+- Router uses `initTRPC.context<TRPCContext>().create({ transformer: superjson })`
+- Context: `{ user: User | null }` — extracted from request cookies via `@supabase/ssr`
+- `protectedProcedure` throws `UNAUTHORIZED` if `!ctx.user`
 - Subscriptions use async generators (`async function*`), not Observables
 - `createCallerFactory` for server-side calls and testing
 - Route handler uses `fetchRequestHandler` from `@trpc/server/adapters/fetch`

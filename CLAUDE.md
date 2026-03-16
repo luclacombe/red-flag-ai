@@ -62,7 +62,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Never store secrets in code.** All keys come from environment variables.
 - **Never import from `apps/web` in any package.** Dependency direction is one-way.
 - **Never add OCR or image PDF support.** Out of scope for MVP. Detect and reject with clear message.
-- **Never add auth login flows.** Supabase Auth skeleton is wired but gating is post-MVP.
+- **Never bypass auth middleware.** Session refresh via `getUser()` must happen on every request — no code between `createServerClient()` and `getUser()`.
 - **Never add new dependencies without checking if an existing one covers it.** Keep the dep tree lean.
 - **Never use `eslint` or `prettier`** — this project uses Biome for both linting and formatting.
 - **Never use `react-dropzone` or similar.** Native HTML5 drag-and-drop + `<input type="file">` is ~30 lines. No dependency needed.
@@ -99,6 +99,12 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Shareable URLs:** Analysis pages have dynamic OG meta tags via `generateMetadata()`. Tags include risk score, recommendation, contract type, and clause breakdown. Dynamic OG image at `/api/og/[id]` renders risk score circle + recommendation badge via `next/og` `ImageResponse` (edge runtime). Twitter card tags also included.
 - **PDF report export:** `GET /api/report/[id]` generates a downloadable PDF report using `@react-pdf/renderer`. Layout: branded header, summary section (score, recommendation, contract type, date, breakdown), top concerns, clause-by-clause analysis with risk badges and safer alternatives, legal disclaimer footer with page numbers. Returns `Content-Disposition: attachment`.
 - **Share + Download buttons:** `AnalysisActions` component shows Share (clipboard copy with "Copied!" feedback) and Download PDF buttons. Appears when analysis is complete (both DB render and post-streaming states).
+- **Supabase Auth:** Email/password + magic link via `@supabase/ssr`. Three client utilities in `apps/web/src/lib/supabase/`: `client.ts` (browser, `createBrowserClient`), `server.ts` (server components, `createServerClient` + `cookies()`), `middleware.ts` (session refresh, `updateSession()`). Next.js middleware at `apps/web/middleware.ts` calls `updateSession()` on every request. Public routes: `/`, `/login`, `/signup`, `/auth/*`, `/analysis/*`, `/api/*`. Auth pages: `/login`, `/signup`. Callback routes: `/auth/callback` (code exchange), `/auth/confirm` (email OTP verification).
+- **tRPC auth context:** `createTRPCContext({ req })` extracts user from request cookies via `@supabase/ssr` `parseCookieHeader`. Returns `{ user: User | null }`. `protectedProcedure` throws `UNAUTHORIZED` if `!ctx.user`. `publicProcedure` remains for unauthenticated access (viewing shared analyses).
+- **Auth-aware rate limiting:** `checkRateLimit(identifier, isAuthenticated)` — authenticated users get 10/day (by userId), anonymous get 2/day (by IP). Constants: `RATE_LIMIT_PER_DAY` (2), `RATE_LIMIT_AUTH_PER_DAY` (10) in `@redflag/shared`.
+- **Upload route auth:** Extracts user from cookies via `@supabase/ssr`. Sets `userId` on document record when authenticated. Storage path: `{userId}/{uuid}/{filename}` for auth users, `anonymous/{uuid}/{filename}` for anon.
+- **NavBar auth state:** Client component with `useEffect` for `getUser()` + `onAuthStateChange`. Shows "Sign in" button (unauthenticated) or email + "Sign out" button (authenticated).
+- **Row Level Security:** RLS enabled on all tables. Documents: owner-only CRUD for authenticated users. Analyses + clauses: public SELECT (shared analysis pages), owner-only INSERT/UPDATE via documents join. Knowledge patterns: public SELECT. Storage: users upload/read own folder only. Pipeline writes use Drizzle (bypasses RLS). Index on `documents.user_id`.
 
 ## Current Stack Versions
 
@@ -115,12 +121,16 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | TypeScript | 5.9.3 | |
 | mammoth | 1.12.0 | DOCX text extraction (apps/web only) |
 | @react-pdf/renderer | 4.3.2 | Server-side PDF report generation (apps/web only) |
+| @supabase/ssr | latest | Auth session management — browser/server/middleware clients (apps/web + packages/api) |
 | Turborepo | 2.8.17 | |
 
 ## Supabase
 
 - **Project:** `red-flag-ai` (region: eu-west-1)
 - **DB tables:** documents, analyses, clauses, knowledge_patterns, rate_limits
-- **Storage bucket:** `contracts` (private, 10MB max, PDF only)
+- **Storage bucket:** `contracts` (private, 10MB max, PDF/DOCX/TXT)
 - **pgvector extension** enabled, HNSW index on `knowledge_patterns.embedding`
 - **Connection:** transaction pooler URL (port 6543) with `{ prepare: false }`
+- **Auth:** Email/password + magic links enabled. `@supabase/ssr` for session management.
+- **RLS:** Enabled on all tables. Documents owner-only, analyses/clauses/knowledge_patterns public SELECT. Storage scoped to user folder.
+- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
