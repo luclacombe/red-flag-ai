@@ -70,6 +70,14 @@ describe("GET /api/cron/cleanup", () => {
     expect(res.status).toBe(401);
   });
 
+  it("rejects requests when CRON_SECRET is not set (fail-closed)", async () => {
+    vi.stubEnv("CRON_SECRET", "");
+
+    const req = new Request("http://localhost:3000/api/cron/cleanup");
+    const res = await GET(req);
+    expect(res.status).toBe(401);
+  });
+
   it("accepts requests with correct CRON_SECRET", async () => {
     // No old documents or rate limits
     mockSelect.mockReturnValue({
