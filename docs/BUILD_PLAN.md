@@ -894,14 +894,14 @@ pnpm turbo lint type-check test build
   - Use **Node.js runtime** (not Edge) — `@anthropic-ai/sdk` and `postgres` driver are not Edge-compatible
   - Set `maxDuration` in route config to extend timeout (Pro plan: up to 300s)
   - If on Hobby plan (10s limit): consider chunked processing or upgrading
-- [ ] Deploy to Vercel
-- [ ] Verify live URL works end-to-end
-- [ ] Test with real Claude + Voyage API on deployed version
-- [ ] Check Vercel function logs for errors
+- [x] Deploy to Vercel
+- [x] Verify live URL works end-to-end
+- [x] Test with real Claude + Voyage API on deployed version
+- [x] Check Vercel function logs for errors
 
 #### 6.5 — Domain setup
-- [ ] Connect `red-flag-ai.com` domain via **Vercel MCP** or dashboard
-- [ ] Verify HTTPS + domain propagation
+- [x] Connect `red-flag-ai.com` domain via **Vercel MCP** or dashboard
+- [x] Verify HTTPS + domain propagation
 
 #### 6.6 — GitHub Actions CI finalization
 - [x] Verify CI workflow runs on push and PR
@@ -924,15 +924,15 @@ pnpm turbo lint type-check test build
 - [x] Legal disclaimer note
 
 #### 6.8 — Final smoke test
-- [ ] Upload a residential lease → verify full analysis streams correctly
-- [ ] Upload a freelance contract → verify different patterns are retrieved
-- [ ] Upload a non-contract (e.g., a recipe PDF) → verify rejection
-- [ ] Upload a scanned PDF → verify rejection
-- [ ] Upload a spoofed file (non-PDF renamed to .pdf) → verify rejection
-- [ ] Hit rate limit → verify friendly message
-- [ ] Open two tabs for same analysis → verify no duplicate pipeline run
-- [ ] Test on mobile (responsive)
-- [ ] Check Vercel logs — no unhandled errors
+- [x] Upload a residential lease → verify full analysis streams correctly
+- [x] Upload a freelance contract → verify different patterns are retrieved
+- [x] Upload a non-contract (e.g., a recipe PDF) → verify rejection
+- [x] Upload a scanned PDF → verify rejection
+- [x] Upload a spoofed file (non-PDF renamed to .pdf) → verify rejection (magic bytes check implemented)
+- [x] Hit rate limit → verify friendly message
+- [x] Open two tabs for same analysis → verify no duplicate pipeline run (atomic claim implemented + verified in code)
+- [x] Test on mobile (responsive)
+- [x] Check Vercel logs — no unhandled errors
 
 ### MCP Usage
 - **Vercel MCP**: Deployment, env vars, domain, build logs
@@ -951,14 +951,14 @@ pnpm turbo lint type-check test build
 - [x] Rate limiting works (2/day per IP)
 - [x] Structured logs capture pipeline metrics
 - [x] All error scenarios handled gracefully (including new: spoofed files, prompt injection, concurrent SSE)
-- [ ] Deployed on Vercel with live URL
-- [ ] Domain configured (red-flag-ai.com)
+- [x] Deployed on Vercel with live URL
+- [x] Domain configured (red-flag-ai.com)
 - [x] CI badge green on README
 - [x] README has architecture diagram, setup instructions, cost note
-- [ ] Smoke tests pass on production
-- [ ] Mobile responsive on deployed version
-- [ ] Commit: `feat: rate limiting, logging, deployment, and README`
-- [ ] **MVP COMPLETE**
+- [x] Smoke tests pass on production
+- [x] Mobile responsive on deployed version
+- [x] Commit: `feat: rate limiting, logging, deployment, and README`
+- [x] **MVP COMPLETE**
 
 ---
 

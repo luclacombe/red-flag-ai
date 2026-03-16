@@ -11,39 +11,42 @@ AI-powered contract red-flag detector. Upload a PDF, get clause-by-clause risk a
 ## How It Works
 
 1. Upload a contract (PDF)
-2. AI checks if it's actually a contract — rejects non-contracts immediately
+2. AI checks if it's actually a contract and rejects non-contracts immediately
 3. Clauses are extracted and analyzed against a curated knowledge base of predatory patterns (RAG)
-4. Results stream to the UI in real-time — each clause scored red/yellow/green with explanations
+4. Results stream to the UI in real-time, with each clause scored red/yellow/green and explained
 5. Get a summary with an overall risk score, top concerns, and a sign/don't-sign recommendation
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    A[Upload PDF] --> B[Relevance Gate]
+    A[Upload PDF] --> B[Relevance Gate\nHaiku]
     B -->|Not a contract| C[Rejection]
-    B -->|Contract| D[Parse Agent]
-    D --> E[Risk Agent + RAG]
-    E --> F[Rewrite Agent]
-    F --> G[Summary Agent]
-    G --> H[Stream to UI]
+    B -->|Contract| D[Smart Parse\nHeuristic + Haiku fallback]
+    D --> E
 
-    subgraph RAG
-        E -.->|Embed clause| I[Voyage AI]
-        I -.->|Vector search| J[(pgvector)]
-        J -.->|Similar patterns| E
+    subgraph SA[Combined Analysis - Sonnet streaming]
+        E[Risk + Rewrite + Summary\nin one call]
     end
+
+    E -->|Stream clause by clause| F[UI]
+
+    subgraph RAG[RAG]
+        G[(pgvector)] -->|Patterns in\nsystem prompt| E
+    end
+
+    D -->|Bulk fetch\nby contract type| G
 ```
 
 ### Pipeline
 
 | Step | Agent | Model | Purpose |
 |------|-------|-------|---------|
-| 1 | Relevance Gate | Claude Haiku | Is this a contract? What type? What language? |
-| 2 | Parse Agent | Claude Sonnet | Split into individual clauses |
-| 3 | Risk Agent | Claude Sonnet | Score each clause (red/yellow/green) with RAG context |
-| 4 | Rewrite Agent | Claude Sonnet | Generate safer alternative for flagged clauses |
-| 5 | Summary Agent | Claude Sonnet | Overall risk score + recommendation |
+| 1 | Relevance Gate | Haiku | Is this a contract? What type? What language? |
+| 2 | Smart Parse | Heuristic (+ Haiku fallback) | Split document into individual clauses |
+| 3 | Combined Analysis | Sonnet (streaming) | Score each clause, generate safer alternatives, produce summary. Single API call with `report_clause` + `report_summary` tools. |
+
+Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
 
 ## Tech Stack
 
@@ -65,7 +68,7 @@ flowchart LR
 ```
 apps/web/              → Next.js App Router (UI + route handlers)
 packages/api/          → tRPC v11 routers, procedures, context
-packages/agents/       → Agent pipeline (gate, parse, risk, rewrite, summary)
+packages/agents/       → Agent pipeline (gate, smart parse, combined analysis, summary fallback)
 packages/db/           → Drizzle schema, migrations, vector search, embeddings
 packages/shared/       → Zod schemas, types, constants, logger
 ```
@@ -100,17 +103,17 @@ pnpm dev
 
 ## What I'd Improve With More Time
 
-- **Authentication** — Supabase Auth is wired but login flows are deferred. Unlock higher rate limits for logged-in users.
-- **Side-by-side view** — Clause positions (`startIndex`/`endIndex`) are already stored. Build a split view: original PDF on the left, annotations on the right.
-- **DOCX support** — Many contracts arrive as Word docs. Add extraction with `mammoth` or similar.
-- **Jurisdiction-specific patterns** — The knowledge base is jurisdiction-agnostic. Add region-specific pattern sets (EU, US states, UK).
-- **LLM observability** — Add tracing (e.g., Langfuse) for token usage, latency per agent, and prompt versioning.
-- **Contract comparison** — Upload two versions of a contract, diff the clauses.
-- **Shareable analysis URLs** — Currently anonymous. Add shareable links for completed analyses.
+- **Authentication.** Supabase Auth is wired but login flows are deferred. Unlock higher rate limits for logged-in users.
+- **Side-by-side view.** Clause positions (`startIndex`/`endIndex`) are already stored. Build a split view with the original PDF on the left and annotations on the right.
+- **DOCX support.** Many contracts arrive as Word docs. Add extraction with `mammoth` or similar.
+- **Jurisdiction-specific patterns.** The knowledge base is jurisdiction-agnostic. Add region-specific pattern sets (EU, US states, UK).
+- **LLM observability.** Add tracing (e.g., Langfuse) for token usage, latency per agent, and prompt versioning.
+- **Contract comparison.** Upload two versions of a contract, diff the clauses.
+- **Shareable analysis URLs.** Currently anonymous. Add shareable links for completed analyses.
 
 ## Cost Note
 
-Each full analysis costs approximately **$0.10–0.20** in API calls (Claude + Voyage AI), depending on document length. IP-based rate limiting (2 analyses/day for anonymous users) controls spend.
+Each full analysis costs approximately **$0.10 to $0.20** in API calls (Claude + Voyage AI), depending on document length. IP-based rate limiting (2 analyses/day for anonymous users) controls spend.
 
 ## Legal Disclaimer
 
