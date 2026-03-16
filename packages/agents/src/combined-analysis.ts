@@ -16,40 +16,43 @@ import { buildCombinedSystemPrompt, buildCombinedUserMessage } from "./prompts/c
 
 // ── Tool Definitions ──────────────────────────────────────────────
 
-const REPORT_CLAUSE_TOOL: Anthropic.Messages.Tool = {
-  name: "report_clause",
-  description: "Report risk analysis for a single contract clause",
-  strict: true,
-  eager_input_streaming: true,
-  input_schema: {
-    type: "object",
-    properties: {
-      position: {
-        type: "integer",
-        description: "Zero-based clause position from the [N] label in the input",
+function buildReportClauseTool(responseLanguage: string): Anthropic.Messages.Tool {
+  return {
+    name: "report_clause",
+    description: "Report risk analysis for a single contract clause",
+    strict: true,
+    eager_input_streaming: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        position: {
+          type: "integer",
+          description: "Zero-based clause position from the [N] label in the input",
+        },
+        riskLevel: {
+          type: "string",
+          enum: ["red", "yellow", "green"],
+          description: "Risk assessment level",
+        },
+        explanation: {
+          type: "string",
+          description: `Plain-language risk explanation written in ${responseLanguage}`,
+        },
+        category: {
+          type: "string",
+          description: "Risk category (e.g. termination, liability, rent)",
+        },
+        saferAlternative: {
+          type: "string",
+          description:
+            "Fairer rewrite of the clause in the document's original language. Empty string for green.",
+        },
       },
-      riskLevel: {
-        type: "string",
-        enum: ["red", "yellow", "green"],
-        description: "Risk assessment level",
-      },
-      explanation: {
-        type: "string",
-        description: "Plain-language risk explanation in document language",
-      },
-      category: {
-        type: "string",
-        description: "Risk category (e.g. termination, liability, rent)",
-      },
-      saferAlternative: {
-        type: "string",
-        description: "Fairer rewrite of the clause for red/yellow. Empty string for green.",
-      },
+      required: ["position", "riskLevel", "explanation", "category", "saferAlternative"],
+      additionalProperties: false,
     },
-    required: ["position", "riskLevel", "explanation", "category", "saferAlternative"],
-    additionalProperties: false,
-  },
-};
+  };
+}
 
 const REPORT_SUMMARY_TOOL: Anthropic.Messages.Tool = {
   name: "report_summary",
@@ -79,8 +82,13 @@ const REPORT_SUMMARY_TOOL: Anthropic.Messages.Tool = {
   },
 };
 
-/** Exported for test assertions */
-export const TOOL_DEFINITIONS = [REPORT_CLAUSE_TOOL, REPORT_SUMMARY_TOOL];
+/** Build tool definitions with the response language baked into the schema */
+export function buildToolDefinitions(responseLanguage: string): Anthropic.Messages.Tool[] {
+  return [buildReportClauseTool(responseLanguage), REPORT_SUMMARY_TOOL];
+}
+
+/** Default tool definitions for test assertions */
+export const TOOL_DEFINITIONS = buildToolDefinitions("en");
 
 // ── Internal Zod Schemas (defense-in-depth alongside strict: true) ─
 
@@ -188,7 +196,7 @@ async function* analyzeAllClausesInternal(
         content: buildCombinedUserMessage(params.clauses),
       },
     ],
-    tools: TOOL_DEFINITIONS,
+    tools: buildToolDefinitions(params.responseLanguage),
     tool_choice: { type: "auto" },
   });
 
