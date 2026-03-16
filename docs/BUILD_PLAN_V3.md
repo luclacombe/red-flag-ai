@@ -638,16 +638,23 @@ Must pass before committing. No exceptions.
 - [ ] Add delete button to each history item (with confirmation dialog)
 - [ ] Add "Delete" button to the analysis page itself
 
-#### 7.4 — NavBar update
+#### 7.4 — Account deletion UI
+- [ ] Add "Delete Account" option to NavBar user menu (only visible when authenticated)
+- [ ] Confirmation dialog: "This will permanently delete your account and all analyses. This cannot be undone."
+- [ ] Calls `DELETE /api/account/delete` (already implemented — deletes all documents + storage files + auth user)
+- [ ] On success: redirect to `/` with signed-out state
+
+#### 7.5 — NavBar update
 - [ ] Add "History" link to NavBar (only visible when authenticated)
 - [ ] Link to `/history`
 
-#### 7.5 — Tests
+#### 7.6 — Tests
 - [ ] Unit test: `analysis.list` returns only the authenticated user's analyses
 - [ ] Unit test: `analysis.delete` rejects if user doesn't own the analysis
 - [ ] Unit test: `analysis.delete` cascades correctly (document → analyses → clauses + storage)
+- [ ] Unit test: account deletion removes all user data and auth record
 
-#### 7.6 — Documentation
+#### 7.7 — Documentation
 - [ ] Update CLAUDE.md: add history route, analysis.list/delete procedures
 - [ ] Update PROJECT.md: add analysis history to feature list
 

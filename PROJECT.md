@@ -148,7 +148,7 @@ This means the AI isn't just relying on its training data — it has specific, c
 
 - **File size limit**: 30 pages max per document. Covers 95% of real use cases (leases: 5-15 pages, freelance contracts: 3-10, NDAs: 2-5). Beyond 30 pages, costs spike and analysis time degrades. Clear error message shown to user.
 - **No OCR**: Scanned/image-only PDFs are out of scope for MVP. Text-based PDFs only.
-- **Auth-aware rate limiting**: Anonymous users get 2 analyses/day (IP-based); authenticated users get 10/day. Supabase Auth implemented with email/password and magic links; RLS enforced on all tables.
+- **Auth-aware rate limiting**: Anonymous users get 2 analyses/day (IP-based, HMAC-hashed); authenticated users get 10/day (by userId). Supabase Auth implemented with email/password and magic links; RLS enforced on all tables.
 
 ## Data Privacy
 
@@ -186,6 +186,7 @@ This means the AI isn't just relying on its training data — it has specific, c
 - [x] Supabase Auth login flow (email/password + magic links; 10 analyses/day when authenticated)
 - [x] Contract type detection influencing which patterns to retrieve
 - [x] DOCX + TXT support
+- [x] Data privacy layer (AES-256-GCM encryption at rest, HMAC-SHA256 IP hashing, 30-day auto-deletion)
 - [ ] Contract comparison mode
 - [ ] Agent observability dashboard (/admin)
 - [x] Shareable analysis URLs with OG meta tags + dynamic OG images
