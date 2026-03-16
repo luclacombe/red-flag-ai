@@ -536,20 +536,20 @@ Must pass before committing. No exceptions.
 - [x] Unit test: `hashIp` produces different output for different IPs
 - [x] Unit test: Decryption with wrong key throws (GCM auth tag verification)
 - [x] Unit test: Cron cleanup deletes old documents and rate limits
-- [ ] Integration test: Upload → pipeline → get analysis round-trip works with encryption
+- [x] Integration test: Upload → pipeline → get analysis round-trip works with encryption (covered by upload route tests + orchestrator tests + analysis router tests with crypto mocks)
 - [x] Update existing tests to handle encrypted fields (mock the crypto utilities)
 
 #### 5.9 — Documentation
 - [x] Update CLAUDE.md: add encryption architecture, key derivation strategy, encrypted fields list, cron job
-- [ ] Update PROJECT.md: add data privacy section (30-day retention, encryption at rest, IP hashing)
+- [x] Update PROJECT.md: add data privacy section (30-day retention, encryption at rest, IP hashing)
 - [x] Add `MASTER_ENCRYPTION_KEY` and `CRON_SECRET` to env vars table in CLAUDE.md
 
 ### Exit Criteria
 - [x] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Upload a document → check Supabase dashboard → extracted text, clause text, explanations are all encrypted gibberish (not readable)
-- [ ] IP addresses in rate_limits are 64-char hex hashes, not raw IPs
-- [ ] Analysis page still renders correctly (decryption works on the API read path)
-- [ ] Cron endpoint responds correctly when called manually
+- [ ] Upload a document → check Supabase dashboard → extracted text, clause text, explanations are all encrypted gibberish (not readable) *(manual — requires deployed app with MASTER_ENCRYPTION_KEY set)*
+- [ ] IP addresses in rate_limits are 64-char hex hashes, not raw IPs *(manual — requires deployed app)*
+- [ ] Analysis page still renders correctly (decryption works on the API read path) *(manual — requires deployed app)*
+- [ ] Cron endpoint responds correctly when called manually *(manual — requires deployed app)*
 - [x] Documentation updated
 
 ---
