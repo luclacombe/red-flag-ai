@@ -61,6 +61,14 @@ vi.mock("@supabase/ssr", () => ({
   parseCookieHeader: () => [],
 }));
 
+// Mock crypto utilities
+vi.mock("@redflag/shared/crypto", () => ({
+  getMasterKey: () => Buffer.alloc(32),
+  deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
+  encrypt: vi.fn((plaintext: string) => `encrypted:${plaintext}`),
+  encryptBuffer: vi.fn((buf: Buffer) => Buffer.concat([Buffer.from("ENC:"), buf])),
+}));
+
 // Import after mocks
 const { POST } = await import("../route");
 const unpdf = await import("unpdf");

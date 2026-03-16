@@ -1,5 +1,6 @@
 import { getDb, rateLimits, sql } from "@redflag/db";
 import { RATE_LIMIT_AUTH_PER_DAY, RATE_LIMIT_PER_DAY } from "@redflag/shared";
+import { deriveKey, getMasterKey, hashIp } from "@redflag/shared/crypto";
 
 export interface RateLimitResult {
   limited: boolean;
@@ -22,6 +23,17 @@ function nextMidnightUTC(): string {
 }
 
 /**
+ * Hash an identifier for storage in the rate_limits table.
+ * IP addresses are HMAC-hashed for GDPR compliance.
+ * User IDs (UUIDs) are also hashed for consistency.
+ */
+async function hashIdentifier(identifier: string): Promise<string> {
+  const masterKey = getMasterKey();
+  const ipKey = await deriveKey(masterKey, "rate-limit", "ip-hash");
+  return hashIp(identifier, ipKey);
+}
+
+/**
  * Check and increment rate limit.
  *
  * @param identifier - IP address (anonymous) or user ID (authenticated)
@@ -40,11 +52,14 @@ export async function checkRateLimit(
   const resetAt = nextMidnightUTC();
   const limit = isAuthenticated ? RATE_LIMIT_AUTH_PER_DAY : RATE_LIMIT_PER_DAY;
 
+  // Hash the identifier before any DB operation (HMAC-SHA256)
+  const hashedId = await hashIdentifier(identifier);
+
   // Check current count
   const rows = await db
     .select({ count: rateLimits.count })
     .from(rateLimits)
-    .where(sql`${rateLimits.ipAddress} = ${identifier} AND ${rateLimits.date} = ${today}`);
+    .where(sql`${rateLimits.ipAddress} = ${hashedId} AND ${rateLimits.date} = ${today}`);
 
   const currentCount = rows[0]?.count ?? 0;
 
@@ -55,7 +70,7 @@ export async function checkRateLimit(
   // Under limit — UPSERT to increment
   await db
     .insert(rateLimits)
-    .values({ ipAddress: identifier, date: today, count: 1 })
+    .values({ ipAddress: hashedId, date: today, count: 1 })
     .onConflictDoUpdate({
       target: [rateLimits.ipAddress, rateLimits.date],
       set: { count: sql`${rateLimits.count} + 1` },

@@ -45,7 +45,7 @@ export async function generateMetadata({
     }
 
     const docRows = await db
-      .select({ contractType: documents.contractType, filename: documents.filename })
+      .select({ contractType: documents.contractType })
       .from(documents)
       .where(eq(documents.id, analysis.documentId));
 

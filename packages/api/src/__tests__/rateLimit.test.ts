@@ -27,6 +27,12 @@ vi.mock("@redflag/shared", () => ({
   RATE_LIMIT_AUTH_PER_DAY: 10,
 }));
 
+vi.mock("@redflag/shared/crypto", () => ({
+  getMasterKey: () => Buffer.alloc(32),
+  deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
+  hashIp: vi.fn((ip: string) => `hashed:${ip}`),
+}));
+
 const { checkRateLimit } = await import("../rateLimit");
 
 // ── Tests ──────────────────────────────────────────────────────

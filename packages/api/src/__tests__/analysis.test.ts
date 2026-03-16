@@ -27,6 +27,13 @@ vi.mock("@supabase/ssr", () => ({
   parseCookieHeader: () => [],
 }));
 
+// Mock crypto
+vi.mock("@redflag/shared/crypto", () => ({
+  getMasterKey: () => Buffer.alloc(32),
+  deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
+  decrypt: vi.fn((val: string) => val),
+}));
+
 // Mock analyzeContract
 const mockAnalyzeContract = vi.fn();
 vi.mock("@redflag/agents", () => ({
@@ -62,10 +69,22 @@ describe("analysis.get", () => {
   it("returns analysis with clauses", async () => {
     const analysis = {
       id: "550e8400-e29b-41d4-a716-446655440000",
+      documentId: "doc-1",
       status: "complete",
       overallRiskScore: 45,
+      topConcerns: null,
+      summaryText: null,
     };
-    const clauseRows = [{ id: "c1", clauseText: "Clause 1", position: 0, riskLevel: "green" }];
+    const clauseRows = [
+      {
+        id: "c1",
+        clauseText: "Clause 1",
+        explanation: "OK",
+        saferAlternative: null,
+        position: 0,
+        riskLevel: "green",
+      },
+    ];
 
     let callCount = 0;
     mockSelect.mockImplementation(() => {
@@ -125,7 +144,8 @@ describe("analysis.stream", () => {
       documentId: "doc-1",
       overallRiskScore: 30,
       recommendation: "sign",
-      topConcerns: [],
+      topConcerns: JSON.stringify([]),
+      summaryText: null,
       updatedAt: new Date(),
     };
     const clauseRows = [
@@ -206,16 +226,19 @@ describe("analysis.stream", () => {
     const analysis = {
       id: "a1",
       status: "processing",
+      documentId: "doc-1",
       updatedAt: new Date(), // Just now — not stale
       parsedClauses: null,
     };
     const completedAnalysis = {
       id: "a1",
       status: "complete",
+      documentId: "doc-1",
       updatedAt: new Date(),
       overallRiskScore: 30,
       recommendation: "sign",
-      topConcerns: [],
+      topConcerns: JSON.stringify([]),
+      summaryText: null,
       parsedClauses: null,
     };
     const dbClause = {
@@ -356,6 +379,7 @@ describe("analysis.stream", () => {
     expect(mockAnalyzeContract).toHaveBeenCalledWith(
       expect.objectContaining({
         analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        documentId: "doc-1",
         text: "Contract text here.",
         contractType: "nda",
         language: "en",

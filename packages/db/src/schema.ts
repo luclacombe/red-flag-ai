@@ -23,6 +23,7 @@ export const documents = pgTable(
     storagePath: text("storage_path").notNull(),
     extractedText: text("extracted_text").notNull(),
     fileType: text("file_type").notNull().default("pdf"),
+    keyVersion: integer("key_version").notNull().default(1),
     language: text("language"),
     contractType: text("contract_type"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -42,12 +43,9 @@ export const analyses = pgTable(
     status: text("status").notNull().default("pending"),
     overallRiskScore: integer("overall_risk_score"),
     recommendation: text("recommendation"),
-    topConcerns: jsonb("top_concerns").$type<string[]>(),
+    topConcerns: text("top_concerns"),
     summaryText: text("summary_text"),
-    parsedClauses:
-      jsonb("parsed_clauses").$type<
-        Array<{ text: string; position: number; startIndex: number; endIndex: number }>
-      >(),
+    parsedClauses: text("parsed_clauses"),
     responseLanguage: text("response_language").notNull().default("en"),
     errorMessage: text("error_message"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

@@ -29,6 +29,13 @@
       "when": 1773661481401,
       "tag": "0003_quiet_captain_cross",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773664779897,
+      "tag": "0004_flowery_johnny_blaze",
+      "breakpoints": true
     }
   ]
 }

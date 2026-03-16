@@ -37,6 +37,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/signup` | Static | Registration form. Shows confirmation message on success. |
 | `/auth/callback` | API (GET) | Exchanges auth code for session (magic link + OAuth). |
 | `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
+| `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` bearer token. `runtime = "nodejs"`, `maxDuration = 60`. |
 
 ## Components
 

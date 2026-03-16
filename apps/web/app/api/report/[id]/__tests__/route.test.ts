@@ -21,6 +21,12 @@ vi.mock("@redflag/shared", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
 }));
 
+vi.mock("@redflag/shared/crypto", () => ({
+  getMasterKey: () => Buffer.alloc(32),
+  deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
+  decrypt: vi.fn((val: string) => val),
+}));
+
 const mockRenderReport = vi.fn();
 vi.mock("../report-document", () => ({
   renderReport: (...args: unknown[]) => mockRenderReport(...args),
@@ -102,10 +108,11 @@ describe("GET /api/report/[id]", () => {
       documentId: "doc-1",
       overallRiskScore: 65,
       recommendation: "caution",
-      topConcerns: ["Late fees are excessive"],
+      topConcerns: JSON.stringify(["Late fees are excessive"]),
     };
 
     const docRow = {
+      id: "doc-1",
       contractType: "residential_lease",
       filename: "my-lease.pdf",
     };

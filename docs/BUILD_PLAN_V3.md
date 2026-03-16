@@ -467,7 +467,7 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 5.1 — Encryption utilities
-- [ ] Create `packages/shared/src/crypto.ts`:
+- [x] Create `packages/shared/src/crypto.ts`:
   - `getMasterKey()`: reads `MASTER_ENCRYPTION_KEY` env var (64-char hex → 32 bytes)
   - `deriveKey(masterKey, salt, info)`: HKDF-SHA256, returns 32-byte Buffer
   - `encrypt(plaintext, key)`: AES-256-GCM, returns `"iv.tag.ciphertext"` (base64 dot-separated)
@@ -476,17 +476,17 @@ Must pass before committing. No exceptions.
   - `decryptBuffer(encrypted, key)`: Reverse of encryptBuffer
   - `hashIp(ip, key)`: HMAC-SHA256, returns hex string
   - All functions use `node:crypto` — zero dependencies
-- [ ] Add `MASTER_ENCRYPTION_KEY` to `.env.example` with generation command: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-- [ ] Export from `@redflag/shared` barrel
+- [x] Add `MASTER_ENCRYPTION_KEY` to `.env.example` with generation command: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+- [x] Export from `@redflag/shared/crypto` subpath (NOT main barrel — edge runtime compat)
 
 #### 5.2 — Database schema changes
-- [ ] Add `keyVersion` column to `documents` table: `integer("key_version").notNull().default(1)` (for future key rotation)
-- [ ] Change `parsedClauses` column type from `jsonb` to `text` in analyses (encrypted JSON is stored as text)
-- [ ] Generate + apply Drizzle migration
-- [ ] **Note:** No column type changes needed for other fields — encrypted text (base64) fits in `text` columns
+- [x] Add `keyVersion` column to `documents` table: `integer("key_version").notNull().default(1)` (for future key rotation)
+- [x] Change `parsedClauses` column type from `jsonb` to `text` in analyses (encrypted JSON is stored as text)
+- [x] Generate + apply Drizzle migration
+- [x] **Note:** `topConcerns` also changed from `jsonb` to `text` (encrypted JSON)
 
 #### 5.3 — Encrypt at write: upload route
-- [ ] In `apps/web/app/api/upload/route.ts`:
+- [x] In `apps/web/app/api/upload/route.ts`:
   - After text extraction, derive document key: `deriveKey(masterKey, documentId, "document")`
   - Encrypt the file buffer before Supabase Storage upload
   - Encrypt `extractedText` and `filename` before inserting into documents table
@@ -494,63 +494,63 @@ Must pass before committing. No exceptions.
   - Keep plaintext `extractedText` in memory for the gate agent (don't re-read from DB)
 
 #### 5.4 — Encrypt at write: pipeline
-- [ ] In `packages/agents/src/orchestrator.ts` (or wherever clauses are persisted):
+- [x] In `packages/agents/src/orchestrator.ts` (or wherever clauses are persisted):
   - Encrypt `clauseText`, `explanation`, `saferAlternative` before DB insert
   - Encrypt `parsedClauses` (serialize to JSON string first, then encrypt) before updating analyses
   - Encrypt `summaryText` and `topConcerns` (JSON string) before updating analyses
   - **Important:** The SSE stream sends plaintext to the client — encryption is only for at-rest storage
 
 #### 5.5 — Decrypt at read: API layer
-- [ ] In the `analysis.get` query (packages/api/src/routers/analysis.ts):
+- [x] In the `analysis.get` query (packages/api/src/routers/analysis.ts):
   - After fetching from DB, decrypt all encrypted fields before returning to client
   - Derive the key using the document's ID
-- [ ] In the `analysis.stream` subscription replay path (when replaying from DB on reconnect):
+- [x] In the `analysis.stream` subscription replay path (when replaying from DB on reconnect):
   - Decrypt clause fields before yielding to SSE stream
-- [ ] Create a helper: `decryptClause(clause, key)` and `decryptAnalysis(analysis, key)` to keep it DRY
+- [x] Create a helper: `decryptClauseRow(clause, key)` and `decryptAnalysisFields(analysis, key)` to keep it DRY
 
 #### 5.6 — HMAC IP addresses
-- [ ] Update `packages/api/src/rateLimit.ts`:
+- [x] Update `packages/api/src/rateLimit.ts`:
   - Hash IP with `hashIp(ip, deriveKey(masterKey, "rate-limit", "ip-hash"))` before any DB operation
   - Rate limit lookups use the hashed IP
   - Existing raw IPs in the table: run a one-time migration to hash them, or just truncate the table (it's ephemeral data)
 
 #### 5.7 — Auto-deletion (Vercel Cron)
-- [ ] Create `apps/web/app/api/cron/cleanup/route.ts`:
+- [x] Create `apps/web/app/api/cron/cleanup/route.ts`:
   - GET handler (Vercel Cron sends GET)
   - Verify `CRON_SECRET` header (Vercel sets this for cron endpoints)
   - Query documents older than 30 days
   - For each: decrypt `storagePath`, delete from Supabase Storage, then delete document (CASCADE handles analyses + clauses)
   - Also delete `rate_limits` rows older than 7 days
   - Log counts for observability
-- [ ] Add to `vercel.json`:
+- [x] Add to `vercel.json`:
   ```json
   { "crons": [{ "path": "/api/cron/cleanup", "schedule": "0 2 * * *" }] }
   ```
-- [ ] Add `CRON_SECRET` to `.env.example`
+- [x] Add `CRON_SECRET` to `.env.example`
 
 #### 5.8 — Tests
-- [ ] Unit test: `encrypt` → `decrypt` round-trip preserves plaintext
-- [ ] Unit test: `encryptBuffer` → `decryptBuffer` round-trip for files
-- [ ] Unit test: Different document IDs produce different derived keys
-- [ ] Unit test: `hashIp` produces consistent output for same IP + key
-- [ ] Unit test: `hashIp` produces different output for different IPs
-- [ ] Unit test: Decryption with wrong key throws (GCM auth tag verification)
-- [ ] Unit test: Cron cleanup deletes old documents and rate limits
+- [x] Unit test: `encrypt` → `decrypt` round-trip preserves plaintext
+- [x] Unit test: `encryptBuffer` → `decryptBuffer` round-trip for files
+- [x] Unit test: Different document IDs produce different derived keys
+- [x] Unit test: `hashIp` produces consistent output for same IP + key
+- [x] Unit test: `hashIp` produces different output for different IPs
+- [x] Unit test: Decryption with wrong key throws (GCM auth tag verification)
+- [x] Unit test: Cron cleanup deletes old documents and rate limits
 - [ ] Integration test: Upload → pipeline → get analysis round-trip works with encryption
-- [ ] Update existing tests to handle encrypted fields (mock the crypto utilities)
+- [x] Update existing tests to handle encrypted fields (mock the crypto utilities)
 
 #### 5.9 — Documentation
-- [ ] Update CLAUDE.md: add encryption architecture, key derivation strategy, encrypted fields list, cron job
+- [x] Update CLAUDE.md: add encryption architecture, key derivation strategy, encrypted fields list, cron job
 - [ ] Update PROJECT.md: add data privacy section (30-day retention, encryption at rest, IP hashing)
-- [ ] Add `MASTER_ENCRYPTION_KEY` and `CRON_SECRET` to env vars table in CLAUDE.md
+- [x] Add `MASTER_ENCRYPTION_KEY` and `CRON_SECRET` to env vars table in CLAUDE.md
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
 - [ ] Upload a document → check Supabase dashboard → extracted text, clause text, explanations are all encrypted gibberish (not readable)
 - [ ] IP addresses in rate_limits are 64-char hex hashes, not raw IPs
 - [ ] Analysis page still renders correctly (decryption works on the API read path)
 - [ ] Cron endpoint responds correctly when called manually
-- [ ] Documentation updated
+- [x] Documentation updated
 
 ---
 

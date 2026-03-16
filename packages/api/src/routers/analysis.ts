@@ -1,6 +1,7 @@
 import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
 import { type ClauseAnalysis, logger } from "@redflag/shared";
+import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 
@@ -26,8 +27,7 @@ async function claimAnalysis(analysisId: string) {
   return result[0] ?? null;
 }
 
-/** Map a DB clause row to a ClauseAnalysis event payload */
-function clauseRowToAnalysis(row: {
+type ClauseRow = {
   clauseText: string;
   startIndex: number;
   endIndex: number;
@@ -37,17 +37,39 @@ function clauseRowToAnalysis(row: {
   saferAlternative: string | null;
   category: string;
   matchedPatterns: unknown;
-}): ClauseAnalysis {
+};
+
+/** Decrypt encrypted clause fields and map to ClauseAnalysis */
+function decryptClauseRow(row: ClauseRow, key: Buffer): ClauseAnalysis {
   return {
-    clauseText: row.clauseText,
+    clauseText: decrypt(row.clauseText, key),
     startIndex: row.startIndex,
     endIndex: row.endIndex,
     position: row.position,
     riskLevel: row.riskLevel as ClauseAnalysis["riskLevel"],
-    explanation: row.explanation,
-    saferAlternative: row.saferAlternative ?? null,
+    explanation: decrypt(row.explanation, key),
+    saferAlternative: row.saferAlternative ? decrypt(row.saferAlternative, key) : null,
     category: row.category,
     matchedPatterns: (row.matchedPatterns as string[]) ?? [],
+  };
+}
+
+/** Decrypt analysis-level encrypted fields */
+function decryptAnalysisFields(
+  analysis: { topConcerns: string | null; summaryText: string | null },
+  key: Buffer,
+): { topConcerns: string[]; summaryText: string | null } {
+  let topConcerns: string[] = [];
+  if (analysis.topConcerns) {
+    try {
+      topConcerns = JSON.parse(decrypt(analysis.topConcerns, key)) as string[];
+    } catch {
+      topConcerns = [];
+    }
+  }
+  return {
+    topConcerns,
+    summaryText: analysis.summaryText ? decrypt(analysis.summaryText, key) : null,
   };
 }
 
@@ -87,25 +109,33 @@ export const analysisRouter = router({
 
       logger.info("Analysis status", { analysisId: input.analysisId, status: analysis.status });
 
-      // ── COMPLETE → replay from DB ──────────────────────────
+      // ── COMPLETE → replay from DB (decrypt) ──────────────────
       if (analysis.status === "complete") {
+        // Derive decryption keys
+        const masterKey = getMasterKey();
+        const clauseKey = await deriveKey(masterKey, analysis.documentId, "clause");
+        const docKey = await deriveKey(masterKey, analysis.documentId, "document");
+
         const existingClauses = await db
           .select()
           .from(clauses)
           .where(eq(clauses.analysisId, input.analysisId))
           .orderBy(clauses.position);
 
+        const decryptedClauses = existingClauses.map((c) => decryptClauseRow(c, clauseKey));
+        const { topConcerns } = decryptAnalysisFields(analysis, docKey);
+
         // Emit clause positions for skeleton cards
         yield {
           type: "clause_positions" as const,
           data: {
-            totalClauses: existingClauses.length,
-            clauses: existingClauses.map((c) => ({ text: c.clauseText, position: c.position })),
+            totalClauses: decryptedClauses.length,
+            clauses: decryptedClauses.map((c) => ({ text: c.clauseText, position: c.position })),
           },
         };
 
-        for (const clause of existingClauses) {
-          yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+        for (const clause of decryptedClauses) {
+          yield { type: "clause_analysis" as const, data: clause };
         }
 
         yield {
@@ -116,7 +146,7 @@ export const analysisRouter = router({
               | "sign"
               | "caution"
               | "do_not_sign",
-            topConcerns: (analysis.topConcerns as string[]) ?? [],
+            topConcerns,
             clauseBreakdown: {
               red: existingClauses.filter((c) => c.riskLevel === "red").length,
               yellow: existingClauses.filter((c) => c.riskLevel === "yellow").length,
@@ -143,22 +173,32 @@ export const analysisRouter = router({
       if (analysis.status === "processing") {
         const isStale = Date.now() - analysis.updatedAt.getTime() > STALE_THRESHOLD_MS;
         if (!isStale) {
+          // Derive decryption keys for replaying encrypted DB data
+          const masterKey = getMasterKey();
+          const clauseKey = await deriveKey(masterKey, analysis.documentId, "clause");
+          const docKey = await deriveKey(masterKey, analysis.documentId, "document");
+
           // Another connection is actively processing — replay existing + poll for new
           let lastYieldedCount = 0;
 
-          // Emit clause positions if parse results are cached
-          const parsedClauses = analysis.parsedClauses as
-            | Array<{ text: string; position: number }>
-            | null
-            | undefined;
-          if (parsedClauses && parsedClauses.length > 0) {
-            yield {
-              type: "clause_positions" as const,
-              data: {
-                totalClauses: parsedClauses.length,
-                clauses: parsedClauses.map((c) => ({ text: c.text, position: c.position })),
-              },
-            };
+          // Emit clause positions if parse results are cached (encrypted)
+          if (analysis.parsedClauses) {
+            try {
+              const parsed = JSON.parse(
+                decrypt(analysis.parsedClauses as string, docKey),
+              ) as Array<{ text: string; position: number }>;
+              if (parsed.length > 0) {
+                yield {
+                  type: "clause_positions" as const,
+                  data: {
+                    totalClauses: parsed.length,
+                    clauses: parsed.map((c) => ({ text: c.text, position: c.position })),
+                  },
+                };
+              }
+            } catch {
+              // Decryption failed — skip clause positions
+            }
           }
 
           // Immediately replay any already-analyzed clauses
@@ -169,7 +209,7 @@ export const analysisRouter = router({
             .orderBy(clauses.position);
 
           for (const clause of existingClauses) {
-            yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+            yield { type: "clause_analysis" as const, data: decryptClauseRow(clause, clauseKey) };
             lastYieldedCount++;
           }
 
@@ -189,7 +229,6 @@ export const analysisRouter = router({
             if (!current) return;
 
             if (current.status === "complete") {
-              // Fetch all clauses and yield any we haven't sent yet
               const completedClauses = await db
                 .select()
                 .from(clauses)
@@ -197,8 +236,13 @@ export const analysisRouter = router({
                 .orderBy(clauses.position);
 
               for (const clause of completedClauses.slice(lastYieldedCount)) {
-                yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+                yield {
+                  type: "clause_analysis" as const,
+                  data: decryptClauseRow(clause, clauseKey),
+                };
               }
+
+              const { topConcerns } = decryptAnalysisFields(current, docKey);
 
               yield {
                 type: "summary" as const,
@@ -208,7 +252,7 @@ export const analysisRouter = router({
                     | "sign"
                     | "caution"
                     | "do_not_sign",
-                  topConcerns: (current.topConcerns as string[]) ?? [],
+                  topConcerns,
                   clauseBreakdown: {
                     red: completedClauses.filter((c) => c.riskLevel === "red").length,
                     yellow: completedClauses.filter((c) => c.riskLevel === "yellow").length,
@@ -238,7 +282,7 @@ export const analysisRouter = router({
               .orderBy(clauses.position);
 
             for (const clause of latestClauses.slice(lastYieldedCount)) {
-              yield { type: "clause_analysis" as const, data: clauseRowToAnalysis(clause) };
+              yield { type: "clause_analysis" as const, data: decryptClauseRow(clause, clauseKey) };
               lastYieldedCount++;
             }
 
@@ -246,7 +290,16 @@ export const analysisRouter = router({
             const nowStale = Date.now() - current.updatedAt.getTime() > STALE_THRESHOLD_MS;
             if (nowStale) break; // Fall through to claim stale analysis
 
-            const total = (current.parsedClauses as unknown[] | null)?.length;
+            // parsedClauses count for progress (encrypted — try decrypt)
+            let total: number | null = null;
+            if (current.parsedClauses) {
+              try {
+                const parsed = JSON.parse(decrypt(current.parsedClauses as string, docKey));
+                total = (parsed as unknown[]).length;
+              } catch {
+                // ignore
+              }
+            }
             const progress = total
               ? `Analyzing clauses (${lastYieldedCount} of ${total} done)...`
               : `Analyzing clauses (${lastYieldedCount} done)...`;
@@ -284,10 +337,15 @@ export const analysisRouter = router({
         return;
       }
 
+      // Decrypt extractedText for pipeline processing
+      const masterKey = getMasterKey();
+      const docKey = await deriveKey(masterKey, doc.id, "document");
+      const decryptedText = decrypt(doc.extractedText, docKey);
+
       logger.info("Running pipeline", {
         analysisId: input.analysisId,
         documentId: doc.id,
-        textLen: doc.extractedText.length,
+        textLen: decryptedText.length,
         contractType: doc.contractType,
         language: doc.language,
       });
@@ -295,7 +353,8 @@ export const analysisRouter = router({
       // Run the pipeline, forwarding all events to the client
       for await (const event of analyzeContract({
         analysisId: input.analysisId,
-        text: doc.extractedText,
+        documentId: doc.id,
+        text: decryptedText,
         contractType: doc.contractType ?? "other",
         language: doc.language ?? "en",
         responseLanguage: analysis.responseLanguage ?? input.responseLanguage ?? "en",
@@ -328,9 +387,25 @@ export const analysisRouter = router({
         .where(eq(clauses.analysisId, input.analysisId))
         .orderBy(clauses.position);
 
+      // Decrypt encrypted fields
+      const masterKey = getMasterKey();
+      const docKey = await deriveKey(masterKey, analysis.documentId, "document");
+      const clauseKey = await deriveKey(masterKey, analysis.documentId, "clause");
+
+      const decryptedClauses = clauseRows.map((c) => ({
+        ...c,
+        clauseText: decrypt(c.clauseText, clauseKey),
+        explanation: decrypt(c.explanation, clauseKey),
+        saferAlternative: c.saferAlternative ? decrypt(c.saferAlternative, clauseKey) : null,
+      }));
+
+      const { topConcerns, summaryText } = decryptAnalysisFields(analysis, docKey);
+
       return {
         ...analysis,
-        clauses: clauseRows,
+        topConcerns,
+        summaryText,
+        clauses: decryptedClauses,
       };
     }),
 });

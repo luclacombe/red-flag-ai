@@ -7,6 +7,7 @@ import {
   type SSEEvent,
   type Summary,
 } from "@redflag/shared";
+import { decrypt, deriveKey, encrypt, getMasterKey } from "@redflag/shared/crypto";
 import { findAnchorPosition } from "./boundary-detect";
 import { analyzeAllClauses } from "./combined-analysis";
 import { computeMatchedPatterns } from "./compute-matched-patterns";
@@ -30,6 +31,7 @@ const RAG_TYPE_MAP: Record<string, string> = {
 
 export interface AnalyzeContractParams {
   analysisId: string;
+  documentId: string;
   text: string;
   contractType: string;
   language: string;
@@ -81,8 +83,7 @@ async function heartbeat(analysisId: string): Promise<void> {
   await db.update(analyses).set({ updatedAt: new Date() }).where(eq(analyses.id, analysisId));
 }
 
-/** Map a DB clause row to a ClauseAnalysis event payload */
-function clauseRowToAnalysis(row: {
+type ClauseRow = {
   clauseText: string;
   startIndex: number;
   endIndex: number;
@@ -92,7 +93,10 @@ function clauseRowToAnalysis(row: {
   saferAlternative: string | null;
   category: string;
   matchedPatterns: unknown;
-}): ClauseAnalysis {
+};
+
+/** Map a DB clause row to a ClauseAnalysis event payload */
+function clauseRowToAnalysis(row: ClauseRow): ClauseAnalysis {
   return {
     clauseText: row.clauseText,
     startIndex: row.startIndex,
@@ -101,6 +105,21 @@ function clauseRowToAnalysis(row: {
     riskLevel: row.riskLevel as ClauseAnalysis["riskLevel"],
     explanation: row.explanation,
     saferAlternative: row.saferAlternative ?? null,
+    category: row.category,
+    matchedPatterns: (row.matchedPatterns as string[]) ?? [],
+  };
+}
+
+/** Decrypt encrypted clause fields and map to ClauseAnalysis */
+function decryptClauseRow(row: ClauseRow, key: Buffer): ClauseAnalysis {
+  return {
+    clauseText: decrypt(row.clauseText, key),
+    startIndex: row.startIndex,
+    endIndex: row.endIndex,
+    position: row.position,
+    riskLevel: row.riskLevel as ClauseAnalysis["riskLevel"],
+    explanation: decrypt(row.explanation, key),
+    saferAlternative: row.saferAlternative ? decrypt(row.saferAlternative, key) : null,
     category: row.category,
     matchedPatterns: (row.matchedPatterns as string[]) ?? [],
   };
@@ -124,10 +143,15 @@ function clauseRowToAnalysis(row: {
  *   clause_positions → status → [clause_analysis (×already done)] → clause_analysis (×remaining) → summary
  */
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
-  const { analysisId, text, contractType } = params;
+  const { analysisId, documentId, text, contractType } = params;
   const language = params.language || "en";
   const responseLanguage = params.responseLanguage || "en";
   const db = getDb();
+
+  // Derive encryption keys
+  const masterKey = getMasterKey();
+  const docKey = await deriveKey(masterKey, documentId, "document");
+  const clauseKey = await deriveKey(masterKey, documentId, "clause");
 
   logger.info("Pipeline starting", {
     analysisId,
@@ -141,7 +165,17 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     // ── Check for existing progress ──────────────────────────
     const analysisRows = await db.select().from(analyses).where(eq(analyses.id, analysisId));
     const analysisRow = analysisRows[0];
-    const cachedParsed = analysisRow?.parsedClauses as PositionedClause[] | null | undefined;
+    // parsedClauses is now stored as encrypted text — decrypt and parse
+    let cachedParsed: PositionedClause[] | null = null;
+    if (analysisRow?.parsedClauses) {
+      try {
+        const decrypted = decrypt(analysisRow.parsedClauses as string, docKey);
+        cachedParsed = JSON.parse(decrypted) as PositionedClause[];
+      } catch {
+        // Decryption or parse failed — treat as no cache
+        cachedParsed = null;
+      }
+    }
 
     const existingClauses = await db
       .select()
@@ -171,9 +205,9 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         },
       };
 
-      // Replay already-analyzed clauses to the client
+      // Replay already-analyzed clauses to the client (decrypt first)
       for (const row of existingClauses) {
-        yield { type: "clause_analysis", data: clauseRowToAnalysis(row) };
+        yield { type: "clause_analysis", data: decryptClauseRow(row, clauseKey) };
       }
 
       const remaining = positionedClauses.length - existingClauses.length;
@@ -199,11 +233,12 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
 
       positionedClauses = computeClausePositions(text, rawClauses);
 
-      // Cache parse results immediately so they survive function timeout
+      // Cache parse results (encrypted) immediately so they survive function timeout
       try {
+        const encryptedParsed = encrypt(JSON.stringify(positionedClauses), docKey);
         await db
           .update(analyses)
-          .set({ parsedClauses: positionedClauses, updatedAt: new Date() })
+          .set({ parsedClauses: encryptedParsed, updatedAt: new Date() })
           .where(eq(analyses.id, analysisId));
       } catch {
         // Non-fatal — we can re-parse if needed
@@ -272,17 +307,19 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         if (event.type === "clause_analysis") {
           allAnalyses.push(event.data);
 
-          // Persist to DB
+          // Persist to DB (encrypt sensitive fields)
           try {
             await db.insert(clauses).values({
               analysisId,
-              clauseText: event.data.clauseText,
+              clauseText: encrypt(event.data.clauseText, clauseKey),
               startIndex: event.data.startIndex,
               endIndex: event.data.endIndex,
               position: event.data.position,
               riskLevel: event.data.riskLevel,
-              explanation: event.data.explanation,
-              saferAlternative: event.data.saferAlternative,
+              explanation: encrypt(event.data.explanation, clauseKey),
+              saferAlternative: event.data.saferAlternative
+                ? encrypt(event.data.saferAlternative, clauseKey)
+                : null,
               category: event.data.category,
               matchedPatterns: event.data.matchedPatterns,
             });
@@ -363,7 +400,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       }
     }
 
-    // ── Step 5: Persist summary + mark complete ──────────────
+    // ── Step 5: Persist summary (encrypted) + mark complete ──
     try {
       await db
         .update(analyses)
@@ -371,7 +408,9 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
           status: "complete",
           overallRiskScore: summary.overallRiskScore,
           recommendation: summary.recommendation,
-          topConcerns: summary.topConcerns,
+          topConcerns: encrypt(JSON.stringify(summary.topConcerns), docKey),
+          summaryText:
+            summary.topConcerns.length > 0 ? encrypt(summary.topConcerns.join("; "), docKey) : null,
           updatedAt: new Date(),
           completedAt: new Date(),
         })

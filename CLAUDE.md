@@ -105,6 +105,9 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Upload route auth:** Extracts user from cookies via `@supabase/ssr`. Sets `userId` on document record when authenticated. Storage path: `{userId}/{uuid}/{filename}` for auth users, `anonymous/{uuid}/{filename}` for anon.
 - **NavBar auth state:** Client component with `useEffect` for `getUser()` + `onAuthStateChange`. Shows "Sign in" button (unauthenticated) or email + "Sign out" button (authenticated).
 - **Row Level Security:** RLS enabled on all tables. Documents: owner-only CRUD for authenticated users. Analyses + clauses: public SELECT (shared analysis pages), owner-only INSERT/UPDATE via documents join. Knowledge patterns: public SELECT. Storage: users upload/read own folder only. Pipeline writes use Drizzle (bypasses RLS). Index on `documents.user_id`.
+- **Application-level encryption:** AES-256-GCM via `node:crypto` in `packages/shared/src/crypto.ts`. Exported via `@redflag/shared/crypto` (separate subpath, NOT in the main barrel — edge runtime can't use `node:crypto`). HKDF-SHA256 derives per-document keys from `MASTER_ENCRYPTION_KEY` env var using documentId as salt and `"document"` or `"clause"` as info. Encrypted format: `"iv.tag.ciphertext"` (base64, dot-separated). Column types stay text. Encrypted fields: `extractedText`, `filename`, `storagePath` (documents); `clauseText`, `explanation`, `saferAlternative` (clauses); `topConcerns`, `summaryText`, `parsedClauses` (analyses). Uploaded files encrypted with `encryptBuffer` before Storage upload. SSE stream sends plaintext — encryption is at-rest only. `keyVersion` column on documents tracks encryption version for future rotation.
+- **IP address hashing:** HMAC-SHA256 in `checkRateLimit()`. Key derived via HKDF from master key with `"rate-limit"` salt and `"ip-hash"` info. Not reversible (GDPR-compliant). Rate limit lookups use the hashed identifier.
+- **Auto-deletion cron:** `GET /api/cron/cleanup` runs daily at 02:00 UTC via Vercel Cron. Deletes documents >30 days old (CASCADE handles analyses + clauses). Decrypts `storagePath` to delete from Storage. Deletes `rate_limits` rows >7 days old. Verifies `CRON_SECRET` bearer token. Config in `vercel.json`.
 
 ## Current Stack Versions
 
@@ -133,4 +136,4 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Connection:** transaction pooler URL (port 6543) with `{ prepare: false }`
 - **Auth:** Email/password + magic links enabled. `@supabase/ssr` for session management.
 - **RLS:** Enabled on all tables. Documents owner-only, analyses/clauses/knowledge_patterns public SELECT. Storage scoped to user folder.
-- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MASTER_ENCRYPTION_KEY`, `CRON_SECRET`

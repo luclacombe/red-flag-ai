@@ -45,12 +45,26 @@ vi.mock("@redflag/db", () => ({
   sql: vi.fn(),
 }));
 
+// Mock crypto utilities
+vi.mock("@redflag/shared/crypto", () => ({
+  getMasterKey: () => Buffer.alloc(32),
+  deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
+  encrypt: vi.fn((plaintext: string) => `enc:${plaintext}`),
+  decrypt: vi.fn((ciphertext: string) => {
+    if (typeof ciphertext === "string" && ciphertext.startsWith("enc:")) {
+      return ciphertext.slice(4);
+    }
+    return ciphertext;
+  }),
+}));
+
 const { analyzeContract } = await import("../orchestrator");
 
 // ── Test Helpers ──────────────────────────────────────────────────
 
 async function collectEvents(params: {
   analysisId: string;
+  documentId: string;
   text: string;
   contractType: string;
   language: string;
@@ -112,6 +126,7 @@ function summaryEvent(score: number, recommendation: Summary["recommendation"]):
 
 const baseParams = {
   analysisId: "test-analysis-id",
+  documentId: "test-document-id",
   text: "1. RENT. Tenant pays $1000.\n\n2. DEPOSIT. $2000 required.\n\n3. TERMINATION. 30 days notice.",
   contractType: "residential_lease",
   language: "en",
@@ -304,10 +319,10 @@ describe("analyzeContract orchestrator", () => {
             return Promise.resolve([
               {
                 id: "test-analysis-id",
-                parsedClauses: [
+                parsedClauses: JSON.stringify([
                   { text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 },
                   { text: "Clause 2.", position: 1, startIndex: 10, endIndex: 19 },
-                ],
+                ]),
               },
             ]);
           }
@@ -362,7 +377,9 @@ describe("analyzeContract orchestrator", () => {
             return Promise.resolve([
               {
                 id: "test-analysis-id",
-                parsedClauses: [{ text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 }],
+                parsedClauses: JSON.stringify([
+                  { text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 },
+                ]),
               },
             ]);
           }
@@ -423,7 +440,9 @@ describe("analyzeContract orchestrator", () => {
             return Promise.resolve([
               {
                 id: "test-analysis-id",
-                parsedClauses: [{ text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 }],
+                parsedClauses: JSON.stringify([
+                  { text: "Clause 1.", position: 0, startIndex: 0, endIndex: 9 },
+                ]),
               },
             ]);
           }

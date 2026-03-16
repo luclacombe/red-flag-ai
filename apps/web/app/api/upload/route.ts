@@ -10,6 +10,7 @@ import {
   MAX_TEXT_LENGTH,
   TXT_MIME,
 } from "@redflag/shared";
+import { deriveKey, encrypt, encryptBuffer, getMasterKey } from "@redflag/shared/crypto";
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import mammoth from "mammoth";
@@ -48,12 +49,6 @@ function detectFileType(mimeType: string): FileType | null {
   if (mimeType === DOCX_MIME) return "docx";
   if (mimeType === TXT_MIME) return "txt";
   return null;
-}
-
-function getContentType(fileType: FileType): string {
-  if (fileType === "pdf") return "application/pdf";
-  if (fileType === "docx") return DOCX_MIME;
-  return TXT_MIME;
 }
 
 async function extractPdfText(
@@ -251,15 +246,22 @@ export async function POST(request: NextRequest) {
       textLen: trimmedText.length,
     });
 
-    // ── Upload to Supabase Storage ─────────────────────────────
+    // ── Derive encryption key ──────────────────────────────────
+    const documentId = crypto.randomUUID();
+    const masterKey = getMasterKey();
+    const docKey = await deriveKey(masterKey, documentId, "document");
+
+    // ── Encrypt file + upload to Supabase Storage ──────────────
     const supabase = getSupabaseClient();
     const storagePrefix = userId ?? "anonymous";
-    const storagePath = `${storagePrefix}/${crypto.randomUUID()}/${file.name}`;
+    const storagePath = `${storagePrefix}/${documentId}/${file.name}`;
+
+    const encryptedFileBuffer = encryptBuffer(Buffer.from(bytesForStorage), docKey);
 
     const { error: uploadError } = await supabase.storage
       .from("contracts")
-      .upload(storagePath, bytesForStorage, {
-        contentType: getContentType(fileType),
+      .upload(storagePath, encryptedFileBuffer, {
+        contentType: "application/octet-stream",
         upsert: false,
       });
 
@@ -268,16 +270,18 @@ export async function POST(request: NextRequest) {
       return errorResponse("Failed to store the uploaded file.", 500);
     }
 
-    // ── Create document record ─────────────────────────────────
+    // ── Create document record (encrypted fields) ──────────────
     const [document] = await db
       .insert(documents)
       .values({
-        filename: file.name,
+        id: documentId,
+        filename: encrypt(file.name, docKey),
         fileType,
         pageCount,
-        storagePath,
-        extractedText: trimmedText,
+        storagePath: encrypt(storagePath, docKey),
+        extractedText: encrypt(trimmedText, docKey),
         userId,
+        keyVersion: 1,
       })
       .returning();
 

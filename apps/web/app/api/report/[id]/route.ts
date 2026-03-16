@@ -1,5 +1,6 @@
 import { analyses, clauses, documents, eq, getDb } from "@redflag/db";
 import { logger } from "@redflag/shared";
+import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
 import { renderReport } from "./report-document";
 
 export const runtime = "nodejs";
@@ -35,6 +36,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       .where(eq(clauses.analysisId, id))
       .orderBy(clauses.position);
 
+    // Decrypt encrypted fields
+    const masterKey = getMasterKey();
+    const docKey = await deriveKey(masterKey, doc.id, "document");
+    const clauseKey = await deriveKey(masterKey, doc.id, "clause");
+
+    const decryptedFilename = decrypt(doc.filename, docKey);
+
+    let topConcerns: string[] = [];
+    if (analysis.topConcerns) {
+      try {
+        topConcerns = JSON.parse(decrypt(analysis.topConcerns as string, docKey)) as string[];
+      } catch {
+        topConcerns = [];
+      }
+    }
+
     const breakdown = {
       red: clauseRows.filter((c) => c.riskLevel === "red").length,
       yellow: clauseRows.filter((c) => c.riskLevel === "yellow").length,
@@ -43,16 +60,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     const pdfBuffer = await renderReport({
       contractType: doc.contractType ?? "unknown",
-      filename: doc.filename,
+      filename: decryptedFilename,
       overallRiskScore: analysis.overallRiskScore ?? 0,
       recommendation: analysis.recommendation ?? "caution",
-      topConcerns: (analysis.topConcerns as string[]) ?? [],
+      topConcerns,
       clauses: clauseRows.map((c) => ({
         position: c.position,
-        clauseText: c.clauseText,
+        clauseText: decrypt(c.clauseText, clauseKey),
         riskLevel: c.riskLevel,
-        explanation: c.explanation,
-        saferAlternative: c.saferAlternative,
+        explanation: decrypt(c.explanation, clauseKey),
+        saferAlternative: c.saferAlternative ? decrypt(c.saferAlternative, clauseKey) : null,
         category: c.category,
       })),
       generatedAt: new Date().toLocaleDateString("en-US", {
@@ -63,7 +80,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       breakdown,
     });
 
-    const safeFilename = doc.filename.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const safeFilename = decryptedFilename.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");
 
     return new Response(pdfBuffer, {
       headers: {
