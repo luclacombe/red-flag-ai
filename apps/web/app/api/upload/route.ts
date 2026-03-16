@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     const { error: uploadError } = await supabase.storage
       .from("contracts")
       .upload(storagePath, encryptedFileBuffer, {
-        contentType: "application/octet-stream",
+        contentType: file.type,
         upsert: false,
       });
 
