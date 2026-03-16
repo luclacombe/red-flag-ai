@@ -33,7 +33,8 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `HeroSection` | `hero-section.tsx` | Dark bg, BackgroundPaths + headline + TextShimmer subtitle + CTA |
 | `BackgroundPaths` | `background-paths.tsx` | Animated SVG paths in risk colors (motion library). 16 paths, 2-4px strokes. `prefers-reduced-motion` respected. |
 | `TextShimmer` | `text-shimmer.tsx` | Gradient text animation (motion library). `prefers-reduced-motion` respected. |
-| `UploadZone` | `upload-zone.tsx` | Native HTML5 drag-drop + file input. States: idle, drag-over, uploading (progress bar), processing (dots), error, rejection, rate-limit. Handles POST to `/api/upload`. |
+| `UploadZone` | `upload-zone.tsx` | Native HTML5 drag-drop + file input. States: idle, drag-over, uploading (progress bar), processing (dots), error, rejection, rate-limit. Handles POST to `/api/upload`. Includes LanguageSelector below drop zone. |
+| `LanguageSelector` | `language-selector.tsx` | Globe icon + native `<select>` with 15 languages (native names). Persists to `localStorage`. Defaults to `navigator.language`. Also exports `useResponseLanguage()` hook. |
 | `HowItWorks` | `how-it-works.tsx` | 3 steps with Lucide icons. Horizontal on desktop, vertical on mobile. |
 | `LegalDisclaimer` | `legal-disclaimer.tsx` | Footer. Not dismissable. |
 

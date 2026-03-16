@@ -46,7 +46,7 @@ describe("summarize", () => {
     };
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
 
-    const result = await summarize(sampleAnalyses, "residential_lease", "en");
+    const result = await summarize(sampleAnalyses, "residential_lease", "en", "en");
 
     expect(result.overallRiskScore).toBe(65);
     expect(result.recommendation).toBe("do_not_sign");
@@ -61,7 +61,7 @@ describe("summarize", () => {
     mockCreate.mockResolvedValueOnce(makeTextResponse("bad"));
     mockCreate.mockResolvedValueOnce(makeTextResponse("{}"));
 
-    await expect(summarize(sampleAnalyses, "lease", "en")).rejects.toThrow(
+    await expect(summarize(sampleAnalyses, "lease", "en", "en")).rejects.toThrow(
       /Summary agent failed after 2 attempts/,
     );
     expect(mockCreate).toHaveBeenCalledTimes(2);
@@ -78,7 +78,7 @@ describe("summarize", () => {
     mockCreate.mockRejectedValueOnce(new Error("timeout"));
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
 
-    const result = await summarize(sampleAnalyses, "nda", "en");
+    const result = await summarize(sampleAnalyses, "nda", "en", "en");
     expect(result.overallRiskScore).toBe(20);
     expect(mockCreate).toHaveBeenCalledTimes(2);
   });
@@ -94,7 +94,7 @@ describe("summarize", () => {
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
 
-    await expect(summarize(sampleAnalyses, "lease", "en")).rejects.toThrow(
+    await expect(summarize(sampleAnalyses, "lease", "en", "en")).rejects.toThrow(
       /Summary agent failed after 2 attempts/,
     );
   });
@@ -110,7 +110,7 @@ describe("summarize", () => {
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
 
-    await expect(summarize(sampleAnalyses, "lease", "en")).rejects.toThrow(
+    await expect(summarize(sampleAnalyses, "lease", "en", "en")).rejects.toThrow(
       /Summary agent failed after 2 attempts/,
     );
   });
@@ -125,7 +125,7 @@ describe("summarize", () => {
     };
     mockCreate.mockResolvedValueOnce(makeTextResponse(JSON.stringify(response)));
 
-    await summarize(sampleAnalyses, "residential_lease", "en");
+    await summarize(sampleAnalyses, "residential_lease", "en", "en");
 
     const callArgs = mockCreate.mock.calls[0]?.[0] as {
       messages: Array<{ content: string }>;

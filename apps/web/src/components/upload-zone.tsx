@@ -1,9 +1,11 @@
 "use client";
 
+import type { SupportedLanguageCode } from "@redflag/shared";
 import { AlertCircle, Clock, FileText, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LanguageSelector, useResponseLanguage } from "./language-selector";
 import { ProcessingLoader } from "./processing-loader";
 
 type UploadState =
@@ -27,6 +29,9 @@ export function UploadZone() {
   const [state, setState] = useState<UploadState>({ status: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const [responseLanguage, setResponseLanguage] = useState<SupportedLanguageCode>(
+    useResponseLanguage(),
+  );
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -59,6 +64,7 @@ export function UploadZone() {
       try {
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("responseLanguage", responseLanguage);
 
         // Use XMLHttpRequest for upload progress tracking
         const response = await new Promise<Response>((resolve, reject) => {
@@ -131,7 +137,7 @@ export function UploadZone() {
         });
       }
     },
-    [router],
+    [router, responseLanguage],
   );
 
   const handleDrop = useCallback(
@@ -265,6 +271,17 @@ export function UploadZone() {
           </>
         )}
       </div>
+
+      {/* Language selector — below the zone, only when idle or showing errors */}
+      {(state.status === "idle" ||
+        state.status === "drag-over" ||
+        state.status === "error" ||
+        state.status === "rejection" ||
+        state.status === "rate-limit") && (
+        <div className="mt-3 flex justify-center">
+          <LanguageSelector value={responseLanguage} onChange={setResponseLanguage} />
+        </div>
+      )}
 
       {/* Error / rejection / rate-limit messages below the zone */}
       {state.status === "error" && (

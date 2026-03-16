@@ -62,7 +62,12 @@ export const analysisRouter = router({
    * - Failed → yield error
    */
   stream: publicProcedure
-    .input(z.object({ analysisId: z.string().uuid() }))
+    .input(
+      z.object({
+        analysisId: z.string().uuid(),
+        responseLanguage: z.string().optional().default("en"),
+      }),
+    )
     .subscription(async function* ({ input }) {
       const db = getDb();
 
@@ -293,6 +298,7 @@ export const analysisRouter = router({
         text: doc.extractedText,
         contractType: doc.contractType ?? "other",
         language: doc.language ?? "en",
+        responseLanguage: analysis.responseLanguage ?? input.responseLanguage ?? "en",
       })) {
         yield event;
       }

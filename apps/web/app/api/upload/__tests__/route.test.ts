@@ -55,9 +55,10 @@ function makePdfFile(content: Uint8Array, name = "test.pdf", type = "application
   return new File([content.buffer as ArrayBuffer], name, { type });
 }
 
-function makeRequest(file: File): Request {
+function makeRequest(file: File, responseLanguage?: string): Request {
   const formData = new FormData();
   formData.append("file", file);
+  if (responseLanguage) formData.append("responseLanguage", responseLanguage);
   return new Request("http://localhost:3000/api/upload", {
     method: "POST",
     body: formData,
@@ -272,6 +273,49 @@ describe("POST /api/upload", () => {
       expect(body.analysisId).toBe("analysis-456");
       expect(body.contractType).toBe("residential_lease");
       expect(body.language).toBe("en");
+    });
+
+    it("stores responseLanguage on analysis record", async () => {
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file, "fr");
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "lease",
+        language: "fr",
+        reason: "This is a lease.",
+      });
+
+      const res = await POST(req as never);
+      expect(res.status).toBe(200);
+
+      // The second insert call (analysis record) should include responseLanguage
+      const insertCalls = mockValues.mock.calls;
+      const analysisInsert = insertCalls[1]?.[0] as Record<string, unknown> | undefined;
+      expect(analysisInsert?.responseLanguage).toBe("fr");
+    });
+
+    it("defaults responseLanguage to en when not provided", async () => {
+      const bytes = validPdfBytes();
+      const file = makePdfFile(bytes);
+      const req = makeRequest(file);
+
+      setupDefaultMocks();
+      mockRelevanceGate.mockResolvedValue({
+        isContract: true,
+        contractType: "nda",
+        language: "en",
+        reason: "This is an NDA.",
+      });
+
+      const res = await POST(req as never);
+      expect(res.status).toBe(200);
+
+      const insertCalls = mockValues.mock.calls;
+      const analysisInsert = insertCalls[1]?.[0] as Record<string, unknown> | undefined;
+      expect(analysisInsert?.responseLanguage).toBe("en");
     });
 
     it("returns 503 when gate throws", async () => {

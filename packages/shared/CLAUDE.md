@@ -5,7 +5,7 @@ Leaf package — all other packages import from here, this imports nothing inter
 ## What's Here
 
 - `src/schemas/` — Zod schemas for all data shapes crossing package boundaries
-- `src/constants.ts` — Shared constants (MAX_PAGES, RATE_LIMIT_PER_DAY, VOYAGE_DIMENSIONS, MAX_FILE_SIZE_BYTES)
+- `src/constants.ts` — Shared constants (MAX_PAGES, RATE_LIMIT_PER_DAY, VOYAGE_DIMENSIONS, MAX_FILE_SIZE_BYTES, SUPPORTED_LANGUAGES)
 - `src/logger.ts` — Structured JSON logger (`logger.info/warn/error`). Uses `console.log` + `JSON.stringify` — Vercel captures natively.
 - `src/index.ts` — Barrel export (Biome enforces alphabetical import ordering)
 
@@ -21,6 +21,7 @@ Leaf package — all other packages import from here, this imports nothing inter
 | GateResultSchema | `schemas/gate.ts` | Relevance gate output |
 | ParsedClauseSchema, PositionedClauseSchema | `schemas/parse.ts` | Parse agent output (text + position) and orchestrator-enriched version (with startIndex/endIndex) |
 | RiskLevelSchema etc. | `schemas/enums.ts` | Shared enum types |
+| ResponseLanguageSchema | `schemas/language.ts` | Zod enum of 15 supported response language codes |
 
 ## Rules
 

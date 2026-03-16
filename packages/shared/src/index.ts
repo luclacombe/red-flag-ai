@@ -3,6 +3,8 @@ export {
   MAX_FILE_SIZE_BYTES,
   MAX_PAGES,
   RATE_LIMIT_PER_DAY,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguageCode,
   VOYAGE_DIMENSIONS,
 } from "./constants";
 
@@ -37,6 +39,7 @@ export {
 } from "./schemas/events";
 export { type GateResult, GateResultSchema } from "./schemas/gate";
 export { type KnowledgePattern, KnowledgePatternSchema } from "./schemas/knowledge";
+export { type ResponseLanguage, ResponseLanguageSchema } from "./schemas/language";
 export {
   ParseClausesResponseSchema,
   type ParsedClause,

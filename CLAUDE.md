@@ -94,6 +94,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Pipeline resumability:** Parse results are cached in `analyses.parsedClauses`. Clause analyses are persisted individually as each `report_clause` tool call completes. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from where it left off. Heartbeat updates `updatedAt` after each yielded event to prevent premature stale detection (90s threshold).
 - **Clause position strategy:** Hybrid parse returns clause text; orchestrator computes `startIndex`/`endIndex` via `text.indexOf()`. Claude references clauses by position number only (no verbatim copying in output — saves ~50% output tokens).
 - **Performance characteristics:** First clause result in ~8-10s from upload. Full analysis in ~20-30s for typical contracts. Zero JSON parse errors (guaranteed by `strict: true` structured outputs). Zero Vercel timeouts (heartbeat-based keepalive).
+- **Response language selection:** Users choose what language Claude writes explanations in, independent of the document language. 15 supported languages (Tier 1-2 from Anthropic benchmarks). `SUPPORTED_LANGUAGES` constant in `@redflag/shared`. System prompts stay in English. `saferAlternative` stays in the document's original language. `responseLanguage` stored on analysis record, threaded through orchestrator → combined analysis → summary. `LanguageSelector` component with `localStorage` persistence, defaults to `navigator.language`.
 
 ## Current Stack Versions
 

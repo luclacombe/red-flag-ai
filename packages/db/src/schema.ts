@@ -43,6 +43,7 @@ export const analyses = pgTable(
       jsonb("parsed_clauses").$type<
         Array<{ text: string; position: number; startIndex: number; endIndex: number }>
       >(),
+    responseLanguage: text("response_language").notNull().default("en"),
     errorMessage: text("error_message"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

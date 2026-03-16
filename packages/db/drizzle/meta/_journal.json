@@ -15,6 +15,13 @@
       "when": 1773574158390,
       "tag": "0001_fuzzy_slayback",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773660236616,
+      "tag": "0002_sloppy_tag",
+      "breakpoints": true
     }
   ]
 }

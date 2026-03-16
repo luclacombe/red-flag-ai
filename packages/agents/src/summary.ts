@@ -25,19 +25,27 @@ interface ClauseForSummary {
  *
  * @param analyses - All clause analyses from the pipeline
  * @param contractType - Type of contract
- * @param language - Document language code
+ * @param documentLanguage - Document language code
+ * @param responseLanguage - User-selected output language for explanations/concerns
  * @returns Summary without clauseBreakdown (orchestrator computes it deterministically)
  * @throws Error if both attempts fail
  */
 export async function summarize(
   analyses: ClauseForSummary[],
   contractType: string,
-  language: string,
+  documentLanguage: string,
+  responseLanguage: string,
 ): Promise<Omit<Summary, "clauseBreakdown">> {
   const client = getAnthropicClient();
   let lastError: unknown;
 
-  logger.info("Summary starting", { clauseCount: analyses.length, contractType, language });
+  const language = documentLanguage;
+  logger.info("Summary starting", {
+    clauseCount: analyses.length,
+    contractType,
+    language,
+    responseLanguage,
+  });
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -49,7 +57,7 @@ export async function summarize(
         messages: [
           {
             role: "user",
-            content: buildSummaryUserMessage(analyses, contractType, language),
+            content: buildSummaryUserMessage(analyses, contractType, language, responseLanguage),
           },
         ],
       });

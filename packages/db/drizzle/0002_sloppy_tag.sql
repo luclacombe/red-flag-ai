@@ -1,0 +1,1 @@
+ALTER TABLE "analyses" ADD COLUMN "response_language" text DEFAULT 'en' NOT NULL;

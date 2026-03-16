@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     // ── Parse multipart form data ──────────────────────────────
     const formData = await request.formData();
     const file = formData.get("file");
+    const responseLanguage = (formData.get("responseLanguage") as string) || "en";
 
     if (!file || !(file instanceof File)) {
       return errorResponse("No PDF file provided", 400);
@@ -197,6 +198,7 @@ export async function POST(request: NextRequest) {
       .values({
         documentId: document.id,
         status: "pending",
+        responseLanguage,
       })
       .returning();
 

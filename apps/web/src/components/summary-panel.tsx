@@ -1,4 +1,4 @@
-import type { Summary } from "@redflag/shared";
+import { SUPPORTED_LANGUAGES, type Summary } from "@redflag/shared";
 import { cn } from "@/lib/utils";
 import { BreakdownBar } from "./breakdown-bar";
 import { RecommendationBadge } from "./recommendation-badge";
@@ -6,11 +6,21 @@ import { RiskScore } from "./risk-score";
 
 interface SummaryPanelProps {
   summary: Summary;
+  responseLanguage?: string;
   animate?: boolean;
   className?: string;
 }
 
-export function SummaryPanel({ summary, animate = false, className }: SummaryPanelProps) {
+function getLanguageName(code: string): string {
+  return SUPPORTED_LANGUAGES.find((l) => l.code === code)?.name ?? code;
+}
+
+export function SummaryPanel({
+  summary,
+  responseLanguage,
+  animate = false,
+  className,
+}: SummaryPanelProps) {
   const isAllGreen = summary.clauseBreakdown.red === 0 && summary.clauseBreakdown.yellow === 0;
 
   return (
@@ -54,7 +64,7 @@ export function SummaryPanel({ summary, animate = false, className }: SummaryPan
       )}
 
       {/* Contract type + language */}
-      {(summary.contractType || summary.language) && (
+      {(summary.contractType || summary.language || responseLanguage) && (
         <div className="mt-6 flex flex-wrap gap-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
           {summary.contractType && (
             <span>
@@ -64,7 +74,18 @@ export function SummaryPanel({ summary, animate = false, className }: SummaryPan
           )}
           {summary.language && (
             <span>
-              Language: <span className="font-medium text-slate-700">{summary.language}</span>
+              Document language:{" "}
+              <span className="font-medium text-slate-700">
+                {getLanguageName(summary.language)}
+              </span>
+            </span>
+          )}
+          {responseLanguage && responseLanguage !== summary.language && (
+            <span>
+              Explained in:{" "}
+              <span className="font-medium text-slate-700">
+                {getLanguageName(responseLanguage)}
+              </span>
             </span>
           )}
         </div>

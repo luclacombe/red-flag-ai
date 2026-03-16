@@ -33,6 +33,7 @@ export interface AnalyzeContractParams {
   text: string;
   contractType: string;
   language: string;
+  responseLanguage: string;
 }
 
 /**
@@ -125,9 +126,16 @@ function clauseRowToAnalysis(row: {
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
   const { analysisId, text, contractType } = params;
   const language = params.language || "en";
+  const responseLanguage = params.responseLanguage || "en";
   const db = getDb();
 
-  logger.info("Pipeline starting", { analysisId, contractType, language, textLen: text.length });
+  logger.info("Pipeline starting", {
+    analysisId,
+    contractType,
+    language,
+    responseLanguage,
+    textLen: text.length,
+  });
 
   try {
     // ── Check for existing progress ──────────────────────────
@@ -258,6 +266,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         clauses: remainingClauses,
         contractType,
         language,
+        responseLanguage,
         ragPatterns,
       })) {
         if (event.type === "clause_analysis") {
@@ -332,6 +341,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
           })),
           contractType,
           language,
+          responseLanguage,
         );
 
         const clauseBreakdown = {

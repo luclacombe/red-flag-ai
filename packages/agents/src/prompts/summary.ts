@@ -22,7 +22,7 @@ The score should reflect the severity and number of flagged clauses. One red fla
 
 Top concerns: List the 3-5 most important issues, ordered by severity. Use plain language. If there are fewer than 3 concerns, list only what exists. If all clauses are green, return an empty array.
 
-Respond in the same language as the clause analyses.`;
+Write the topConcerns in the response language specified in the user message.`;
 
 interface ClauseForSummary {
   riskLevel: string;
@@ -34,7 +34,8 @@ interface ClauseForSummary {
 export function buildSummaryUserMessage(
   clauseAnalyses: ClauseForSummary[],
   contractType: string,
-  language: string,
+  documentLanguage: string,
+  responseLanguage: string,
 ): string {
   const clauseList = clauseAnalyses
     .map(
@@ -44,11 +45,14 @@ export function buildSummaryUserMessage(
     .join("\n\n");
 
   return `Contract type: ${contractType}
-Document language: ${language}
+Document language: ${documentLanguage}
+Response language: ${responseLanguage}
 Total clauses: ${clauseAnalyses.length}
 Red flags: ${clauseAnalyses.filter((a) => a.riskLevel === "red").length}
 Yellow flags: ${clauseAnalyses.filter((a) => a.riskLevel === "yellow").length}
 Green: ${clauseAnalyses.filter((a) => a.riskLevel === "green").length}
+
+Write the topConcerns in ${responseLanguage}.
 
 Clause analyses:
 

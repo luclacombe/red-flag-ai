@@ -30,6 +30,7 @@ pnpm --filter @redflag/db db:studio     # Open Drizzle Studio
 - **Composite PK:** `rate_limits` uses `(ip_address, date)` composite primary key
 - **Cascading deletes:** `documents → analyses → clauses` cascade on delete
 - **jsonb columns:** `top_concerns`, `matched_patterns`, `contract_type` — typed with `$type<string[]>()`; `parsed_clauses` typed with `$type<PositionedClause[]>()`
+- **response_language:** `analyses.response_language` text NOT NULL DEFAULT 'en' — user-selected language for AI explanations
 
 ## Embedding Functions
 

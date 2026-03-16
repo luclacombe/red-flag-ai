@@ -54,6 +54,7 @@ async function collectEvents(params: {
   text: string;
   contractType: string;
   language: string;
+  responseLanguage: string;
 }): Promise<SSEEvent[]> {
   const events: SSEEvent[] = [];
   for await (const event of analyzeContract(params)) {
@@ -114,6 +115,7 @@ const baseParams = {
   text: "1. RENT. Tenant pays $1000.\n\n2. DEPOSIT. $2000 required.\n\n3. TERMINATION. 30 days notice.",
   contractType: "residential_lease",
   language: "en",
+  responseLanguage: "en",
 };
 
 /** Configure mocks to simulate a fresh analysis (no cached parse, no existing clauses) */

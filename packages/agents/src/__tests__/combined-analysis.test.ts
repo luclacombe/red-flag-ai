@@ -123,6 +123,7 @@ const defaultParams = {
   clauses: testClauses,
   contractType: "lease",
   language: "en",
+  responseLanguage: "en",
   ragPatterns: [],
 };
 

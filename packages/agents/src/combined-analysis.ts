@@ -104,6 +104,7 @@ export interface CombinedAnalysisParams {
   clauses: PositionedClause[];
   contractType: string;
   language: string;
+  responseLanguage: string;
   ragPatterns: KnowledgePattern[];
 }
 
@@ -168,6 +169,7 @@ async function* analyzeAllClausesInternal(
     clauseCount: params.clauses.length,
     contractType: params.contractType,
     language: params.language,
+    responseLanguage: params.responseLanguage,
     ragPatternCount: params.ragPatterns.length,
   });
 
@@ -178,6 +180,7 @@ async function* analyzeAllClausesInternal(
       formatPatternsForPrompt(params.ragPatterns),
       params.contractType,
       params.language,
+      params.responseLanguage,
     ),
     messages: [
       {
