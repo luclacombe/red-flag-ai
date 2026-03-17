@@ -1,22 +1,36 @@
 # RedFlag AI
 
-AI-powered contract red-flag detector. Upload a PDF, DOCX, or TXT file and get clause-by-clause risk analysis with streaming results.
+AI-powered contract red-flag detector. Upload a contract, get clause-by-clause risk analysis streamed in real time — each clause scored, explained, and rewritten with a safer alternative.
 
 [![CI](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml)
 
-**Live:** [red-flag-ai.com](https://red-flag-ai.com)
+**Live at [red-flag-ai.com](https://red-flag-ai.com)**
 
-![RedFlag AI — analysis results](docs/screenshots/v3-db-render-top.png)
+![RedFlag AI — analysis results with risk score and top concerns](docs/screenshots/v3-db-render-top.png)
 
 ---
+
+## Features
+
+- **Multi-format upload** — PDF, DOCX, and TXT contracts
+- **AI relevance gate** — rejects non-contracts before wasting compute
+- **RAG-grounded analysis** — 150 curated predatory patterns matched via Voyage AI legal embeddings + pgvector
+- **Real-time streaming** — clause results stream to the UI as they're analyzed, not after
+- **Side-by-side view** — original document with interactive clause highlighting and connecting lines
+- **15-language support** — analysis in the user's chosen language; safer alternatives stay in the document's language
+- **Shareable reports** — expiring share links + downloadable PDF reports
+- **Privacy-first** — AES-256-GCM encryption at rest, 30-day auto-deletion, GDPR-compliant IP hashing
+
+![Side-by-side clause analysis with connecting lines](docs/screenshots/v3-connecting-line.png)
 
 ## How It Works
 
 1. Upload a contract (PDF, DOCX, or TXT)
-2. AI checks if it's actually a contract and rejects non-contracts immediately
-3. Clauses are extracted and analyzed against a knowledge base of 150 curated predatory patterns (RAG via Voyage AI `voyage-law-2` embeddings + pgvector)
-4. Results stream to the UI in real-time, with each clause scored red/yellow/green and explained with safer alternatives
-5. Get a summary with an overall risk score, top concerns, and a sign/don't-sign recommendation
+2. AI checks if it's actually a contract — rejects non-contracts immediately
+3. Clauses are extracted via hybrid parsing (regex heuristic + LLM fallback)
+4. Each clause is analyzed against a RAG knowledge base of 150 predatory patterns
+5. Results stream clause by clause: risk score, explanation, and safer alternative
+6. Summary with overall risk score, top concerns, and a sign/don't-sign recommendation
 
 ## Architecture
 
@@ -27,7 +41,7 @@ flowchart LR
     B -->|Contract| D[Smart Parse\nHeuristic + Haiku fallback]
     D --> E
 
-    subgraph SA[Combined Analysis - Sonnet streaming]
+    subgraph SA[Combined Analysis — Sonnet streaming]
         E[Risk + Rewrite + Summary\nin one call]
     end
 
@@ -45,33 +59,44 @@ flowchart LR
 
 | Step | Agent | Model | Purpose |
 |------|-------|-------|---------|
-| 1 | Relevance Gate | Haiku | Is this a contract? What type? What language? |
-| 2 | Smart Parse | Heuristic (+ Haiku fallback) | Split document into individual clauses |
-| 3 | Combined Analysis | Sonnet (streaming) | Score each clause, generate safer alternatives, produce summary. Single API call with `report_clause` + `report_summary` tools. |
+| 1 | Relevance Gate | Haiku | Classify: is this a contract? What type? What language? |
+| 2 | Smart Parse | Heuristic + Haiku fallback | Split document into individual clauses |
+| 3 | Combined Analysis | Sonnet (streaming) | Score each clause, generate safer alternatives, produce summary |
 
-Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
+Total: 3–4 API calls per analysis (gate + optional boundary detection + combined analysis + optional summary fallback).
 
 ### Knowledge Base (RAG)
 
-The analysis is grounded by a curated knowledge base of 150 predatory contract patterns covering leases, NDAs, employment contracts, and service agreements. Each pattern includes a risk description, category, and safer alternative.
+150 curated predatory contract patterns covering leases, NDAs, employment contracts, freelance agreements, and terms of service. Each pattern includes a risk description, category, and safer alternative.
 
-Patterns are embedded using [Voyage AI](https://www.voyageai.com/)'s `voyage-law-2` model (legal-domain-specific, 1024 dimensions) and stored in PostgreSQL via pgvector. At analysis time, all patterns for the detected contract type are bulk-fetched and injected into the system prompt, so Claude has domain-specific knowledge about what to flag.
+Patterns are embedded with [Voyage AI](https://www.voyageai.com/)'s `voyage-law-2` model (legal-domain-specific, 1024 dimensions) and stored via pgvector. At analysis time, all patterns for the detected contract type are bulk-fetched and injected into the system prompt — Claude has domain-specific knowledge about what to flag.
 
-The seed data ships with pre-computed embeddings — no Voyage API key needed for local development.
+Seed data ships with pre-computed embeddings. No Voyage API key needed for local development.
+
+## Engineering Highlights
+
+- **Multi-agent AI pipeline** — Three specialized agents (gate → parse → analysis), each a pure async function with Zod-validated inputs and outputs. No classes, no shared mutable state.
+- **Hybrid clause parsing** — Regex heuristic runs first (instant, free). Falls back to Haiku LLM anchor-based boundary detection when the heuristic produces suspicious results (e.g., 1 clause from a 10-page document). Graceful degradation: if both fail, heuristic result used as-is.
+- **Structured outputs with zero parse errors** — Claude `strict: true` mode (constrained decoding) guarantees valid JSON tool calls. Zero JSON parse failures in production.
+- **Pipeline resilience** — Atomic `UPDATE ... WHERE status = 'pending' RETURNING *` prevents duplicate runs from concurrent SSE reconnects. Parse results are cached. Clause analyses are persisted individually as they stream. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from the last checkpoint.
+- **Streaming architecture** — tRPC SSE subscriptions with typed event streams. First event within 25 seconds (Vercel constraint). Heartbeat-based keepalive prevents timeouts at the 300-second limit.
+- **Application-level encryption** — AES-256-GCM with HKDF-SHA256 per-document key derivation from a master key. Separate key contexts for documents vs. clauses. HMAC-SHA256 IP hashing for rate limits (irreversible, GDPR-compliant).
+- **Monorepo with strict dependency boundaries** — Turborepo with unidirectional deps: `web → api → agents → db → shared`. Internal packages export TypeScript source directly — no per-package build step.
+- **Zero-config local dev** — Single `pnpm run setup` bootstraps Supabase (Postgres + pgvector + Auth + Storage), seeds 150 knowledge patterns with pre-computed embeddings, and outputs the next steps.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui |
-| API | tRPC v11 (end-to-end type safety, SSE subscriptions) |
+| API | tRPC v11 — end-to-end type safety, SSE subscriptions |
 | AI | Claude API (Anthropic SDK), multi-agent pipeline |
-| Knowledge Base | 150 curated legal patterns, Voyage AI embeddings (voyage-law-2, 1024 dims), pgvector cosine similarity |
-| Database | Supabase (PostgreSQL + pgvector + Storage) |
+| Knowledge Base | 150 curated legal patterns, Voyage AI embeddings (`voyage-law-2`, 1024 dims), pgvector |
+| Database | Supabase — PostgreSQL + pgvector + Auth + Storage |
 | ORM | Drizzle |
 | Validation | Zod v4 at all boundaries |
-| Deployment | Vercel (Node.js runtime, 300s timeout) |
-| CI/CD | GitHub Actions (lint → type-check → test → build) |
+| Deployment | Vercel (Node.js runtime, 300s function timeout) |
+| CI/CD | GitHub Actions — lint → type-check → test → build |
 | Linting | Biome |
 
 ## Project Structure
@@ -79,7 +104,7 @@ The seed data ships with pre-computed embeddings — no Voyage API key needed fo
 ```
 apps/web/              → Next.js App Router (UI + route handlers)
 packages/api/          → tRPC v11 routers, procedures, context
-packages/agents/       → Agent pipeline (gate, smart parse, combined analysis, summary fallback)
+packages/agents/       → Agent pipeline (gate, smart parse, combined analysis, summary)
 packages/db/           → Drizzle schema, migrations, vector search, embeddings
 packages/shared/       → Zod schemas, types, constants, logger
 ```
@@ -118,41 +143,12 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http://127.0.0.1:54323](http://127.0.0.1:54323).
-
-### Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase API URL (`http://127.0.0.1:54321` locally) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (well-known local dev key in `.env.example`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (well-known local dev key in `.env.example`) |
-| `DATABASE_URL` | Yes | Postgres connection string |
-| `NEXT_PUBLIC_APP_URL` | Yes | App URL (`http://localhost:3000` locally) |
-| `MASTER_ENCRYPTION_KEY` | Yes | 32-byte hex key for AES-256-GCM at-rest encryption (dev key in `.env.example`) |
-| `CRON_SECRET` | Yes | Bearer token for cron endpoint |
-| `ANTHROPIC_API_KEY` | Yes | Claude API key for contract analysis |
-| `VOYAGE_API_KEY` | No | Voyage AI API key (only needed if re-seeding knowledge base via `pnpm run seed`) |
-
-### Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start Next.js dev server |
-| `pnpm build` | Build all packages + Next.js app |
-| `pnpm turbo lint` | Biome lint across all packages |
-| `pnpm turbo type-check` | TypeScript strict check across all packages |
-| `pnpm turbo test` | Vitest across all packages |
-| `pnpm turbo lint type-check test build` | Full quality gate |
-| `pnpm supabase:start` | Start local Supabase |
-| `pnpm supabase:stop` | Stop local Supabase |
-| `pnpm supabase:reset` | Reset DB (re-apply migrations + seed) |
-| `pnpm run seed` | Seed knowledge base via Voyage AI (needs `VOYAGE_API_KEY`) |
+Open [localhost:3000](http://localhost:3000). Supabase Studio at [127.0.0.1:54323](http://127.0.0.1:54323).
 
 ## Security
 
 - **AES-256-GCM encryption at rest** — all document content and PII encrypted with per-document derived keys (HKDF-SHA256)
-- **30-day auto-deletion** — documents and analysis data purged automatically via Vercel Cron
+- **30-day auto-deletion** — documents and analysis data purged automatically via cron
 - **HMAC-SHA256 IP hashing** — rate limit identifiers are irreversibly hashed (GDPR-compliant)
 - **Row Level Security** — Supabase RLS enforced on all tables
 - **Private by default** — analyses require explicit share toggle; share links expire after 7 days
@@ -168,10 +164,14 @@ See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 - **Contract comparison.** Upload two versions of a contract, diff the clauses.
 - **PDF viewer.** Render the original PDF in the side-by-side view instead of extracted text.
 
-## Cost Note
+## Cost
 
-Each full analysis costs approximately **$0.01 to $0.05** in Claude API calls, depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
+Each analysis costs ~**$0.01–$0.05** in Claude API calls depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
 
-## Legal Disclaimer
+## License
 
-RedFlag AI is **not a substitute for professional legal advice**. It provides AI-generated analysis for informational purposes only. Always consult a qualified attorney before making legal decisions based on contract review. The developers are not responsible for any actions taken based on this tool's output.
+[MIT](LICENSE)
+
+---
+
+*RedFlag AI is not a substitute for professional legal advice. It provides AI-generated analysis for informational purposes only. Always consult a qualified attorney before making legal decisions based on contract review.*

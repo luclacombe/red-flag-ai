@@ -16,7 +16,12 @@ TOOLING.md
 test.pdf
 /test-documents/
 /testing_screenshots
-/docs/screenshots/
+/docs/screenshots/*
+!/docs/screenshots/v3-db-render-top.png
+!/docs/screenshots/v3-connecting-line.png
+/design-system/
+/docs/BUILD_PLAN*.md
+/docs/UI_SPEC.md
 .DS_Store
 .playwright-mcp/
 qa-*.png
