@@ -14,8 +14,8 @@ AI-powered contract red-flag detector. Upload a PDF, DOCX, or TXT file and get c
 
 1. Upload a contract (PDF, DOCX, or TXT)
 2. AI checks if it's actually a contract and rejects non-contracts immediately
-3. Clauses are extracted and analyzed against a curated knowledge base of predatory patterns (RAG)
-4. Results stream to the UI in real-time, with each clause scored red/yellow/green and explained
+3. Clauses are extracted and analyzed against a knowledge base of 150 curated predatory patterns (RAG via Voyage AI `voyage-law-2` embeddings + pgvector)
+4. Results stream to the UI in real-time, with each clause scored red/yellow/green and explained with safer alternatives
 5. Get a summary with an overall risk score, top concerns, and a sign/don't-sign recommendation
 
 ## Architecture
@@ -33,8 +33,9 @@ flowchart LR
 
     E -->|Stream clause by clause| F[UI]
 
-    subgraph RAG[RAG]
-        G[(pgvector)] -->|Patterns in\nsystem prompt| E
+    subgraph RAG[Knowledge Base]
+        G[(pgvector\n150 patterns)] -->|Patterns in\nsystem prompt| E
+        H[Voyage AI\nvoyage-law-2] -.->|Pre-computed\nembeddings| G
     end
 
     D -->|Bulk fetch\nby contract type| G
@@ -50,6 +51,14 @@ flowchart LR
 
 Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
 
+### Knowledge Base (RAG)
+
+The analysis is grounded by a curated knowledge base of 150 predatory contract patterns covering leases, NDAs, employment contracts, and service agreements. Each pattern includes a risk description, category, and safer alternative.
+
+Patterns are embedded using [Voyage AI](https://www.voyageai.com/)'s `voyage-law-2` model (legal-domain-specific, 1024 dimensions) and stored in PostgreSQL via pgvector. At analysis time, all patterns for the detected contract type are bulk-fetched and injected into the system prompt, so Claude has domain-specific knowledge about what to flag.
+
+The seed data ships with pre-computed embeddings — no Voyage API key needed for local development.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -57,7 +66,7 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 | Frontend | Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui |
 | API | tRPC v11 (end-to-end type safety, SSE subscriptions) |
 | AI | Claude API (Anthropic SDK), multi-agent pipeline |
-| Embeddings | Voyage AI (voyage-law-2, 1024 dims) |
+| Knowledge Base | 150 curated legal patterns, Voyage AI embeddings (voyage-law-2, 1024 dims), pgvector cosine similarity |
 | Database | Supabase (PostgreSQL + pgvector + Storage) |
 | ORM | Drizzle |
 | Validation | Zod v4 at all boundaries |
@@ -146,7 +155,7 @@ Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http
 - **30-day auto-deletion** — documents and analysis data purged automatically via Vercel Cron
 - **HMAC-SHA256 IP hashing** — rate limit identifiers are irreversibly hashed (GDPR-compliant)
 - **Row Level Security** — Supabase RLS enforced on all tables
-- **Auth-scoped access** — document owners only; anonymous uploads accessible by UUID
+- **Private by default** — analyses require explicit share toggle; share links expire after 7 days
 - **HTTP security headers** — CSP, HSTS, X-Frame-Options, Permissions-Policy
 - **Prompt injection defense** — document text treated as untrusted input in all AI agent prompts
 
@@ -161,7 +170,7 @@ See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 
 ## Cost Note
 
-Each full analysis costs approximately **$0.10 to $0.20** in API calls (Claude + Voyage AI), depending on document length. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
+Each full analysis costs approximately **$0.01 to $0.05** in Claude API calls, depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
 
 ## Legal Disclaimer
 
