@@ -171,6 +171,10 @@ export async function POST(request: NextRequest) {
         step: "rate_limit",
         error: rateLimitErr instanceof Error ? rateLimitErr.message : String(rateLimitErr),
       });
+      return NextResponse.json(
+        { error: "Service temporarily unavailable. Please try again shortly." },
+        { status: 503 },
+      );
     }
 
     // ── Parse multipart form data ──────────────────────────────

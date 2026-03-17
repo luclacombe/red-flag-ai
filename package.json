@@ -3,6 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "description": "AI-powered contract red-flag detector with clause-by-clause risk analysis",
+  "license": "MIT",
+  "author": "Luc Lacombe",
+  "homepage": "https://red-flag-ai.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luclacombe/red-flag-ai.git"
+  },
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",

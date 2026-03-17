@@ -27,6 +27,14 @@ vi.mock("@redflag/shared/crypto", () => ({
   decrypt: vi.fn((val: string) => val),
 }));
 
+const mockGetUser = vi.fn();
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: () =>
+    Promise.resolve({
+      auth: { getUser: mockGetUser },
+    }),
+}));
+
 const mockRenderReport = vi.fn();
 vi.mock("../report-document", () => ({
   renderReport: (...args: unknown[]) => mockRenderReport(...args),
@@ -43,6 +51,8 @@ function makeRequest(id: string) {
 describe("GET /api/report/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: no authenticated user
+    mockGetUser.mockResolvedValue({ data: { user: null } });
   });
 
   it("returns 404 when analysis is not found", async () => {
@@ -166,6 +176,77 @@ describe("GET /api/report/[id]", () => {
     expect(reportData.overallRiskScore).toBe(65);
     expect(reportData.clauses).toHaveLength(2);
     expect(reportData.breakdown).toEqual({ red: 1, yellow: 0, green: 1 });
+  });
+
+  it("returns 403 when non-owner tries to access owned document", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "other-user" } } });
+
+    const analysisRow = {
+      status: "complete",
+      documentId: "doc-1",
+      overallRiskScore: 50,
+      recommendation: "caution",
+      topConcerns: null,
+    };
+    const docRow = {
+      id: "doc-1",
+      userId: "owner-user",
+      contractType: "lease",
+      filename: "test.pdf",
+    };
+
+    let callCount = 0;
+    mockSelect.mockReturnValue({ from: mockFrom });
+    mockFrom.mockReturnValue({ where: mockWhere });
+    mockWhere.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.resolve([analysisRow]);
+      return Promise.resolve([docRow]);
+    });
+
+    const response = await GET(makeRequest("owned-id"), {
+      params: Promise.resolve({ id: "owned-id" }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("allows owner to download their own report", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "owner-user" } } });
+
+    const analysisRow = {
+      status: "complete",
+      documentId: "doc-1",
+      overallRiskScore: 50,
+      recommendation: "caution",
+      topConcerns: null,
+    };
+    const docRow = {
+      id: "doc-1",
+      userId: "owner-user",
+      contractType: "lease",
+      filename: "test.pdf",
+    };
+    const clauseRows: unknown[] = [];
+
+    let callCount = 0;
+    mockSelect.mockReturnValue({ from: mockFrom });
+    mockFrom.mockReturnValue({ where: mockWhere });
+    mockWhere.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.resolve([analysisRow]);
+      if (callCount === 2) return Promise.resolve([docRow]);
+      return { orderBy: mockOrderBy };
+    });
+    mockOrderBy.mockResolvedValue(clauseRows);
+    mockRenderReport.mockResolvedValue(new ArrayBuffer(10));
+
+    const response = await GET(makeRequest("owned-id"), {
+      params: Promise.resolve({ id: "owned-id" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/pdf");
   });
 
   it("returns 500 on unexpected error", async () => {

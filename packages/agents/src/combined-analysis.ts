@@ -306,7 +306,7 @@ function* handleReportClause(
   } catch (error) {
     logger.error("Failed to parse report_clause input", {
       error: error instanceof Error ? error.message : String(error),
-      jsonBuf: jsonBuf.slice(0, 200),
+      jsonBufLength: jsonBuf.length,
     });
     return;
   }
@@ -357,7 +357,7 @@ function* handleReportSummary(
   } catch (error) {
     logger.error("Failed to parse report_summary input", {
       error: error instanceof Error ? error.message : String(error),
-      jsonBuf: jsonBuf.slice(0, 200),
+      jsonBufLength: jsonBuf.length,
     });
     return;
   }

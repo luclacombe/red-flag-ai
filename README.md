@@ -6,11 +6,13 @@ AI-powered contract red-flag detector. Upload a PDF, DOCX, or TXT file and get c
 
 **Live:** [red-flag-ai.com](https://red-flag-ai.com)
 
+![RedFlag AI — analysis results](docs/screenshots/v3-db-render-top.png)
+
 ---
 
 ## How It Works
 
-1. Upload a contract (PDF)
+1. Upload a contract (PDF, DOCX, or TXT)
 2. AI checks if it's actually a contract and rejects non-contracts immediately
 3. Clauses are extracted and analyzed against a curated knowledge base of predatory patterns (RAG)
 4. Results stream to the UI in real-time, with each clause scored red/yellow/green and explained
@@ -20,7 +22,7 @@ AI-powered contract red-flag detector. Upload a PDF, DOCX, or TXT file and get c
 
 ```mermaid
 flowchart LR
-    A[Upload PDF] --> B[Relevance Gate\nHaiku]
+    A[Upload Contract] --> B[Relevance Gate\nHaiku]
     B -->|Not a contract| C[Rejection]
     B -->|Contract| D[Smart Parse\nHeuristic + Haiku fallback]
     D --> E
@@ -137,6 +139,18 @@ Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http
 | `pnpm supabase:stop` | Stop local Supabase |
 | `pnpm supabase:reset` | Reset DB (re-apply migrations + seed) |
 | `pnpm run seed` | Seed knowledge base via Voyage AI (needs `VOYAGE_API_KEY`) |
+
+## Security
+
+- **AES-256-GCM encryption at rest** — all document content and PII encrypted with per-document derived keys (HKDF-SHA256)
+- **30-day auto-deletion** — documents and analysis data purged automatically via Vercel Cron
+- **HMAC-SHA256 IP hashing** — rate limit identifiers are irreversibly hashed (GDPR-compliant)
+- **Row Level Security** — Supabase RLS enforced on all tables
+- **Auth-scoped access** — document owners only; anonymous uploads accessible by UUID
+- **HTTP security headers** — CSP, HSTS, X-Frame-Options, Permissions-Policy
+- **Prompt injection defense** — document text treated as untrusted input in all AI agent prompts
+
+See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 
 ## What I'd Improve With More Time
 

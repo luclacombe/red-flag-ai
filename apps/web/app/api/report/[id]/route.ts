@@ -1,6 +1,7 @@
 import { analyses, clauses, documents, eq, getDb } from "@redflag/db";
 import { logger } from "@redflag/shared";
 import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
+import { createClient } from "@/lib/supabase/server";
 import { renderReport } from "./report-document";
 
 export const runtime = "nodejs";
@@ -10,6 +11,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   try {
+    // Auth check
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const db = getDb();
 
     const analysisRows = await db.select().from(analyses).where(eq(analyses.id, id));
@@ -28,6 +35,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     if (!doc) {
       return Response.json({ error: "Document not found" }, { status: 404 });
+    }
+
+    // Ownership check: if document has an owner, only that user can download
+    if (doc.userId) {
+      if (!user || doc.userId !== user.id) {
+        return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const clauseRows = await db

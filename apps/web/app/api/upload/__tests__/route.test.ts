@@ -597,7 +597,7 @@ describe("POST /api/upload", () => {
       expect(body.isContract).toBe(true);
     });
 
-    it("continues processing when rate limit check fails", async () => {
+    it("returns 503 when rate limit check fails", async () => {
       mockCheckRateLimit.mockRejectedValue(new Error("DB connection failed"));
 
       const bytes = validPdfBytes();
@@ -605,19 +605,13 @@ describe("POST /api/upload", () => {
       const req = makeRequest(file);
 
       setupDefaultMocks();
-      mockRelevanceGate.mockResolvedValue({
-        isContract: true,
-        contractType: "lease",
-        language: "en",
-        reason: "Lease.",
-      });
 
       const res = await POST(req as never);
       const body = await res.json();
 
-      // Should not block user — graceful degradation
-      expect(res.status).toBe(200);
-      expect(body.isContract).toBe(true);
+      // Fail closed — if DB is down, pipeline would fail anyway
+      expect(res.status).toBe(503);
+      expect(body.error).toContain("temporarily unavailable");
     });
   });
 

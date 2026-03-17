@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { documents, getDb, rateLimits, sql } from "@redflag/db";
 import { logger } from "@redflag/shared";
 import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
@@ -10,6 +11,13 @@ export const maxDuration = 60;
 const RETENTION_DAYS = 30;
 /** Rate limit rows older than 7 days are deleted */
 const RATE_LIMIT_RETENTION_DAYS = 7;
+
+function timingSafeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +33,7 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !authHeader || !timingSafeCompare(authHeader, `Bearer ${cronSecret}`)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
