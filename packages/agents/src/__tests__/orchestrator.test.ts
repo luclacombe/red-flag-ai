@@ -66,6 +66,7 @@ async function collectEvents(params: {
   analysisId: string;
   documentId: string;
   text: string;
+  fileType: "pdf" | "docx" | "txt";
   contractType: string;
   language: string;
   responseLanguage: string;
@@ -128,6 +129,7 @@ const baseParams = {
   analysisId: "test-analysis-id",
   documentId: "test-document-id",
   text: "1. RENT. Tenant pays $1000.\n\n2. DEPOSIT. $2000 required.\n\n3. TERMINATION. 30 days notice.",
+  fileType: "pdf" as const,
   contractType: "residential_lease",
   language: "en",
   responseLanguage: "en",
@@ -179,13 +181,15 @@ describe("analyzeContract orchestrator", () => {
 
     const events = await collectEvents(baseParams);
 
-    // First event: clause_positions
-    expect(events[0]?.type).toBe("clause_positions");
-    if (events[0]?.type === "clause_positions") {
-      expect(events[0].data.totalClauses).toBe(2);
+    // First event: document_text, then clause_positions
+    expect(events[0]?.type).toBe("document_text");
+    const cpEvent = events.find((e) => e.type === "clause_positions");
+    expect(cpEvent).toBeDefined();
+    if (cpEvent?.type === "clause_positions") {
+      expect(cpEvent.data.totalClauses).toBe(2);
     }
 
-    // Second: status with clause count
+    // Status with clause count
     const foundStatus = events.find(
       (e) => e.type === "status" && "message" in e && e.message.includes("Found 2 clauses"),
     );
@@ -354,8 +358,10 @@ describe("analyzeContract orchestrator", () => {
 
     // Parse should NOT have been called (cached)
     expect(mockParseClausesSmart).not.toHaveBeenCalled();
-    // Should have clause_positions event
-    expect(events[0]?.type).toBe("clause_positions");
+    // First event is document_text, then clause_positions
+    expect(events[0]?.type).toBe("document_text");
+    const cpEvent2 = events.find((e) => e.type === "clause_positions");
+    expect(cpEvent2).toBeDefined();
     // Should have clause_analysis for both (replayed + new)
     const clauseEvents = events.filter((e) => e.type === "clause_analysis");
     expect(clauseEvents).toHaveLength(2);

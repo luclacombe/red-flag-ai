@@ -116,6 +116,29 @@ export const analysisRouter = router({
         const clauseKey = await deriveKey(masterKey, analysis.documentId, "clause");
         const docKey = await deriveKey(masterKey, analysis.documentId, "document");
 
+        // Fetch document for text + fileType
+        const docRows = await db
+          .select()
+          .from(documents)
+          .where(eq(documents.id, analysis.documentId));
+        const doc = docRows[0];
+
+        // Emit document text if available (for side-by-side rendering)
+        if (doc) {
+          try {
+            const decryptedText = decrypt(doc.extractedText, docKey);
+            yield {
+              type: "document_text" as const,
+              data: {
+                text: decryptedText,
+                fileType: (doc.fileType as "pdf" | "docx" | "txt") ?? "pdf",
+              },
+            };
+          } catch {
+            // Decryption failed — skip document text
+          }
+        }
+
         const existingClauses = await db
           .select()
           .from(clauses)
@@ -125,12 +148,17 @@ export const analysisRouter = router({
         const decryptedClauses = existingClauses.map((c) => decryptClauseRow(c, clauseKey));
         const { topConcerns } = decryptAnalysisFields(analysis, docKey);
 
-        // Emit clause positions for skeleton cards
+        // Emit clause positions with full startIndex/endIndex
         yield {
           type: "clause_positions" as const,
           data: {
             totalClauses: decryptedClauses.length,
-            clauses: decryptedClauses.map((c) => ({ text: c.clauseText, position: c.position })),
+            clauses: decryptedClauses.map((c) => ({
+              text: c.clauseText,
+              position: c.position,
+              startIndex: c.startIndex,
+              endIndex: c.endIndex,
+            })),
           },
         };
 
@@ -186,13 +214,23 @@ export const analysisRouter = router({
             try {
               const parsed = JSON.parse(
                 decrypt(analysis.parsedClauses as string, docKey),
-              ) as Array<{ text: string; position: number }>;
+              ) as Array<{
+                text: string;
+                position: number;
+                startIndex: number;
+                endIndex: number;
+              }>;
               if (parsed.length > 0) {
                 yield {
                   type: "clause_positions" as const,
                   data: {
                     totalClauses: parsed.length,
-                    clauses: parsed.map((c) => ({ text: c.text, position: c.position })),
+                    clauses: parsed.map((c) => ({
+                      text: c.text,
+                      position: c.position,
+                      startIndex: c.startIndex ?? -1,
+                      endIndex: c.endIndex ?? -1,
+                    })),
                   },
                 };
               }
@@ -355,6 +393,7 @@ export const analysisRouter = router({
         analysisId: input.analysisId,
         documentId: doc.id,
         text: decryptedText,
+        fileType: (doc.fileType as "pdf" | "docx" | "txt") ?? "pdf",
         contractType: doc.contractType ?? "other",
         language: doc.language ?? "en",
         responseLanguage: analysis.responseLanguage ?? input.responseLanguage ?? "en",
@@ -381,6 +420,13 @@ export const analysisRouter = router({
 
       if (!analysis) return null;
 
+      // Fetch document for extractedText + fileType
+      const docRows = await db
+        .select()
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+
       const clauseRows = await db
         .select()
         .from(clauses)
@@ -401,10 +447,25 @@ export const analysisRouter = router({
 
       const { topConcerns, summaryText } = decryptAnalysisFields(analysis, docKey);
 
+      // Decrypt extractedText from document (for side-by-side rendering)
+      let extractedText: string | null = null;
+      let fileType: string | null = null;
+      if (doc) {
+        try {
+          extractedText = decrypt(doc.extractedText, docKey);
+        } catch {
+          // Decryption failed — fall back to no text panel
+          extractedText = null;
+        }
+        fileType = doc.fileType;
+      }
+
       return {
         ...analysis,
         topConcerns,
         summaryText,
+        extractedText,
+        fileType,
         clauses: decryptedClauses,
       };
     }),

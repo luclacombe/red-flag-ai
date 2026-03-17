@@ -32,11 +32,11 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 ## Analysis Router
 
 - **`analysis.stream`** — SSE subscription. Input: `{ analysisId: string (uuid) }`. Dual path:
-  - Complete → emits `clause_positions` → replays clauses + summary from DB
-  - Processing (not stale) → emits `clause_positions` (from cached parse if available) → polls DB every 3s until analysis completes or fails, replays results. Falls through to claim if it becomes stale.
-  - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline
+  - Complete → emits `document_text` (with fileType) → `clause_positions` (with startIndex/endIndex) → replays clauses + summary from DB
+  - Processing (not stale) → emits `clause_positions` (from cached parse if available, with positions) → polls DB every 3s until analysis completes or fails, replays results. Falls through to claim if it becomes stale.
+  - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline (passes `fileType`)
   - Failed → yields error event
-- **`analysis.get`** — Query. Returns analysis record + all clauses (for page refresh without SSE)
+- **`analysis.get`** — Query. Returns analysis record + all clauses + `extractedText` (decrypted from documents table) + `fileType` + `documentId`. Enables side-by-side layout on page refresh.
 - **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>90s without heartbeat).
 - **Polling path** — When another connection is processing, replays existing clauses immediately, then polls every 3s for new clauses and status changes. Shows real-time progress even when not running the pipeline.
 

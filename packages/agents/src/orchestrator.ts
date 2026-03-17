@@ -1,6 +1,7 @@
 import { analyses, clauses, eq, getDb, getPatternsByContractType, sql } from "@redflag/db";
 import {
   type ClauseAnalysis,
+  type FileType,
   logger,
   type ParsedClause,
   type PositionedClause,
@@ -33,6 +34,7 @@ export interface AnalyzeContractParams {
   analysisId: string;
   documentId: string;
   text: string;
+  fileType: FileType;
   contractType: string;
   language: string;
   responseLanguage: string;
@@ -143,7 +145,7 @@ function decryptClauseRow(row: ClauseRow, key: Buffer): ClauseAnalysis {
  *   clause_positions → status → [clause_analysis (×already done)] → clause_analysis (×remaining) → summary
  */
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
-  const { analysisId, documentId, text, contractType } = params;
+  const { analysisId, documentId, text, fileType, contractType } = params;
   const language = params.language || "en";
   const responseLanguage = params.responseLanguage || "en";
   const db = getDb();
@@ -162,6 +164,9 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
   });
 
   try {
+    // ── Emit document text for frontend rendering ──────────────
+    yield { type: "document_text", data: { text, fileType } };
+
     // ── Check for existing progress ──────────────────────────
     const analysisRows = await db.select().from(analyses).where(eq(analyses.id, analysisId));
     const analysisRow = analysisRows[0];
@@ -201,7 +206,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         type: "clause_positions",
         data: {
           totalClauses: positionedClauses.length,
-          clauses: positionedClauses.map((c) => ({ text: c.text, position: c.position })),
+          clauses: positionedClauses,
         },
       };
 
@@ -251,7 +256,7 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         type: "clause_positions",
         data: {
           totalClauses: positionedClauses.length,
-          clauses: positionedClauses.map((c) => ({ text: c.text, position: c.position })),
+          clauses: positionedClauses,
         },
       };
 
@@ -297,6 +302,12 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       );
 
       // Single streaming analysis call
+      // Signal that the first clause is being analyzed
+      if (remainingClauses[0]) {
+        yield { type: "clause_analyzing", data: { position: remainingClauses[0].position } };
+      }
+
+      let nextAnalyzingPosition = 0;
       for await (const event of analyzeAllClauses({
         clauses: remainingClauses,
         contractType,
@@ -305,6 +316,15 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         ragPatterns,
       })) {
         if (event.type === "clause_analysis") {
+          // Emit analyzing indicator for the NEXT clause (look-ahead)
+          const nextPos = nextAnalyzingPosition + 1;
+          if (nextPos < remainingClauses.length) {
+            const nextClause = remainingClauses[nextPos];
+            if (nextClause) {
+              yield { type: "clause_analyzing", data: { position: nextClause.position } };
+            }
+          }
+          nextAnalyzingPosition++;
           allAnalyses.push(event.data);
 
           // Persist to DB (encrypt sensitive fields)
