@@ -187,6 +187,8 @@ This means the AI isn't just relying on its training data — it has specific, c
 - [x] Contract type detection influencing which patterns to retrieve
 - [x] DOCX + TXT support
 - [x] Data privacy layer (AES-256-GCM encryption at rest, HMAC-SHA256 IP hashing, 30-day auto-deletion)
+- [x] Analysis history page (`/history`) — paginated list of past analyses with delete functionality
+- [x] Account deletion UI (NavBar dropdown menu with confirmation dialog)
 - [ ] Contract comparison mode
 - [ ] Agent observability dashboard (/admin)
 - [x] Shareable analysis URLs with OG meta tags + dynamic OG images

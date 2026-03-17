@@ -39,13 +39,15 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
 | `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` bearer token. `runtime = "nodejs"`, `maxDuration = 60`. |
 | `/api/document/[id]` | API (GET) | Serve decrypted document binary. Owner-only (auth + userId check). Returns raw file bytes with appropriate Content-Type. `Cache-Control: private, max-age=3600`. `runtime = "nodejs"`. |
+| `/history` | Static | Analysis history page. Protected by middleware (redirects to `/login` if unauthenticated). `HistoryView` client component with infinite scroll via `analysis.list` tRPC query. |
+| `/api/account/delete` | API (DELETE) | Delete user account. Deletes all documents + storage files + auth user. Returns `{ ok, docsDeleted, storageDeleted }`. |
 
 ## Components
 
 ### Landing page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" smooth-scroll button + auth state right. Client component: `getUser()` + `onAuthStateChange`. Shows "Sign in" link or user email + "Sign out" button. |
+| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" smooth-scroll button + auth state right. Client component: `getUser()` + `onAuthStateChange`. Authenticated: dropdown menu (History link, Sign out, Delete account with ConfirmDialog). Unauthenticated: "Sign in" link. |
 | `HeroSection` | `hero-section.tsx` | Dark bg, BackgroundPaths (pill shapes) + headline + SlidingWords + CTA button (smooth scroll to #upload) |
 | `BackgroundPaths` | `background-paths.tsx` | Animated glassmorphism pill shapes in risk colors (motion library). `variant="hero"` (7 pills with risk labels like "Safe Clause ✓", "Penalty Clause") or `variant="auth"` (3 pills, no labels, subtler). ElegantPill subcomponent: entry animation + 12s floating loop. `prefers-reduced-motion` renders static. Used on hero, login, signup pages. |
 | `ScrollReveal` | `scroll-reveal.tsx` | Intersection Observer wrapper using `useInView` from motion library. Fades children in (opacity 0→1, y 20→0) when scrolled into viewport. Props: `delay`, `once`, `direction`. `prefers-reduced-motion` renders plain div. |
@@ -70,7 +72,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | Component | File | Notes |
 |-----------|------|-------|
 | `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. `ProcessingSteps` shown before clauses arrive. Interaction model: `hoveredClause` (visual only, no scroll) + `pinnedClause` (click → scroll other panel with `block: "nearest"`). Scroll suppression via `isScrollingRef` (150ms debounce) prevents hover during scroll. Minimum 400ms shimmer per clause via `shimmerStartTimes` + `pendingResults` buffering — `analyzingPositions` is a `Set<number>`. Auto-scroll follows analysis progress (`skeletonRef`) until `userHasInteracted` (wheel/touchmove). Summary skeleton shown between last clause and summary arrival. `GreenClauseCompact` inline for green clauses. DB render path shows side-by-side layout. |
-| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`). Centered below summary in both DB and streaming paths. |
+| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`) + Delete button (with ConfirmDialog, redirects to `/history` on success). Centered below summary in both DB and streaming paths. |
 | `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). `compact` prop hides clause text (used in side-by-side layout). CSS fade-slide-in animation. |
 | `ConnectingLines` | `connecting-lines.tsx` | Fixed SVG overlay with cubic bezier curves connecting clause highlights to analysis cards. Risk-colored (3px stroke, full opacity for red/yellow). `docScrollContainer` ref for accurate scroll tracking (attached to TextDocumentPanel's inner scrollable div). rAF-throttled updates. |
 | `DocumentPanel` | `document-panel.tsx` | Dispatcher routing to `TextDocumentPanel`. Passes through `onScrollContainerRef`. Future: PDF viewer dispatch. Exports `ClauseHighlight` type. |
@@ -81,6 +83,12 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `RecommendationBadge` | `recommendation-badge.tsx` | Large pill: "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red). Uses `Recommendation` type. |
 | `BreakdownBar` | `breakdown-bar.tsx` | Horizontal stacked bar (red|amber|green segments) with dot + count labels. Pure div widths, no charting library. |
 | `SummaryPanel` | `summary-panel.tsx` | Composed: RiskScore + RecommendationBadge + BreakdownBar + top concerns list + contract type/language. Fade-in animation. |
+
+### History page components
+| Component | File | Notes |
+|-----------|------|-------|
+| `HistoryView` | `history-view.tsx` | Client component. `trpc.analysis.list.useInfiniteQuery` with cursor-based pagination. Renders list items with risk score, document name, contract type badge, recommendation badge, date. Delete button per item (with ConfirmDialog). Empty state for new users. Loading skeleton. "Load more" button for pagination. |
+| `ConfirmDialog` | `confirm-dialog.tsx` | Reusable `<dialog>` modal. Props: `open`, `onClose`, `onConfirm`, `title`, `description`, `confirmLabel`, `loading`, `variant` (`"destructive"` | `"default"`). Used for analysis deletion and account deletion. Dark themed. |
 
 ## Upload Route (`POST /api/upload`)
 

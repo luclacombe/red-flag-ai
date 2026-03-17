@@ -8,7 +8,7 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 - `src/__tests__/auth.test.ts` — Auth context and protectedProcedure tests
 - `src/root.ts` — Root router combining all sub-routers
 - `src/routers/health.ts` — Health check router (`health.check` query)
-- `src/routers/analysis.ts` — Analysis router: `analysis.stream` (SSE subscription) + `analysis.get` (query)
+- `src/routers/analysis.ts` — Analysis router: `analysis.stream` (SSE subscription) + `analysis.get` (query) + `analysis.list` (protectedProcedure, paginated) + `analysis.delete` (protectedProcedure, ownership-verified)
 - `src/rateLimit.ts` — Auth-aware rate limiting: `checkRateLimit(identifier, isAuthenticated?)` → `{ limited, resetAt }`. Uses userId (10/day) or IP (2/day). Atomic UPSERT on `rate_limits` table. Exported via `@redflag/api/rateLimit`.
 - `src/index.ts` — Barrel export: `appRouter`, `AppRouter` type, `TRPCContext` type, `createTRPCContext`, `createCallerFactory`, `protectedProcedure`
 
@@ -39,6 +39,8 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 - **`analysis.get`** — Query. Returns analysis record + all clauses + `extractedText` (decrypted from documents table) + `fileType` + `documentId`. Enables side-by-side layout on page refresh.
 - **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>90s without heartbeat).
 - **Polling path** — When another connection is processing, replays existing clauses immediately, then polls every 3s for new clauses and status changes. Shows real-time progress even when not running the pipeline.
+- **`analysis.list`** — protectedProcedure query. Input: `{ cursor?: string, limit?: number (default 20) }`. Returns paginated user analyses joined with documents. Decrypts filenames. Cursor-based pagination via `createdAt` ordering. Returns `{ items, nextCursor }`.
+- **`analysis.delete`** — protectedProcedure mutation. Input: `{ analysisId: string }`. Verifies document ownership (`userId === ctx.user.id`). Decrypts `storagePath` → deletes from Supabase Storage → deletes document (CASCADE handles analyses + clauses). Uses `@supabase/supabase-js` service role client for storage deletion.
 
 ## Rules
 

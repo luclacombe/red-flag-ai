@@ -1,18 +1,35 @@
 import type { SSEEvent } from "@redflag/shared";
+import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock DB
 const mockSelect = vi.fn();
 const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
 
 vi.mock("@redflag/db", () => ({
   getDb: () => ({
     select: mockSelect,
     update: mockUpdate,
+    delete: mockDelete,
   }),
-  analyses: { id: "id", status: "status", updatedAt: "updated_at", documentId: "document_id" },
+  analyses: {
+    id: "id",
+    status: "status",
+    updatedAt: "updated_at",
+    documentId: "document_id",
+    createdAt: "created_at",
+    overallRiskScore: "overall_risk_score",
+    recommendation: "recommendation",
+  },
   clauses: { analysisId: "analysis_id", position: "position" },
-  documents: { id: "id" },
+  documents: {
+    id: "id",
+    userId: "user_id",
+    filename: "filename",
+    contractType: "contract_type",
+    storagePath: "storage_path",
+  },
   eq: vi.fn((_col: unknown, _val: unknown) => "eq-condition"),
   sql: Object.assign((strings: TemplateStringsArray, ..._values: unknown[]) => strings.join(""), {
     raw: (str: string) => str,
@@ -32,6 +49,18 @@ vi.mock("@redflag/shared/crypto", () => ({
   getMasterKey: () => Buffer.alloc(32),
   deriveKey: vi.fn().mockResolvedValue(Buffer.alloc(32)),
   decrypt: vi.fn((val: string) => val),
+}));
+
+// Mock Supabase JS (service role client for storage deletion)
+const mockStorageRemove = vi.fn().mockResolvedValue({ error: null });
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: () => ({
+    storage: {
+      from: () => ({
+        remove: mockStorageRemove,
+      }),
+    },
+  }),
 }));
 
 // Mock analyzeContract
@@ -419,5 +448,203 @@ describe("analysis.stream", () => {
     expect(
       events.some((e) => e.type === "status" && e.message === "Analysis already in progress."),
     ).toBe(true);
+  });
+});
+
+describe("analysis.list", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(caller.analysis.list({ limit: 20 })).rejects.toThrow(TRPCError);
+    await expect(caller.analysis.list({ limit: 20 })).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("returns user's analyses with decrypted filenames", async () => {
+    const rows = [
+      {
+        analysisId: "a1",
+        documentId: "doc-1",
+        status: "complete",
+        overallRiskScore: 45,
+        recommendation: "caution",
+        createdAt: new Date("2026-01-01"),
+        filename: "contract.pdf",
+        contractType: "nda",
+      },
+    ];
+
+    mockSelect.mockReturnValue({
+      from: () => ({
+        innerJoin: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve(rows),
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.list({ limit: 20 });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.id).toBe("a1");
+    expect(result.items[0]?.documentName).toBe("contract.pdf"); // decrypt mock returns input
+    expect(result.items[0]?.recommendation).toBe("caution");
+    expect(result.nextCursor).toBeUndefined();
+  });
+
+  it("returns empty list for user with no analyses", async () => {
+    mockSelect.mockReturnValue({
+      from: () => ({
+        innerJoin: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve([]),
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const caller = await createCaller({ id: "user-2", email: "new@example.com" });
+    const result = await caller.analysis.list({ limit: 20 });
+
+    expect(result.items).toHaveLength(0);
+    expect(result.nextCursor).toBeUndefined();
+  });
+
+  it("returns nextCursor when more results exist", async () => {
+    // Return limit + 1 rows to indicate more
+    const rows = Array.from({ length: 3 }, (_, i) => ({
+      analysisId: `a${i}`,
+      documentId: `doc-${i}`,
+      status: "complete",
+      overallRiskScore: 50,
+      recommendation: "caution",
+      createdAt: new Date(`2026-01-0${i + 1}`),
+      filename: `file${i}.pdf`,
+      contractType: "nda",
+    }));
+
+    mockSelect.mockReturnValue({
+      from: () => ({
+        innerJoin: () => ({
+          where: () => ({
+            orderBy: () => ({
+              limit: () => Promise.resolve(rows),
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.list({ limit: 2 });
+
+    expect(result.items).toHaveLength(2);
+    expect(result.nextCursor).toBe("a1");
+  });
+});
+
+describe("analysis.delete", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(
+      caller.analysis.delete({ analysisId: "550e8400-e29b-41d4-a716-446655440000" }),
+    ).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("rejects if analysis does not exist", async () => {
+    mockSelect.mockReturnValue({
+      from: () => ({
+        where: () => Promise.resolve([]),
+      }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.delete({ analysisId: "550e8400-e29b-41d4-a716-446655440000" }),
+    ).rejects.toThrow("Analysis not found.");
+  });
+
+  it("rejects if user does not own the analysis", async () => {
+    let callCount = 0;
+    mockSelect.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        // analysis lookup
+        return {
+          from: () => ({
+            where: () => Promise.resolve([{ documentId: "doc-1" }]),
+          }),
+        };
+      }
+      // document lookup — different owner
+      return {
+        from: () => ({
+          where: () =>
+            Promise.resolve([{ id: "doc-1", userId: "other-user", storagePath: "path/file.pdf" }]),
+        }),
+      };
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.delete({ analysisId: "550e8400-e29b-41d4-a716-446655440000" }),
+    ).rejects.toThrow("You do not own this analysis.");
+  });
+
+  it("deletes analysis, storage file, and document for owner", async () => {
+    // Set env vars so storage deletion runs
+    const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-key";
+
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({
+            where: () => Promise.resolve([{ documentId: "doc-1" }]),
+          }),
+        };
+      }
+      return {
+        from: () => ({
+          where: () =>
+            Promise.resolve([
+              { id: "doc-1", userId: "user-1", storagePath: "user-1/abc/file.pdf" },
+            ]),
+        }),
+      };
+    });
+
+    mockDelete.mockReturnValue({
+      where: () => Promise.resolve(),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.delete({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(mockStorageRemove).toHaveBeenCalledWith(["user-1/abc/file.pdf"]);
+    expect(mockDelete).toHaveBeenCalled();
+
+    // Restore env vars
+    process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
   });
 });

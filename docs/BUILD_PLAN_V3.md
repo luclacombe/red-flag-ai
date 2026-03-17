@@ -613,7 +613,7 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 7.1 — API endpoint
-- [ ] Add `analysis.list` query to the analysis router (protectedProcedure):
+- [x] Add `analysis.list` query to the analysis router (protectedProcedure):
   - Input: optional pagination params (`cursor`, `limit` default 20)
   - Fetches analyses joined with documents for the authenticated user
   - Returns: `{ items: Array<{ id, documentName, contractType, riskScore, recommendation, status, createdAt }>, nextCursor }`
@@ -621,50 +621,50 @@ Must pass before committing. No exceptions.
   - **Decrypt** document filename before returning (encrypted in Phase 5)
 
 #### 7.2 — History page
-- [ ] Create `apps/web/app/history/page.tsx`:
+- [x] Create `apps/web/app/history/page.tsx`:
   - Server component shell, client component for data fetching
   - Uses `analysis.list` tRPC query with infinite scroll or "Load more" button
   - Each item: document name, contract type badge, risk score, recommendation badge, date, "View" link
   - Empty state: "No analyses yet. Upload your first contract."
   - Loading state: skeleton cards
-- [ ] Gate behind auth — redirect to `/login` if not authenticated (middleware already handles this if `/history` is not in the public routes list)
+- [x] Gate behind auth — redirect to `/login` if not authenticated (middleware already handles this if `/history` is not in the public routes list)
 
 #### 7.3 — Delete functionality
-- [ ] Add `analysis.delete` mutation to the analysis router (protectedProcedure):
+- [x] Add `analysis.delete` mutation to the analysis router (protectedProcedure):
   - Input: `{ analysisId: string }`
   - Verify ownership (document.userId matches ctx.user.id)
   - Decrypt storagePath → delete from Supabase Storage
   - Delete document record (CASCADE deletes analyses + clauses)
-- [ ] Add delete button to each history item (with confirmation dialog)
-- [ ] Add "Delete" button to the analysis page itself
+- [x] Add delete button to each history item (with confirmation dialog)
+- [x] Add "Delete" button to the analysis page itself
 
 #### 7.4 — Account deletion UI
-- [ ] Add "Delete Account" option to NavBar user menu (only visible when authenticated)
-- [ ] Confirmation dialog: "This will permanently delete your account and all analyses. This cannot be undone."
-- [ ] Calls `DELETE /api/account/delete` (already implemented — deletes all documents + storage files + auth user)
-- [ ] On success: redirect to `/` with signed-out state
+- [x] Add "Delete Account" option to NavBar user menu (only visible when authenticated)
+- [x] Confirmation dialog: "This will permanently delete your account and all analyses. This cannot be undone."
+- [x] Calls `DELETE /api/account/delete` (already implemented — deletes all documents + storage files + auth user)
+- [x] On success: redirect to `/` with signed-out state
 
 #### 7.5 — NavBar update
-- [ ] Add "History" link to NavBar (only visible when authenticated)
-- [ ] Link to `/history`
+- [x] Add "History" link to NavBar (only visible when authenticated)
+- [x] Link to `/history`
 
 #### 7.6 — Tests
-- [ ] Unit test: `analysis.list` returns only the authenticated user's analyses
-- [ ] Unit test: `analysis.delete` rejects if user doesn't own the analysis
-- [ ] Unit test: `analysis.delete` cascades correctly (document → analyses → clauses + storage)
+- [x] Unit test: `analysis.list` returns only the authenticated user's analyses
+- [x] Unit test: `analysis.delete` rejects if user doesn't own the analysis
+- [x] Unit test: `analysis.delete` cascades correctly (document → analyses → clauses + storage)
 - [ ] Unit test: account deletion removes all user data and auth record
 
 #### 7.7 — Documentation
-- [ ] Update CLAUDE.md: add history route, analysis.list/delete procedures
-- [ ] Update PROJECT.md: add analysis history to feature list
+- [x] Update CLAUDE.md: add history route, analysis.list/delete procedures
+- [x] Update PROJECT.md: add analysis history to feature list
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Authenticated user sees past analyses on `/history`
-- [ ] Can delete an analysis (document + storage file removed)
-- [ ] Empty state renders correctly for new users
-- [ ] History page matches Phase 6 design language
-- [ ] Documentation updated
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] Authenticated user sees past analyses on `/history`
+- [x] Can delete an analysis (document + storage file removed)
+- [x] Empty state renders correctly for new users
+- [x] History page matches Phase 6 design language
+- [x] Documentation updated
 
 ---
 

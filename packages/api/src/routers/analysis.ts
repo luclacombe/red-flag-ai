@@ -2,8 +2,10 @@ import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
 import { type ClauseAnalysis, logger } from "@redflag/shared";
 import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
+import { createClient } from "@supabase/supabase-js";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 
 /** 90 seconds — fast recovery from dead functions while heartbeat keeps active ones alive */
 const STALE_THRESHOLD_MS = 90 * 1000;
@@ -468,5 +470,143 @@ export const analysisRouter = router({
         fileType,
         clauses: decryptedClauses,
       };
+    }),
+
+  /**
+   * List — paginated list of the authenticated user's analyses.
+   * Returns decrypted filenames and basic analysis metadata.
+   */
+  list: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(50).optional().default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const db = getDb();
+      const masterKey = getMasterKey();
+
+      // Fetch analyses joined with documents for this user, ordered by createdAt DESC
+      // Use cursor-based pagination (cursor = analysis.id from the last row)
+      const rows = await db
+        .select({
+          analysisId: analyses.id,
+          documentId: analyses.documentId,
+          status: analyses.status,
+          overallRiskScore: analyses.overallRiskScore,
+          recommendation: analyses.recommendation,
+          createdAt: analyses.createdAt,
+          filename: documents.filename,
+          contractType: documents.contractType,
+        })
+        .from(analyses)
+        .innerJoin(documents, eq(analyses.documentId, documents.id))
+        .where(
+          input.cursor
+            ? sql`${documents.userId} = ${ctx.user.id} AND ${analyses.createdAt} < (SELECT created_at FROM analyses WHERE id = ${input.cursor})`
+            : sql`${documents.userId} = ${ctx.user.id}`,
+        )
+        .orderBy(sql`${analyses.createdAt} DESC`)
+        .limit(input.limit + 1);
+
+      const hasMore = rows.length > input.limit;
+      const items = hasMore ? rows.slice(0, input.limit) : rows;
+
+      // Decrypt filenames
+      const decryptedItems = await Promise.all(
+        items.map(async (row) => {
+          let documentName = "Untitled document";
+          try {
+            const docKey = await deriveKey(masterKey, row.documentId, "document");
+            documentName = decrypt(row.filename, docKey);
+          } catch {
+            // Pre-encryption data or decryption failure — show fallback
+          }
+          return {
+            id: row.analysisId,
+            documentName,
+            contractType: row.contractType,
+            riskScore: row.overallRiskScore,
+            recommendation: row.recommendation as "sign" | "caution" | "do_not_sign" | null,
+            status: row.status,
+            createdAt: row.createdAt,
+          };
+        }),
+      );
+
+      return {
+        items: decryptedItems,
+        nextCursor: hasMore ? items[items.length - 1]?.analysisId : undefined,
+      };
+    }),
+
+  /**
+   * Delete — delete an analysis and its associated document + storage file.
+   * Verifies ownership before deleting. CASCADE handles analyses + clauses.
+   */
+  delete: protectedProcedure
+    .input(z.object({ analysisId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+
+      // Look up analysis → document, verify ownership
+      const analysisRows = await db
+        .select({
+          documentId: analyses.documentId,
+        })
+        .from(analyses)
+        .where(eq(analyses.id, input.analysisId));
+      const analysis = analysisRows[0];
+
+      if (!analysis) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Analysis not found." });
+      }
+
+      const docRows = await db
+        .select({
+          id: documents.id,
+          userId: documents.userId,
+          storagePath: documents.storagePath,
+        })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+
+      if (!doc) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Document not found." });
+      }
+
+      if (doc.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this analysis." });
+      }
+
+      // Decrypt storagePath and delete from Supabase Storage
+      const masterKey = getMasterKey();
+      try {
+        const docKey = await deriveKey(masterKey, doc.id, "document");
+        const decryptedPath = decrypt(doc.storagePath, docKey);
+
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (supabaseUrl && serviceKey) {
+          const serviceClient = createClient(supabaseUrl, serviceKey);
+          await serviceClient.storage.from("contracts").remove([decryptedPath]);
+        }
+      } catch {
+        // Storage deletion failed — continue with DB deletion
+        logger.warn("Failed to delete storage file", { documentId: doc.id });
+      }
+
+      // Delete document — CASCADE handles analyses + clauses
+      await db.delete(documents).where(eq(documents.id, doc.id));
+
+      logger.info("Analysis deleted", {
+        analysisId: input.analysisId,
+        documentId: doc.id,
+        userId: ctx.user.id,
+      });
+
+      return { ok: true };
     }),
 });
