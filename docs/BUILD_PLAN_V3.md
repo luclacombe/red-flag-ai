@@ -683,28 +683,28 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 8.1 — Supabase CLI init
-- [ ] Run `supabase init` in the project root (creates `supabase/config.toml`)
-- [ ] Configure `config.toml`:
+- [x] Run `supabase init` in the project root (creates `supabase/config.toml`)
+- [x] Configure `config.toml`:
   - Set project name to `red-flag-ai`
   - Configure auth settings (enable email provider, disable phone)
   - Configure storage bucket `contracts` (10MB limit, PDF + DOCX + TXT MIME types)
 
 #### 8.2 — Migrate Drizzle migrations to Supabase format
-- [ ] Create `supabase/migrations/` directory
-- [ ] Create `00000000000000_enable_extensions.sql`: `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;`
-- [ ] Convert existing Drizzle SQL migrations into numbered Supabase migration files
-- [ ] Include RLS policies from Phase 4 in the appropriate migration
+- [x] Create `supabase/migrations/` directory
+- [x] Create `00000000000000_enable_extensions.sql`: `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;`
+- [x] Convert existing Drizzle SQL migrations into numbered Supabase migration files
+- [x] Include RLS policies from Phase 4 in the appropriate migration
 - [ ] Verify: `supabase start` → `supabase db reset` applies all migrations cleanly
 
 #### 8.3 — Seed data
-- [ ] Create `supabase/seed.sql` with pre-computed knowledge patterns including embeddings:
+- [x] Create `supabase/seed.sql` with pre-computed knowledge patterns including embeddings:
   - Export current production patterns: `SELECT * FROM knowledge_patterns` → format as INSERT statements
   - Include the embeddings as array literals
   - This enables fully offline local dev (no Voyage API key needed for seed)
-- [ ] Keep existing `pnpm run seed` as the "live" seeding option (calls Voyage API)
+- [x] Keep existing `pnpm run seed` as the "live" seeding option (calls Voyage API)
 
 #### 8.4 — Environment configuration
-- [ ] Create `.env.development` with local Supabase URLs:
+- [x] Create `.env.development` with local Supabase URLs:
   ```
   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
   NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase start output>
@@ -712,10 +712,10 @@ Must pass before committing. No exceptions.
   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
   NEXT_PUBLIC_APP_URL=http://localhost:3000
   ```
-- [ ] Update `packages/db/src/client.ts` to handle local connection (no `{ prepare: false }` needed locally, but harmless to keep)
+- [x] Update `packages/db/src/client.ts` to handle local connection (no `{ prepare: false }` needed locally, but harmless to keep)
 
 #### 8.5 — Developer scripts
-- [ ] Add to root `package.json` scripts:
+- [x] Add to root `package.json` scripts:
   - `"supabase:start": "supabase start"`
   - `"supabase:stop": "supabase stop"`
   - `"supabase:reset": "supabase db reset"`
@@ -723,7 +723,7 @@ Must pass before committing. No exceptions.
 - [ ] Verify full flow: `supabase start` → `pnpm dev` → upload PDF → analysis completes
 
 #### 8.6 — README
-- [ ] Write (or update) `README.md` with:
+- [x] Write (or update) `README.md` with:
   - Quick start: prerequisites (Node 22, pnpm, Docker, Supabase CLI) → `pnpm run setup` → add API keys → `pnpm dev`
   - Architecture overview (brief — link to CLAUDE.md for details)
   - Environment variables table with descriptions
@@ -732,20 +732,20 @@ Must pass before committing. No exceptions.
   - Tech stack badges
 
 #### 8.7 — .gitignore update
-- [ ] Ensure `supabase/.temp/` is in `.gitignore` (Supabase CLI temp files)
-- [ ] Ensure `.env.local`, `.env.development.local` are gitignored
+- [x] Ensure `supabase/.temp/` is in `.gitignore` (Supabase CLI temp files)
+- [x] Ensure `.env.local`, `.env.development.local` are gitignored
 
 #### 8.8 — Tests
-- [ ] Verify: `supabase start` → `supabase db reset` → all migrations apply → seed data present
-- [ ] Verify: `pnpm dev` connects to local Supabase successfully
-- [ ] Verify: full upload → analysis flow works against local Supabase
+- [ ] Verify: `supabase start` → `supabase db reset` → all migrations apply → seed data present (requires Docker Desktop running)
+- [ ] Verify: `pnpm dev` connects to local Supabase successfully (requires Docker Desktop running)
+- [ ] Verify: full upload → analysis flow works against local Supabase (requires Docker Desktop running)
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] Fresh clone → `supabase start` → `pnpm install` → `pnpm dev` → working app
-- [ ] Knowledge base seeded (via seed.sql or pnpm run seed)
-- [ ] README has clear setup instructions
-- [ ] Documentation updated
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
+- [ ] Fresh clone → `supabase start` → `pnpm install` → `pnpm dev` → working app (requires Docker Desktop running)
+- [x] Knowledge base seeded (via seed.sql or pnpm run seed)
+- [x] README has clear setup instructions
+- [x] Documentation updated
 
 ---
 

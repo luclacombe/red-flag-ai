@@ -1,6 +1,6 @@
 # RedFlag AI
 
-AI-powered contract red-flag detector. Upload a PDF, get clause-by-clause risk analysis with streaming results.
+AI-powered contract red-flag detector. Upload a PDF, DOCX, or TXT file and get clause-by-clause risk analysis with streaming results.
 
 [![CI](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml)
 
@@ -77,43 +77,77 @@ Dependency direction: `web → api → agents → db → shared` (shared is the 
 
 ## Local Setup
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 22+
+- [pnpm](https://pnpm.io/) 10+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for local Supabase)
+- [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) 2.x
+- An [Anthropic API key](https://console.anthropic.com/)
+
+### Quick Start
+
 ```bash
-# Clone
+# 1. Clone and install
 git clone https://github.com/luclacombe/red-flag-ai.git
 cd red-flag-ai
-
-# Install
 pnpm install
 
-# Environment variables
-cp .env.example .env.local
-# Fill in:
-#   NEXT_PUBLIC_SUPABASE_URL
-#   SUPABASE_SERVICE_ROLE_KEY
-#   ANTHROPIC_API_KEY
-#   VOYAGE_API_KEY
-#   NEXT_PUBLIC_APP_URL=http://localhost:3000
+# 2. Start local Supabase (Postgres + pgvector, Auth, Storage, Studio)
+pnpm supabase:start
 
-# Seed the knowledge base
-pnpm run seed
+# 3. Reset database (applies migrations + seeds knowledge base with pre-computed embeddings)
+pnpm supabase:reset
 
-# Start dev server
+# 4. Configure environment
+cp .env.development .env.local
+# Edit .env.local — add your ANTHROPIC_API_KEY
+
+# 5. Start dev server
 pnpm dev
 ```
 
+Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http://127.0.0.1:54323](http://127.0.0.1:54323).
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase API URL (`http://127.0.0.1:54321` locally) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (well-known local dev key in `.env.development`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (well-known local dev key in `.env.development`) |
+| `DATABASE_URL` | Yes | Postgres connection string |
+| `NEXT_PUBLIC_APP_URL` | Yes | App URL (`http://localhost:3000` locally) |
+| `MASTER_ENCRYPTION_KEY` | Yes | 32-byte hex key for AES-256-GCM at-rest encryption (dev key in `.env.development`) |
+| `CRON_SECRET` | Yes | Bearer token for cron endpoint |
+| `ANTHROPIC_API_KEY` | Yes | Claude API key for contract analysis |
+| `VOYAGE_API_KEY` | No | Voyage AI API key (only needed if re-seeding knowledge base via `pnpm run seed`) |
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Build all packages + Next.js app |
+| `pnpm turbo lint` | Biome lint across all packages |
+| `pnpm turbo type-check` | TypeScript strict check across all packages |
+| `pnpm turbo test` | Vitest across all packages |
+| `pnpm turbo lint type-check test build` | Full quality gate |
+| `pnpm supabase:start` | Start local Supabase |
+| `pnpm supabase:stop` | Stop local Supabase |
+| `pnpm supabase:reset` | Reset DB (re-apply migrations + seed) |
+| `pnpm run seed` | Seed knowledge base via Voyage AI (needs `VOYAGE_API_KEY`) |
+
 ## What I'd Improve With More Time
 
-- **Authentication.** Supabase Auth is wired but login flows are deferred. Unlock higher rate limits for logged-in users.
-- **Side-by-side view.** Clause positions (`startIndex`/`endIndex`) are already stored. Build a split view with the original PDF on the left and annotations on the right.
-- **DOCX support.** Many contracts arrive as Word docs. Add extraction with `mammoth` or similar.
 - **Jurisdiction-specific patterns.** The knowledge base is jurisdiction-agnostic. Add region-specific pattern sets (EU, US states, UK).
 - **LLM observability.** Add tracing (e.g., Langfuse) for token usage, latency per agent, and prompt versioning.
 - **Contract comparison.** Upload two versions of a contract, diff the clauses.
-- **Shareable analysis URLs.** Currently anonymous. Add shareable links for completed analyses.
+- **PDF viewer.** Render the original PDF in the side-by-side view instead of extracted text.
 
 ## Cost Note
 
-Each full analysis costs approximately **$0.10 to $0.20** in API calls (Claude + Voyage AI), depending on document length. IP-based rate limiting (2 analyses/day for anonymous users) controls spend.
+Each full analysis costs approximately **$0.10 to $0.20** in API calls (Claude + Voyage AI), depending on document length. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
 
 ## Legal Disclaimer
 

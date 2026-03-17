@@ -11,7 +11,11 @@
     "test": "turbo test",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "seed": "node --env-file=.env.local --import=tsx/esm scripts/seed-knowledge-base.ts"
+    "seed": "node --env-file=.env.local --import=tsx/esm scripts/seed-knowledge-base.ts",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "setup": "supabase start && pnpm install && echo '\n✔ Supabase is running. Copy .env.development to .env.local and add your API keys:\n  cp .env.development .env.local\n  # Then add ANTHROPIC_API_KEY to .env.local\n  pnpm dev'"
   },
   "packageManager": "pnpm@10.30.3",
   "devDependencies": {

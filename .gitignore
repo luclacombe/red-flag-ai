@@ -17,3 +17,8 @@ test.pdf
 /test-documents/
 /testing_screenshots
 /docs/screenshots/
+.DS_Store
+.playwright-mcp/
+qa-*.png
+supabase/.temp/
+supabase/.branches/

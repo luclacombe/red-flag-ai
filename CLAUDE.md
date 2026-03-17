@@ -39,6 +39,10 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | `pnpm turbo build` | Build all packages + Next.js app |
 | `pnpm turbo lint type-check test build` | Full quality gate — run before every commit |
 | `pnpm run seed` | Seed knowledge base into Supabase (needs API keys) |
+| `pnpm supabase:start` | Start local Supabase (Postgres, Auth, Storage, Studio) |
+| `pnpm supabase:stop` | Stop local Supabase |
+| `pnpm supabase:reset` | Reset local DB (re-apply migrations + seed) |
+| `pnpm run setup` | One-command local setup (starts Supabase + installs deps) |
 
 ## Conventions
 
@@ -142,3 +146,15 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Auth:** Email/password + magic links enabled. `@supabase/ssr` for session management.
 - **RLS:** Enabled on all tables. Documents owner-only, analyses/clauses/knowledge_patterns public SELECT. Storage scoped to user folder.
 - **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MASTER_ENCRYPTION_KEY`, `CRON_SECRET`
+
+## Local Development (Supabase CLI)
+
+- **Setup:** `pnpm run setup` (starts Supabase + installs deps) → `cp .env.development .env.local` → add `ANTHROPIC_API_KEY` → `pnpm dev`
+- **Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x
+- **Local ports:** API 54321, Postgres 54322, Studio 54323
+- **Config:** `supabase/config.toml` — project settings, auth, storage bucket
+- **Migrations:** `supabase/migrations/` — 3 files: pgvector extension, consolidated schema (all 5 tables), RLS policies
+- **Seed:** `supabase/seed.sql` — 150 knowledge patterns with pre-computed Voyage AI embeddings (no API key needed)
+- **Env template:** `.env.development` — committed to git with well-known local Supabase keys + dev encryption key. Copy to `.env.local` and add `ANTHROPIC_API_KEY`.
+- **Reset:** `pnpm supabase:reset` re-applies all migrations + seed
+- **DB client:** `packages/db/src/client.ts` uses `{ prepare: false }` — works for both Supabase pooler (production) and direct connection (local)
