@@ -150,12 +150,12 @@ Cross-package deps use pnpm `workspace:*` protocol.
 
 ## Local Development (Supabase CLI)
 
-- **Setup:** `pnpm run setup` (starts Supabase + installs deps) → `cp .env.development .env.local` → add `ANTHROPIC_API_KEY` → `pnpm dev`
+- **Setup:** `pnpm run setup` (starts Supabase + installs deps) → `cp .env.example .env.local` → add `ANTHROPIC_API_KEY` → `pnpm dev`
 - **Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x
 - **Local ports:** API 54321, Postgres 54322, Studio 54323
 - **Config:** `supabase/config.toml` — project settings, auth, storage bucket
 - **Migrations:** `supabase/migrations/` — 4 files: pgvector extension, consolidated schema (all 5 tables), RLS policies, pipeline_metrics table
 - **Seed:** `supabase/seed.sql` — 150 knowledge patterns with pre-computed Voyage AI embeddings (no API key needed)
-- **Env template:** `.env.development` — committed to git with well-known local Supabase keys + dev encryption key. Copy to `.env.local` and add `ANTHROPIC_API_KEY`.
+- **Env template:** `.env.example` — committed to git with well-known local Supabase keys (default) + commented-out production section. Copy to `.env.local` and add `ANTHROPIC_API_KEY`.
 - **Reset:** `pnpm supabase:reset` re-applies all migrations + seed
 - **DB client:** `packages/db/src/client.ts` uses `{ prepare: false }` — works for both Supabase pooler (production) and direct connection (local)

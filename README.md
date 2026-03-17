@@ -100,7 +100,7 @@ pnpm supabase:start
 pnpm supabase:reset
 
 # 4. Configure environment
-cp .env.development .env.local
+cp .env.example .env.local
 # Edit .env.local — add your ANTHROPIC_API_KEY
 
 # 5. Start dev server
@@ -114,11 +114,11 @@ Open [http://localhost:3000](http://localhost:3000). Supabase Studio is at [http
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase API URL (`http://127.0.0.1:54321` locally) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (well-known local dev key in `.env.development`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (well-known local dev key in `.env.development`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (well-known local dev key in `.env.example`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (well-known local dev key in `.env.example`) |
 | `DATABASE_URL` | Yes | Postgres connection string |
 | `NEXT_PUBLIC_APP_URL` | Yes | App URL (`http://localhost:3000` locally) |
-| `MASTER_ENCRYPTION_KEY` | Yes | 32-byte hex key for AES-256-GCM at-rest encryption (dev key in `.env.development`) |
+| `MASTER_ENCRYPTION_KEY` | Yes | 32-byte hex key for AES-256-GCM at-rest encryption (dev key in `.env.example`) |
 | `CRON_SECRET` | Yes | Bearer token for cron endpoint |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key for contract analysis |
 | `VOYAGE_API_KEY` | No | Voyage AI API key (only needed if re-seeding knowledge base via `pnpm run seed`) |

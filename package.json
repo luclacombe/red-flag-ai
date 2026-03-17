@@ -15,7 +15,7 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
-    "setup": "supabase start && pnpm install && echo '\n✔ Supabase is running. Copy .env.development to .env.local and add your API keys:\n  cp .env.development .env.local\n  # Then add ANTHROPIC_API_KEY to .env.local\n  pnpm dev'"
+    "setup": "supabase start && pnpm install && echo '\n✔ Supabase is running. Copy .env.example to .env.local and add your API keys:\n  cp .env.example .env.local\n  # Then add ANTHROPIC_API_KEY to .env.local\n  pnpm dev'"
   },
   "packageManager": "pnpm@10.30.3",
   "devDependencies": {

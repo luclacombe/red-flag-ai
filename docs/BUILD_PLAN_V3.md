@@ -704,7 +704,7 @@ Must pass before committing. No exceptions.
 - [x] Keep existing `pnpm run seed` as the "live" seeding option (calls Voyage API)
 
 #### 8.4 — Environment configuration
-- [x] Create `.env.development` with local Supabase URLs:
+- [x] Create `.env.example` with local Supabase URLs:
   ```
   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
   NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase start output>
@@ -719,7 +719,7 @@ Must pass before committing. No exceptions.
   - `"supabase:start": "supabase start"`
   - `"supabase:stop": "supabase stop"`
   - `"supabase:reset": "supabase db reset"`
-  - `"setup": "supabase start && pnpm install && echo 'Copy .env.development to .env.local and add your API keys'"` — one-command setup
+  - `"setup": "supabase start && pnpm install && echo 'Copy .env.example to .env.local and add your API keys'"` — one-command setup
 - [ ] Verify full flow: `supabase start` → `pnpm dev` → upload PDF → analysis completes
 
 #### 8.6 — README
@@ -733,7 +733,7 @@ Must pass before committing. No exceptions.
 
 #### 8.7 — .gitignore update
 - [x] Ensure `supabase/.temp/` is in `.gitignore` (Supabase CLI temp files)
-- [x] Ensure `.env.local`, `.env.development.local` are gitignored
+- [x] Ensure `.env.local`, `.env.example.local` are gitignored
 
 #### 8.8 — Tests
 - [ ] Verify: `supabase start` → `supabase db reset` → all migrations apply → seed data present (requires Docker Desktop running)
