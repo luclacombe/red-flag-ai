@@ -562,45 +562,45 @@ Must pass before committing. No exceptions.
 
 ### Step 1: Enter plan mode and have a conversation with the user
 
-- [ ] **Enter plan mode** at the start of this session
-- [ ] Review the current UI by using Playwright MCP to screenshot every page/state:
+- [x] **Enter plan mode** at the start of this session
+- [x] Review the current UI by using Playwright MCP to screenshot every page/state:
   - Home page (desktop 1280px + mobile 375px)
   - Upload zone in each state (idle, drag-over, uploading, processing, error)
   - Analysis page during streaming (skeleton cards, partial results)
   - Analysis page when complete (full results with summary)
   - Login page, signup page
-- [ ] Present the screenshots to the user and discuss:
+- [x] Present the screenshots to the user and discuss:
   - What they like / want to keep
   - What they want to change
   - Visual references or design inspiration they have
   - Brand direction (colors, typography, tone)
   - Specific components that need redesign vs. new components needed
-- [ ] Use 21st.dev Magic MCP for component inspiration based on the discussion
-- [ ] Write a detailed UI design spec based on the conversation (save as `docs/UI_SPEC.md`)
-- [ ] Get user approval on the spec before proceeding
-- [ ] **Exit plan mode** and begin implementation
+- [x] Use 21st.dev Magic MCP for component inspiration based on the discussion
+- [x] Write a detailed UI design spec based on the conversation (save as `docs/UI_SPEC.md`)
+- [x] Get user approval on the spec before proceeding
+- [x] **Exit plan mode** and begin implementation
 
 ### Step 2: Implement the redesign
 
-- [ ] Implement the approved design spec
-- [ ] Use 21st.dev Magic for component generation where appropriate
-- [ ] After each major component change, use Playwright to screenshot and verify
-- [ ] Test at both 375px and 1280px breakpoints
-- [ ] Ensure all existing functionality still works (streaming, upload, auth, sharing, PDF export, language selector)
+- [x] Implement the approved design spec
+- [x] Use 21st.dev Magic for component generation where appropriate
+- [x] After each major component change, use Playwright to screenshot and verify
+- [x] Test at both 375px and 1280px breakpoints
+- [x] Ensure all existing functionality still works (streaming, upload, auth, sharing, PDF export, language selector)
 
 ### Step 3: Polish and QA
 
-- [ ] Full Playwright visual QA pass: every page, every state, both breakpoints
-- [ ] Verify animations respect `prefers-reduced-motion`
-- [ ] Check color contrast for accessibility (WCAG AA minimum)
-- [ ] Test the complete user flow: land → upload → stream → results → share → download PDF
+- [x] Full Playwright visual QA pass: every page, every state, both breakpoints
+- [x] Verify animations respect `prefers-reduced-motion`
+- [x] Check color contrast for accessibility (WCAG AA minimum)
+- [x] Test the complete user flow: land → upload → stream → results → share → download PDF
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] UI spec document exists at `docs/UI_SPEC.md`
-- [ ] All pages screenshot-verified at mobile and desktop widths
-- [ ] User approves the final visual result
-- [ ] Documentation updated
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] UI spec document exists at `docs/UI_SPEC.md`
+- [x] All pages screenshot-verified at mobile and desktop widths
+- [x] User approves the final visual result
+- [x] Documentation updated
 
 ---
 

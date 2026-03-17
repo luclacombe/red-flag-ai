@@ -1,313 +1,380 @@
-# RedFlag AI — UI Specification
+# Phase 6: UI Overhaul — Implementation Plan
 
-> Companion to `BUILD_PLAN.md` phases 4 + 5. This document defines what to build.
-> Design tokens and rules: `design-system/redflag-ai/MASTER.md`
-> Page-specific overrides: `design-system/redflag-ai/pages/`
+## Context
 
-## How to Use This Spec
+The current RedFlag AI UI is functional but static, plain, and lacks the visual energy expected of an AI-powered product. Key problems:
+- **Dead time everywhere**: gaps between upload completion and processing, between clause detection and analysis, etc.
+- **Summary panel buried**: risk score sits below all clause cards — users must scroll through everything first
+- **Analysis page is a vertical card stack**: no document context, no visual connection between clauses and their source text
+- **Hero section has issues**: background paths too thin/harsh angles, text shimmer misused, harsh color transition to white
+- **Auth pages disconnected**: bare white cards with no brand personality
+- **Streaming too chunky**: whole clause analysis appears at once instead of streaming progressively
 
-This spec is **guidance, not gospel.** During implementation:
+## Core Design Philosophy: Constant Stimulation
 
-1. **Use the UI/UX Pro Max skill** — run `--domain ux`, `--domain style`, etc. for specific decisions. The skill script lives at `.claude/skills/ui-ux-pro-max-skill/src/ui-ux-pro-max/scripts/search.py`.
-2. **Use the Magic MCP** (`mcp__magic__21st_magic_component_inspiration` / `mcp__magic__21st_magic_component_builder`) when you need component ideas or want to search 21st.dev.
-3. **Fetch 21st.dev component code** — URLs are provided below. Fetch the actual source code via WebFetch, then adapt it. Do NOT guess or recreate from memory/descriptions.
-4. **Modify the spec** if something doesn't work in practice — update this file and the page override files when you deviate. Keep them as the source of truth for what was actually built.
-5. **Run the pre-delivery checklist** in `MASTER.md` before considering UI work done.
+**There must never be a moment where the user sees nothing happening.** Every processing step — upload validation, clause detection, clause analysis, summary generation — must have continuous visual feedback: animations, streaming text, shimmer effects, status updates, thinking indicators.
 
----
-
-## Design Direction
-
-**Bold + Warm.** Protective, confident, not vibe-coded.
-
-- **Style:** Flat Design base. Bold Typography on the hero. No gradients, no glassmorphism.
-- **Color:** Hybrid dark/light. Dark nav + hero (slate-900), light content (slate-50).
-- **Typography:** Space Grotesk (headings) + DM Sans (body). Technical authority + human warmth.
-- **Accent:** Amber/gold for CTAs and positive actions. Red reserved ONLY for risk indicators.
-- **Animations:** Functional only. Card stagger entrance, score count-up, fade transitions. No springs or bouncing on content. One bold moment: animated background paths on hero.
-- **Hero accent:** Animated flowing SVG ribbons in risk colors (red/amber/green) — geometric, on-brand, distinctive.
+**UI/UX Pro Max guidelines confirm this (severity: HIGH):**
+- "Show spinner/skeleton for operations > 300ms" — any wait over 300ms needs visual feedback
+- "Stream text response token by token" — never show a loading spinner for 10s+
+- "Use skeleton screens or spinners" — leave no UI frozen with no feedback
+- "Step indicators or progress bar" — show progress for multi-step processes
 
 ---
 
-## Fonts Setup
+## Landing Page
 
-Install via `next/font/google` (not CSS import — better performance):
+### Hero Section
 
-```typescript
-// apps/web/app/fonts.ts
-import { Space_Grotesk, DM_Sans } from 'next/font/google'
+**Layout:** Full-viewport height, single consistent background color throughout the page (dark slate-950 or neutral-950 — no harsh white transition).
 
-export const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-heading',
-  weight: ['500', '600', '700'],
-})
+**Background Paths (redesigned):**
+- **3-6 thick ribbons** (not 36 thin lines) — like highlighters or flags
+- Colors: red, amber, green (the risk colors) at ~30-40% opacity
+- **Smooth bezier curves** — no hard angles. Organic, flowing paths
+- Stroke width: 40-80px (not 0.5-2px like current)
+- **Extend through entire page** — not clipped at hero bottom. Ribbons flow from top through upload section and beyond
+- Animate with slow, continuous motion (20-30s loops)
+- `prefers-reduced-motion`: static, subtle gradient overlay instead
 
-export const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-body',
-  weight: ['400', '500', '600'],
-})
+**Headline:**
 ```
-
-Wire into Tailwind v4 via CSS variables in `app/globals.css`:
-```css
-@theme {
-  --font-heading: var(--font-heading);
-  --font-body: var(--font-body);
-}
+Find the red flags in your
+[rental contracts]     ← sliding words, cycling every 2.5s
 ```
+- Large display text (6xl mobile, 8xl desktop)
+- **Sliding words** cycle through: "rental contracts", "lease agreements", "NDAs", "freelance contracts", "employment agreements"
+- Spring animation with vertical slide (from animated-hero reference)
+- Words colored with a subtle gradient or the amber accent
+
+**Subtitle:** Plain text, no shimmer (shimmer is reserved for AI-thinking states)
+
+**CTA button:** "Upload your contract ↓" — scrolls to upload zone
+
+### Upload Zone
+
+**Integrated into the page flow** — not a separate white section. Sits within the same background with the ribbons flowing behind it.
+
+**Design:** Inspired by 21st.dev file upload reference:
+- Rounded container with subtle glassmorphism/frosted glass effect
+- Drag-over state: blue ring glow, scale up, "Drop files here" with animated icon
+- **Upload progress**: animated progress bar with spring physics
+- **Post-upload processing**: immediately transition to a "Processing..." state:
+  - File preview card (filename, size, type icon) stays visible
+  - Animated spinner or thinking indicator
+  - Text shimmer: "Checking document type..." → "Extracting text..." → "Running relevance check..."
+  - **No dead time** — even if the backend is fast, show at least a brief animation
+
+**Language selector:** Globe icon + styled select, integrated below or beside the upload zone.
+
+### How It Works
+
+- 3 steps with icons, positioned **below** the upload zone
+- Horizontally on desktop, vertically on mobile
+- Consider subtle scroll-reveal animations (fade up as they enter viewport)
+
+### Footer / Legal Disclaimer
+
+- Same as current but styled to match the dark background
+- Privacy Policy + Terms of Service links
 
 ---
 
-## Components Inventory
+## Analysis Page — The Big Redesign
 
-### Phase 4 Components (Landing + Upload)
-
-| Component | Source | Notes |
-|-----------|--------|-------|
-| `NavBar` | Custom | Dark bg, logo text, minimal. No hamburger needed. |
-| `BackgroundPaths` | Adapted from 21st.dev `kokonutd/background-paths` | Thick, translucent flowing SVG ribbons in red/amber/green. Hero background only. Modified: fewer paths (~12-18), thicker strokes (2-4px), risk colors with low opacity. |
-| `HeroSection` | Custom | Dark bg, BackgroundPaths behind, bold Space Grotesk headline, CTA anchors to upload. |
-| `TextShimmer` | Adapted from 21st.dev `motion-primitives/text-shimmer` | Subtle shimmer on hero subheadline or status bar text. Adds polish without being flashy. |
-| `UploadZone` | Custom (native HTML5) | Drag-drop + file input. NO react-dropzone. |
-| `UploadProgress` | Custom | Filename, size, progress bar during upload. |
-| `ProcessingLoader` | Adapted from 21st.dev `erikx/loader` (dots variant) | Bouncing dots shown during gate check after upload. "Checking document..." |
-| `UploadError` | Custom | Inline error message below zone with retry. |
-| `HowItWorks` | Custom | 3 steps with Lucide icons. Numbered. |
-| `LegalDisclaimer` | Custom | Footer text. Not dismissable. |
-| `RiskBadge` | Adapted from 21st.dev `arihantcodes/status-badge` | Lucide icon + colored bg pill. 3 risk variants: red (AlertTriangle), yellow (TriangleAlert), green (CircleCheck). |
-
-### Phase 5 Components (Results + Polish)
-
-| Component | Source | Notes |
-|-----------|--------|-------|
-| `ClauseCard` | Custom | 4px left border, collapsible text, expandable rewrite. |
-| `ClauseSkeleton` | Custom | Pulse animation matching ClauseCard shape. |
-| `StatusBar` | Custom | Blue bar below nav showing pipeline step. |
-| `RiskScore` | Adapted from 21st.dev `magicui/animated-circular-progress-bar` | SVG circular gauge. CSS-driven animation (no motion library). Color shifts by score range: 0-33 green, 34-66 amber, 67-100 red. Animated count-up on appearance. |
-| `RecommendationBadge` | Custom | Large pill: "Safe to Sign" / "Caution" / "Do Not Sign". |
-| `BreakdownBar` | Custom | Horizontal stacked bar showing red/yellow/green counts. |
-| `SummaryPanel` | Custom | Composed: RiskScore + RecommendationBadge + BreakdownBar + concerns list. |
-| `ErrorState` | Custom | Friendly error display with retry CTA. |
-| `NotFoundState` | Custom | Simple "not found" with home link. |
-
-### shadcn/ui Components to Install
-
-```bash
-npx shadcn@latest add badge button card collapsible separator skeleton
-```
-
-These provide the accessible primitives. All styling overridden via Tailwind to match our design system.
-
----
-
-## Page Specifications
-
-### Landing Page (`/`)
-
-See: `design-system/redflag-ai/pages/landing.md` for full layout.
-
-**Section order:**
-1. Nav bar (dark)
-2. Hero (dark bg, bold headline, CTA button)
-3. Upload zone (light bg, dashed border, drag-drop)
-4. How it works (3 steps with icons)
-5. Footer with legal disclaimer
-
-**Key interactions:**
-- Upload CTA in hero anchors smoothly to upload section
-- Upload zone handles: drag-over, file validation, upload progress, gate result
-- Rejection shows inline (not a modal) with the reason from the gate agent
-- Success navigates to `/analysis/[id]` via `router.push()`
-- Rate limit shows friendly message with when they can try again
-
-**Mobile (375px):**
-- Hero: stack vertically, reduce headline to `text-3xl`
-- Upload zone: full-width with less padding
-- How it works: vertical stack (not 3-column grid)
-
-### Analysis Page (`/analysis/[id]`)
-
-See: `design-system/redflag-ai/pages/analysis.md` for full layout.
-
-**Dual-path rendering:**
-1. If status is `complete` → load from DB, render all cards immediately
-2. If status is `pending`/`processing` → subscribe to SSE, stream cards
-
-**Section order:**
-1. Nav bar (dark, with contract type badge)
-2. Status bar (blue, shows pipeline step — only during streaming)
-3. Clause cards (vertical stack, max-w-3xl, centered)
-4. Loading skeletons (during streaming, below last real card)
-5. Summary panel (appears after all clauses)
-6. Legal disclaimer (persistent at bottom)
-
-**Streaming UX:**
-- Each clause card fades in + slides up (200ms, 30ms stagger)
-- 2-3 skeleton cards visible below the last rendered card
-- Status bar text updates with each pipeline stage
-- Summary panel fades in as the final element
-- Score gauge animates count-up when summary appears
-
-**Key interactions:**
-- Clause text is collapsible if > 3 lines (show "Show more" toggle)
-- Safer alternative is in a collapsible section (chevron toggle)
-- On page refresh after completion: render from DB, no animation
-
----
-
-## Streaming Animation Spec
+### Overall Layout (Desktop)
 
 ```
-Time 0s     Status bar: "Parsing contract..."
-Time ~3s    Status bar: "Found 16 clauses. Analyzing..."
-Time ~4s    Card 1 fades in (200ms ease-out)
-Time ~4.03s Card skeleton 1 visible below
-Time ~6s    Card 2 fades in, skeleton shifts down
-...
-Time ~45s   Last card fades in
-Time ~46s   Status bar: "Generating summary..."
-Time ~48s   Summary panel fades in, gauge animates 0→72
-Time ~49s   Status bar fades out
+┌─────────────────────────────────────────────────────┐
+│  NavBar                              [Share] [PDF]  │
+├──────────────────────┬──────────────────────────────┤
+│                      │                              │
+│   Document Panel     │    Analysis Panel            │
+│   (scrollable)       │    (scrollable, synced)      │
+│                      │                              │
+│   Rendered text      │    Summary (top, sticky?)    │
+│   with highlighted   │    ─────────────────────     │
+│   clauses            │    Clause 1 analysis card    │
+│   ┌──────────┐       │    ┌────────────────────┐    │
+│   │ Clause 1 │───────│───▶│ Risk + explanation │    │
+│   └──────────┘       │    └────────────────────┘    │
+│   ┌──────────┐       │    Clause 2 analysis card    │
+│   │ Clause 2 │───────│───▶│ ...                │    │
+│   └──────────┘       │    └────────────────────┘    │
+│   ...                │    ...                       │
+│                      │                              │
+└──────────────────────┴──────────────────────────────┘
 ```
 
-Skeletons: always show 2-3 below the last real card. As new cards arrive, the top skeleton gets replaced, and a new one appears at the bottom. When the last card arrives, all skeletons fade out.
+- **Left panel (50-55%):** Document text rendered in a clean, readable format. Each clause highlighted with background color. Alternating subtle shades for clause boundaries (even when all green). Clause numbers displayed.
+- **Right panel (45-50%):** Summary panel at top (risk score, recommendation, breakdown). Below: clause analysis cards aligned to their corresponding highlighted text. Connecting lines from clause highlight to analysis card.
+- **Scroll sync:** Both panels scroll together or semi-independently with the connecting lines maintaining alignment.
+
+### Overall Layout (Mobile ≤768px)
+
+Side-by-side doesn't work. **Tap-to-expand inline** approach:
+- Single column with document text and clause highlights
+- **Tapping a highlighted clause** expands its analysis card inline directly below the clause text
+- Tapping again (or another clause) collapses it
+- Summary panel at top (scrollable, not sticky)
+- Red/yellow risk clauses auto-expand on load (consistent with desktop behavior)
+
+### Streaming UX — Step by Step
+
+This is the critical flow. Every moment must have visual feedback.
+
+#### Step 1: Upload Complete → Redirect
+
+After upload succeeds, redirect to `/analysis/[id]`. The page loads in "processing" state.
+
+**What the user sees:**
+- NavBar
+- Processing indicator: animated thinking block (inspired by agent-plan reference)
+  - Shimmer text: "Analyzing your contract..."
+  - Steps appearing: "Checking document relevance..." ✓ → "Identifying clauses..."
+  - Spinner or animated dots
+
+#### Step 2: Document Text Appears
+
+**New SSE event needed:** `document_text` — sends the full extracted text to the frontend immediately after the gate passes.
+
+**What the user sees:**
+- Left panel: Document text fades in, styled as a clean document
+- Subtle shimmer overlay on the entire document: "Identifying clauses..."
+- Right panel: skeleton/loading state
+
+#### Step 3: Clauses Detected
+
+**Existing SSE event:** `clause_positions` — already sends positions. We enhance it.
+
+**What the user sees:**
+- Document text gets clause highlights applied — alternating gray shades initially
+- Each clause gets a number badge (①, ②, ③...)
+- Brief stagger animation — clauses highlight one by one (fast, 50ms each)
+- Right panel: skeleton cards appear for each clause (matching count)
+- Status text updates: "Found N clauses. Analyzing..."
+
+#### Step 4: Clause Analysis Streaming
+
+**Current behavior:** Complete clause analysis arrives at once per clause.
+**Enhanced behavior:** Each clause analysis card appears as its `report_clause` tool call completes. But during analysis:
+
+**What the user sees for each clause being analyzed:**
+- Left panel: the active clause's highlight **shimmers** (animated gradient overlay)
+- Right panel: the corresponding card shows a thinking state:
+  - Spinner + "Analyzing clause N..."
+  - Text shimmer effect on placeholder text
+- When complete:
+  - Left panel: highlight transitions to final risk color (red/amber/green) with a brief flash animation
+  - Right panel: analysis card content fades/slides in — risk badge, category, explanation
+  - Connecting line draws from clause to card
+  - For green (low risk) clauses: card is compact (1 line explanation)
+  - For yellow/red (risky) clauses: full explanation + collapsible safer alternative
+
+**Progress:** Determinate progress indicator: "Analyzed 3 of 12 clauses"
+
+#### Step 5: Summary Appears
+
+After all clauses analyzed, summary panel animates in at the top of the right panel:
+- **Smooth scroll to top** — page scrolls up to reveal the summary
+- Risk score gauge animates from 0 to final value
+- Recommendation badge fades in
+- Breakdown bar fills
+- Top concerns list items stagger in
+- Summary is at the top of the right panel, **not sticky** — it scrolls with content
+
+#### Step 6: Complete State
+
+- All clause highlights have final colors
+- All analysis cards populated
+- Summary visible at top right
+- Share + Download PDF buttons appear
+- Connecting lines visible on hover or always (need to decide)
+
+### Connecting Lines
+
+SVG-based lines drawn between clause highlights (left panel) and analysis cards (right panel):
+- Thin lines (1-2px) in the clause's risk color (muted)
+- **Red/yellow (risky) clauses:** Lines and expanded cards are **always visible** — risky clauses demand attention
+- **Green (low risk) clauses:** Lines appear on **hover**, click to **pin** them visible
+- Lines update position on scroll (use ResizeObserver + scroll listeners)
+
+### Clause Interaction
+
+**Hover on clause highlight (left panel):**
+- Clause highlight intensifies
+- Corresponding analysis card gets a glow/border highlight
+- Connecting line appears (if not already visible)
+
+**Click on clause highlight:**
+- Analysis card scrolls into view on right panel (if not visible)
+- Card expands to show full details
+- Line persists (pinned)
+
+**Hover on analysis card (right panel):**
+- Corresponding clause highlight intensifies in document
+- Line appears (if not already visible)
+
+**Click on analysis card:**
+- Scrolls the document panel to bring the clause into view
+- Line persists (pinned)
+
+### Document Panel Styling
+
+- White/light background (paper-like) in a contained card/panel
+- Clean typography (the body font, DM Sans)
+- Comfortable line height and spacing
+- Clause highlights: subtle background colors
+  - Analyzing: animated shimmer (gray gradient sweep)
+  - Green: `bg-green-100/60` with `border-l-2 border-green-500`
+  - Yellow: `bg-amber-100/60` with `border-l-2 border-amber-500`
+  - Red: `bg-red-100/60` with `border-l-2 border-red-500`
+  - Between clauses: normal text (no highlight)
+- Clause numbers: small badge in the left margin
 
 ---
 
-## Risk Color Mapping
+## Auth Pages (Login / Signup)
 
-Used consistently everywhere — badges, card borders, gauge, breakdown bar:
-
-| Risk Level | Label | Border | Badge BG | Badge Text | Badge Border |
-|------------|-------|--------|----------|------------|--------------|
-| `red` | "High Risk" | `border-l-red-600` | `bg-red-50` | `text-red-700` | `border-red-200` |
-| `yellow` | "Caution" | `border-l-amber-600` | `bg-amber-50` | `text-amber-700` | `border-amber-200` |
-| `green` | "Low Risk" | `border-l-green-600` | `bg-green-50` | `text-green-700` | `border-green-200` |
+- Same dark background as main page (consistency)
+- Background paths visible behind the auth card (same ribbons, more subtle)
+- Card: frosted glass effect, rounded, with the RedFlag AI logo
+- Consistent with the rest of the product's visual language
 
 ---
 
-## 21st.dev Component References
+## Design System (informed by UI/UX Pro Max skill)
 
-**IMPORTANT:** Do NOT guess or recreate this code from descriptions. Fetch the actual source from the URL, then modify it.
+**Style foundation:** Trust & Authority + Minimalism (recommended for Legal Services by UI/UX Pro Max). Blended with modern SaaS energy since this is an AI-powered product, not a traditional law firm.
 
-### How to fetch
+### Color System
 
-Use `WebFetch` on each URL to get the component code, then adapt it to our design system. The URLs return component source code in markdown format.
+**Dark foundation, light content panels.** Authority navy + trust gold — the industry-validated palette for legal tech.
 
-### Components
+| Token | Light Value | Dark Value | Usage |
+|-------|-------------|------------|-------|
+| Background | `#F8FAFC` | `#0B1120` | Page bg (dark used for hero, nav, auth) |
+| Surface | `#FFFFFF` | `#131B2E` | Document panel, cards, upload zone |
+| Surface glass | `white/80 blur` | `white/5 blur` | Frosted overlays |
+| Primary | `#1E3A8A` | `#3B82F6` | Trust navy / links, interactive |
+| Accent / CTA | `#F59E0B` | `#F59E0B` | Gold — authority, action (CTAs, progress) |
+| Text primary | `#0F172A` | `#F1F5F9` | Body text |
+| Text secondary | `#64748B` | `#94A3B8` | Muted text |
+| Border | `#E2E8F0` | `#1E293B` | Dividers, card borders |
+| Ring / focus | `#2563EB` | `#3B82F6` | Focus states, interactive |
+| Risk red | `#DC2626` | `#EF4444` | High risk |
+| Risk amber | `#D97706` | `#F59E0B` | Caution |
+| Risk green | `#16A34A` | `#22C55E` | Low risk / safe |
+| Destructive | `#DC2626` | `#EF4444` | Error states |
 
-#### 1. BackgroundPaths (Hero background)
-- **URL:** `https://21st.dev/community/components/kokonutd/background-paths/default`
-- **Use in:** `HeroSection` on landing page
-- **Modifications needed:**
-  - Reduce paths from 36 to ~12-18 (performance)
-  - Increase stroke width from 0.5px to 2-4px (thicker ribbons)
-  - Replace `currentColor` strokes with risk colors: `rgba(220,38,38,0.12)` (red), `rgba(245,158,11,0.12)` (amber), `rgba(22,163,74,0.12)` (green)
-  - Remove the spring letter animation on the title (we do our own headline)
-  - Remove the glassmorphic button (we do our own CTA)
-  - Add `prefers-reduced-motion` check — show static paths when motion is reduced
-  - Keep the `FloatingPaths` SVG animation logic, discard the rest
+**Key from UI/UX Pro Max:** "Authority navy + trust gold" palette. CTA uses amber/gold (#F59E0B) — not blue. Blue is for trust/links, gold is for action.
 
-#### 2. TextShimmer (Status bar text)
-- **URL:** `https://21st.dev/community/components/motion-primitives/text-shimmer/default`
-- **Use in:** `StatusBar` on analysis page during streaming
-- **Modifications needed:**
-  - Slow duration to ~3s (less flashy)
-  - Set colors to match our blue status bar (`--base-color: slate-400`, `--base-gradient-color: blue-800`)
-  - Add `prefers-reduced-motion` check — render plain text when motion is reduced
+### Typography
 
-#### 3. Animated Circular Progress Bar (Risk score gauge)
-- **URL:** `https://21st.dev/magicui/animated-circular-progress-bar/default`
-- **Use in:** `RiskScore` in `SummaryPanel` on analysis page
-- **Modifications needed:**
-  - Dynamic `gaugePrimaryColor` based on score range: 0-33 green-600, 34-66 amber-600, 67-100 red-600
-  - `gaugeSecondaryColor`: `slate-200`
-  - Size: 120px
-  - Show score number centered inside
-  - CSS-only animation (no `motion` dependency — this component uses CSS transitions natively)
+Keep current fonts — confirmed as strong by UI/UX Pro Max searches:
 
-#### 4. Status Badge (Risk badges)
-- **URL:** `https://21st.dev/arihantcodes_1f7b8c4d/status-badge/default`
-- **Use in:** `RiskBadge` throughout analysis page
-- **Modifications needed:**
-  - Map to 3 risk levels only: High Risk (red, AlertTriangle icon), Caution (amber, TriangleAlert icon), Low Risk (green, CircleCheck icon)
-  - Use our risk color tokens from MASTER.md (bg-red-50 + text-red-700 etc.)
-  - Change shape from `rounded-xl` to `rounded-full` for inline pill style
-  - Reduce width from fixed `w-40` to auto-width `px-3 py-1`
+| Role | Font | Weights | Notes |
+|------|------|---------|-------|
+| Headings | **Space Grotesk** | 500, 600, 700 | Geometric, modern, distinctive. UI/UX Pro Max: "geometric modern" category. |
+| Body | **DM Sans** | 400, 500, 600 | Humanist, highly readable. Good contrast with geometric headings. |
+| Mono (optional) | **JetBrains Mono** | 400 | For clause numbers, stats, code-like data. Consider adding. |
 
-#### 5. Loader (Processing dots)
-- **URL:** `https://21st.dev/erikx/loader/default`
-- **Use in:** Upload zone during gate check ("Checking document...")
-- **Modifications needed:**
-  - Use only the dots/typing variant — ignore other 11 variants
-  - Match our color tokens (amber-500 dots on light background)
-  - Keep it pure CSS (no motion library)
-  - Small size, inline with "Checking document..." text
+### Pre-Delivery Checklist (from UI/UX Pro Max)
+
+- [ ] No emojis as icons — use Lucide SVGs (already in place)
+- [ ] `cursor-pointer` on all clickable elements
+- [ ] Hover states with smooth transitions (150-300ms)
+- [ ] Text contrast 4.5:1 minimum (WCAG AA), aim for 7:1 (AAA) on critical text
+- [ ] Focus states visible for keyboard navigation (3-4px ring)
+- [ ] `prefers-reduced-motion` respected on ALL animations
+- [ ] Responsive breakpoints: 375px, 768px, 1024px, 1280px
+- [ ] Touch targets ≥ 44x44px on mobile
+- [ ] Avoid AI purple/pink gradients (anti-pattern for legal services per UI/UX Pro Max)
 
 ---
 
-## Dependencies
+## Animation System
 
-### Required for UI phases
+| Animation | Where | Implementation |
+|-----------|-------|---------------|
+| Background paths (ribbons) | Hero, auth pages | `motion` — thick SVG paths, slow continuous loop |
+| Sliding words | Hero headline | `motion` — spring vertical slide, 2.5s interval |
+| Text shimmer | Processing states, thinking indicators | `motion` — gradient sweep (from reference) |
+| Upload progress | Upload zone | CSS transition + spring physics |
+| Processing steps | Post-upload, pre-analysis | Staggered fade-in, checkmarks, spinners |
+| Clause highlight shimmer | Active clause being analyzed | CSS animation — gradient sweep on background |
+| Clause color transition | When analysis completes | CSS transition (300ms ease) |
+| Card content reveal | Analysis card population | `motion` — fade + slide up |
+| Risk score gauge | Summary panel | CSS animation — stroke-dasharray |
+| Line drawing | Connecting lines | SVG path animation |
+| Scroll-reveal | How it works, page sections | Intersection Observer + fade up |
 
-```bash
-# In apps/web
-pnpm add motion    # Lightweight successor to framer-motion (~15KB). Used for BackgroundPaths + TextShimmer on landing page ONLY.
-```
-
-### NOT to use
-
-- `react-dropzone` — native HTML5 drag-drop is ~30 lines
-- `framer-motion` — use `motion` instead (lighter, same API)
-- `chart.js` or `recharts` — the breakdown bar and gauge are simple SVG, no charting library needed
-- Any component that adds glassmorphism or blur effects
-- Dark mode toggle — single theme for MVP
-
-### Scope of `motion` usage
-
-`motion` is used ONLY in two landing page components:
-1. `BackgroundPaths` — animated SVG path drawing
-2. `TextShimmer` — subtle gradient text animation
-
-The analysis page uses CSS animations only (`animate-pulse` for skeletons, CSS transitions for card entrance, CSS `@keyframes` for gauge count-up). This keeps the analysis page fast and dependency-light.
+All animations: `prefers-reduced-motion` → instant/static fallback.
 
 ---
 
-## Accessibility Checklist (from UI/UX Pro Max)
+## New SSE Events Needed
 
-### Critical (must have)
-- [ ] Color contrast ≥ 4.5:1 for all text
-- [ ] Risk information conveyed by icon + text, not color alone
-- [ ] Focus rings visible on all interactive elements
-- [ ] Keyboard navigation works: tab through upload zone, cards, toggles
-- [ ] `aria-live` region for status bar messages (screen reader announces pipeline progress)
-- [ ] `aria-expanded` on collapsible clause text and safer alternative sections
-- [ ] Upload zone: `role="button"` with keyboard activation (Enter/Space)
-- [ ] Skip link to main content
+| Event | When | Payload | Purpose |
+|-------|------|---------|---------|
+| `document_text` | After gate passes | `{ text: string }` | Frontend renders document in left panel |
+| `clause_analyzing` | Before each clause analysis | `{ clauseIndex: number }` | Trigger shimmer on active clause |
 
-### High (should have)
-- [ ] `prefers-reduced-motion`: disable card stagger animation, score count-up
-- [ ] Min touch target 44x44px on all interactive elements
-- [ ] Error messages associated with upload zone via `aria-describedby`
-- [ ] Heading hierarchy: h1 (page title) → h2 (sections) → h3 (card titles)
+The existing `clause_positions`, `clause_analysis`, `summary`, `status` events are sufficient for the rest.
 
 ---
 
-## Visual QA Plan (Phase 5)
+## Files to Modify
 
-Use Playwright MCP to screenshot every state:
+### New Components
+- `apps/web/src/components/document-panel.tsx` — Rendered document with clause highlights
+- `apps/web/src/components/analysis-sidebar.tsx` — Right panel with summary + clause cards
+- `apps/web/src/components/connecting-lines.tsx` — SVG lines between panels
+- `apps/web/src/components/processing-steps.tsx` — Post-upload processing animation
+- `apps/web/src/components/sliding-words.tsx` — Hero animated text
 
-1. Landing — desktop (1440px)
-2. Landing — mobile (375px)
-3. Landing — upload drag-over state
-4. Landing — upload error state (wrong file type)
-5. Landing — upload rejection (not a contract)
-6. Analysis — streaming in progress (3 cards + skeletons)
-7. Analysis — complete with mixed red/yellow/green
-8. Analysis — all green clauses
-9. Analysis — error state (pipeline failed)
-10. Analysis — 404 not found
+### Modified Components
+- `apps/web/src/components/hero-section.tsx` — Complete redesign
+- `apps/web/src/components/background-paths.tsx` — Thick ribbons, fewer paths
+- `apps/web/src/components/upload-zone.tsx` — Polished with preview + processing states
+- `apps/web/src/components/analysis-view.tsx` — Side-by-side layout, new streaming UX
+- `apps/web/src/components/clause-card.tsx` — Adapt for sidebar context
+- `apps/web/src/components/summary-panel.tsx` — Move to top of right panel
+- `apps/web/src/components/nav-bar.tsx` — Consistent with dark theme
+- `apps/web/src/components/status-bar.tsx` — Integrated into processing flow
+- `apps/web/src/components/text-shimmer.tsx` — Update to motion-primitives version
+- `apps/web/app/globals.css` — New animations, color tokens
+- `apps/web/app/login/page.tsx` — Redesign with brand consistency
+- `apps/web/app/signup/page.tsx` — Same treatment
 
-Review each screenshot against MASTER.md checklist before shipping.
+### Backend Changes
+- `packages/agents/src/orchestrator.ts` — Emit `document_text` and `clause_analyzing` events
+- `packages/api/src/routers/analysis.ts` — Forward new events in SSE stream
+- `packages/shared/src/schemas/events.ts` — Add new event schemas
+
+---
+
+## Implementation Order
+
+1. **Global: color system, backgrounds, nav** — Set the dark theme foundation
+2. **Hero section** — Sliding words + redesigned background paths
+3. **Upload zone** — Polished design + processing states
+4. **Auth pages** — Match new design language
+5. **Backend: new SSE events** — `document_text`, `clause_analyzing`
+6. **Analysis page: document panel** — Render text with clause highlights
+7. **Analysis page: analysis sidebar** — Summary at top + clause cards
+8. **Analysis page: connecting lines** — SVG connectors
+9. **Analysis page: streaming UX** — Shimmer, transitions, progress
+10. **Mobile responsive** — Stacked layout fallback
+11. **Polish + QA** — Full Playwright screenshot pass, reduced-motion, flow test
+
+---
+
+## Verification
+
+1. `pnpm turbo lint type-check test build` — must pass
+2. Playwright screenshots at 375px + 1280px for every page and state
+3. Complete user flow test: land → upload → stream → results → share → download PDF
+4. `prefers-reduced-motion` check on all animations
+5. Auth flow: login → home → upload → analysis (with auth context)
+6. Reconnect scenario: refresh during streaming → resumes correctly
