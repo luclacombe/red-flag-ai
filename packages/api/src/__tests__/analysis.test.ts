@@ -290,10 +290,14 @@ describe("analysis.stream", () => {
         return { from: () => ({ where: () => Promise.resolve([analysis]) }) };
       }
       if (callCount === 2) {
+        // Access check — anonymous document (userId null)
+        return { from: () => ({ where: () => Promise.resolve([{ userId: null }]) }) };
+      }
+      if (callCount === 3) {
         // Initial existing clauses check (empty)
         return { from: () => ({ where: () => ({ orderBy: () => Promise.resolve([]) }) }) };
       }
-      if (callCount === 3) {
+      if (callCount === 4) {
         // First poll → complete
         return { from: () => ({ where: () => Promise.resolve([completedAnalysis]) }) };
       }

@@ -20,9 +20,12 @@ vi.mock("@redflag/db", () => ({
     overallRiskScore: "analyses.overall_risk_score",
     recommendation: "analyses.recommendation",
     documentId: "analyses.document_id",
+    isPublic: "analyses.is_public",
+    shareExpiresAt: "analyses.share_expires_at",
   },
   documents: {
     id: "documents.id",
+    userId: "documents.user_id",
     contractType: "documents.contract_type",
     filename: "documents.filename",
   },
@@ -76,20 +79,25 @@ describe("generateMetadata", () => {
   });
 
   it("returns dynamic metadata for a complete analysis", async () => {
-    // First call: analyses
+    // First call: analyses (with share fields)
     const analysisCall = [
       {
         status: "complete",
         overallRiskScore: 72,
         recommendation: "do_not_sign",
         documentId: "doc-1",
+        isPublic: false,
+        shareExpiresAt: null,
       },
     ];
 
-    // Second call: documents
+    // Second call: owner check (anonymous upload — userId null)
+    const ownerCall = [{ userId: null }];
+
+    // Third call: documents
     const docCall = [{ contractType: "residential_lease", filename: "lease.pdf" }];
 
-    // Third call: clauses
+    // Fourth call: clauses
     const clauseCall = [
       { riskLevel: "red" },
       { riskLevel: "red" },
@@ -104,7 +112,8 @@ describe("generateMetadata", () => {
     mockWhere.mockImplementation(() => {
       callCount++;
       if (callCount === 1) return Promise.resolve(analysisCall);
-      if (callCount === 2) return Promise.resolve(docCall);
+      if (callCount === 2) return Promise.resolve(ownerCall);
+      if (callCount === 3) return Promise.resolve(docCall);
       return Promise.resolve(clauseCall);
     });
 

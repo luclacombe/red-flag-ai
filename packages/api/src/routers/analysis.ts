@@ -1,11 +1,18 @@
 import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
-import { type ClauseAnalysis, logger } from "@redflag/shared";
+import { type ClauseAnalysis, logger, SHARE_LINK_EXPIRY_DAYS } from "@redflag/shared";
 import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
 import { createClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
+
+/** Check if a shared analysis is currently accessible */
+function isShareActive(analysis: { isPublic: boolean; shareExpiresAt: Date | null }): boolean {
+  if (!analysis.isPublic) return false;
+  if (analysis.shareExpiresAt && analysis.shareExpiresAt < new Date()) return false;
+  return true;
+}
 
 /** 90 seconds — fast recovery from dead functions while heartbeat keeps active ones alive */
 const STALE_THRESHOLD_MS = 90 * 1000;
@@ -92,7 +99,7 @@ export const analysisRouter = router({
         responseLanguage: z.string().optional().default("en"),
       }),
     )
-    .subscription(async function* ({ input }) {
+    .subscription(async function* ({ input, ctx }) {
       const db = getDb();
 
       logger.info("SSE subscription started", { analysisId: input.analysisId });
@@ -107,6 +114,26 @@ export const analysisRouter = router({
         logger.warn("Analysis not found", { analysisId: input.analysisId });
         yield { type: "error" as const, message: "Analysis not found.", recoverable: false };
         return;
+      }
+
+      // Access check: owner always has access, others need active share link
+      {
+        const ownerRows = await db
+          .select({ userId: documents.userId })
+          .from(documents)
+          .where(eq(documents.id, analysis.documentId));
+        const owner = ownerRows[0];
+        const isOwner = owner?.userId != null && ctx.user?.id === owner.userId;
+        const isAnonymous = owner?.userId == null;
+
+        if (!isOwner && !isAnonymous && !isShareActive(analysis)) {
+          yield {
+            type: "error" as const,
+            message: "This analysis is not shared.",
+            recoverable: false,
+          };
+          return;
+        }
       }
 
       logger.info("Analysis status", { analysisId: input.analysisId, status: analysis.status });
@@ -411,7 +438,7 @@ export const analysisRouter = router({
    */
   get: publicProcedure
     .input(z.object({ analysisId: z.string().uuid() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = getDb();
 
       const analysisRows = await db
@@ -422,12 +449,20 @@ export const analysisRouter = router({
 
       if (!analysis) return null;
 
-      // Fetch document for extractedText + fileType
+      // Fetch document for extractedText + fileType + ownership
       const docRows = await db
         .select()
         .from(documents)
         .where(eq(documents.id, analysis.documentId));
       const doc = docRows[0];
+
+      // Access check: owner always has access, others need active share link
+      const isOwner = doc?.userId != null && ctx.user?.id === doc.userId;
+      const isAnonymous = doc?.userId == null;
+
+      if (!isOwner && !isAnonymous && !isShareActive(analysis)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "This analysis is not shared." });
+      }
 
       const clauseRows = await db
         .select()
@@ -469,6 +504,67 @@ export const analysisRouter = router({
         extractedText,
         fileType,
         clauses: decryptedClauses,
+        isOwner,
+      };
+    }),
+
+  /**
+   * Toggle sharing — enable or disable public access to an analysis.
+   * When enabling, sets a 7-day expiry. When disabling, clears the expiry.
+   */
+  toggleShare: protectedProcedure
+    .input(
+      z.object({
+        analysisId: z.string().uuid(),
+        enabled: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+
+      // Verify ownership
+      const analysisRows = await db
+        .select({ documentId: analyses.documentId })
+        .from(analyses)
+        .where(eq(analyses.id, input.analysisId));
+      const analysis = analysisRows[0];
+
+      if (!analysis) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Analysis not found." });
+      }
+
+      const docRows = await db
+        .select({ userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+
+      if (!doc || doc.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this analysis." });
+      }
+
+      const now = new Date();
+      const expiresAt = input.enabled
+        ? new Date(now.getTime() + SHARE_LINK_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
+        : null;
+
+      await db
+        .update(analyses)
+        .set({
+          isPublic: input.enabled,
+          shareExpiresAt: expiresAt,
+        })
+        .where(eq(analyses.id, input.analysisId));
+
+      logger.info("Share toggled", {
+        analysisId: input.analysisId,
+        enabled: input.enabled,
+        expiresAt: expiresAt?.toISOString() ?? null,
+      });
+
+      return {
+        isPublic: input.enabled,
+        shareExpiresAt: expiresAt,
       };
     }),
 

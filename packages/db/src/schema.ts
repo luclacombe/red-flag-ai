@@ -49,6 +49,8 @@ export const analyses = pgTable(
     parsedClauses: text("parsed_clauses"),
     responseLanguage: text("response_language").notNull().default("en"),
     errorMessage: text("error_message"),
+    isPublic: boolean("is_public").notNull().default(false),
+    shareExpiresAt: timestamp("share_expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),

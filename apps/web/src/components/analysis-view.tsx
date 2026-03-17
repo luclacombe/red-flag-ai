@@ -358,12 +358,33 @@ export function AnalysisView({ id }: AnalysisViewProps) {
 
   // ── QUERY ERROR ──────────────────────────────
   if (queryError) {
+    const isForbidden = queryError.data?.code === "FORBIDDEN";
     return (
       <div className="flex min-h-screen flex-col bg-[#0B1120]">
         <NavBar hideHowItWorks />
-        <main className="mx-auto max-w-3xl flex-1 px-4 py-16">
-          <h1 className="sr-only">Error loading analysis</h1>
-          <ErrorState message="Failed to load analysis. Please try again." />
+        <main className="flex flex-1 flex-col items-center justify-center px-4 py-24">
+          {isForbidden ? (
+            <>
+              <h1 className="font-heading text-2xl font-semibold text-white">
+                This analysis is private
+              </h1>
+              <p className="mt-2 text-sm text-slate-400">
+                The owner hasn&apos;t shared this analysis, or the share link has expired.
+              </p>
+              <Link
+                href="/"
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-900 transition-colors duration-150 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-[#0B1120]"
+              >
+                <Home className="size-4" />
+                Back to home
+              </Link>
+            </>
+          ) : (
+            <>
+              <h1 className="sr-only">Error loading analysis</h1>
+              <ErrorState message="Failed to load analysis. Please try again." />
+            </>
+          )}
         </main>
         <LegalDisclaimer />
       </div>
@@ -445,7 +466,12 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           {/* Summary at top */}
           <SummaryPanel summary={completeSummary} className="mb-4" />
           <div className="mb-6 flex justify-center">
-            <AnalysisActions analysisId={id} />
+            <AnalysisActions
+              analysisId={id}
+              isOwner={analysis?.isOwner ?? false}
+              isPublic={analysis?.isPublic ?? false}
+              shareExpiresAt={analysis?.shareExpiresAt ?? null}
+            />
           </div>
 
           {/* Connecting lines — fixed overlay */}
@@ -617,7 +643,12 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           <div ref={summaryRef}>
             <SummaryPanel summary={streamSummary} animate className="mb-4" />
             <div className="mb-6 flex justify-center">
-              <AnalysisActions analysisId={id} />
+              <AnalysisActions
+                analysisId={id}
+                isOwner={analysis?.isOwner ?? false}
+                isPublic={analysis?.isPublic ?? false}
+                shareExpiresAt={analysis?.shareExpiresAt ?? null}
+              />
             </div>
           </div>
         )}

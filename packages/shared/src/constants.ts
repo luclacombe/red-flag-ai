@@ -7,6 +7,9 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 /** Maximum text length for DOCX/TXT files (~30 page equivalent at ~3000 chars/page) */
 export const MAX_TEXT_LENGTH = 90_000;
 
+/** Share links expire after this many days */
+export const SHARE_LINK_EXPIRY_DAYS = 7;
+
 export const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document" as const;
 export const TXT_MIME = "text/plain" as const;

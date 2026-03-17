@@ -35,13 +35,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         recommendation: analyses.recommendation,
         status: analyses.status,
         documentId: analyses.documentId,
+        isPublic: analyses.isPublic,
+        shareExpiresAt: analyses.shareExpiresAt,
       })
       .from(analyses)
       .where(eq(analyses.id, id));
 
     const analysis = analysisRows[0];
 
-    if (!analysis || analysis.status !== "complete") {
+    // Check if this analysis should show a detailed OG image
+    let showDetailed = analysis?.status === "complete";
+    if (showDetailed && analysis) {
+      const docRows = await db
+        .select({ userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+      const isAnonymous = doc?.userId == null;
+      const isShared =
+        analysis.isPublic && (!analysis.shareExpiresAt || analysis.shareExpiresAt > new Date());
+      if (!isAnonymous && !isShared) {
+        showDetailed = false;
+      }
+    }
+
+    if (!showDetailed || !analysis) {
       return new ImageResponse(
         <div
           style={{

@@ -37,9 +37,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return Response.json({ error: "Document not found" }, { status: 404 });
     }
 
-    // Ownership check: if document has an owner, only that user can download
+    // Access check: owner, anonymous uploads, or active share link
     if (doc.userId) {
-      if (!user || doc.userId !== user.id) {
+      const isOwner = user && doc.userId === user.id;
+      const isShared =
+        analysis.isPublic && (!analysis.shareExpiresAt || analysis.shareExpiresAt > new Date());
+      if (!isOwner && !isShared) {
         return Response.json({ error: "Forbidden" }, { status: 403 });
       }
     }

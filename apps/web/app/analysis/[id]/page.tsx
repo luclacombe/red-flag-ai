@@ -31,11 +31,31 @@ export async function generateMetadata({
         overallRiskScore: analyses.overallRiskScore,
         recommendation: analyses.recommendation,
         documentId: analyses.documentId,
+        isPublic: analyses.isPublic,
+        shareExpiresAt: analyses.shareExpiresAt,
       })
       .from(analyses)
       .where(eq(analyses.id, id));
 
     const analysis = analysisRows[0];
+
+    // Only show detailed metadata for shared or anonymous analyses
+    if (analysis && analysis.status === "complete") {
+      const ownerRows = await db
+        .select({ userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const owner = ownerRows[0];
+      const isAnonymous = owner?.userId == null;
+      const isShared =
+        analysis.isPublic && (!analysis.shareExpiresAt || analysis.shareExpiresAt > new Date());
+      if (!isAnonymous && !isShared) {
+        return {
+          title: "Contract Analysis — RedFlag AI",
+          description: "AI-powered clause-by-clause contract risk analysis.",
+        };
+      }
+    }
 
     if (!analysis || analysis.status !== "complete") {
       return {
