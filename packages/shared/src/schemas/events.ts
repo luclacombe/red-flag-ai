@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ClauseAnalysisSchema } from "./clause";
-import { ParsedClauseSchema } from "./parse";
+import { PositionedClauseSchema } from "./parse";
 import { SummarySchema } from "./summary";
 
 export const StatusEventSchema = z.object({
@@ -12,7 +12,7 @@ export const ClausePositionsEventSchema = z.object({
   type: z.literal("clause_positions"),
   data: z.object({
     totalClauses: z.number().int().nonnegative(),
-    clauses: z.array(ParsedClauseSchema),
+    clauses: z.array(PositionedClauseSchema),
   }),
 });
 
@@ -32,9 +32,29 @@ export const ErrorEventSchema = z.object({
   recoverable: z.boolean(),
 });
 
+export const FileTypeSchema = z.enum(["pdf", "docx", "txt"]);
+export type FileType = z.infer<typeof FileTypeSchema>;
+
+export const DocumentTextEventSchema = z.object({
+  type: z.literal("document_text"),
+  data: z.object({
+    text: z.string(),
+    fileType: FileTypeSchema,
+  }),
+});
+
+export const ClauseAnalyzingEventSchema = z.object({
+  type: z.literal("clause_analyzing"),
+  data: z.object({
+    position: z.number().int().nonnegative(),
+  }),
+});
+
 export const SSEEventSchema = z.discriminatedUnion("type", [
   StatusEventSchema,
   ClausePositionsEventSchema,
+  DocumentTextEventSchema,
+  ClauseAnalyzingEventSchema,
   ClauseEventSchema,
   SummaryEventSchema,
   ErrorEventSchema,
@@ -42,6 +62,8 @@ export const SSEEventSchema = z.discriminatedUnion("type", [
 
 export type StatusEvent = z.infer<typeof StatusEventSchema>;
 export type ClausePositionsEvent = z.infer<typeof ClausePositionsEventSchema>;
+export type DocumentTextEvent = z.infer<typeof DocumentTextEventSchema>;
+export type ClauseAnalyzingEvent = z.infer<typeof ClauseAnalyzingEventSchema>;
 export type ClauseEvent = z.infer<typeof ClauseEventSchema>;
 export type SummaryEvent = z.infer<typeof SummaryEventSchema>;
 export type ErrorEvent = z.infer<typeof ErrorEventSchema>;

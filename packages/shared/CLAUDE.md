@@ -17,7 +17,9 @@ Leaf package — all other packages import from here, this imports nothing inter
 | ClauseAnalysisSchema | `schemas/clause.ts` | Shape of a single analyzed clause |
 | SummarySchema | `schemas/summary.ts` | Overall analysis summary with risk score |
 | SSEEventSchema | `schemas/events.ts` | Discriminated union of all streamed event types (status, clause_positions, clause_analysis, summary, error) |
-| ClausePositionsEventSchema | `schemas/events.ts` | **NEW (Phase 1):** Skeleton card event — `{ totalClauses, clauses: ParsedClause[] }`. Emitted after heuristic parse for instant UI feedback. |
+| ClausePositionsEventSchema | `schemas/events.ts` | Skeleton card + highlight event — `{ totalClauses, clauses: PositionedClause[] }`. Includes `startIndex`/`endIndex` for immediate gray highlighting. |
+| DocumentTextEventSchema | `schemas/events.ts` | Document text + `fileType` (`"pdf" | "docx" | "txt"`) — enables side-by-side layout + viewer dispatch. |
+| FileTypeSchema | `schemas/events.ts` | Zod enum for `fileType`: `"pdf" | "docx" | "txt"`. Exported as `FileType` type. |
 | KnowledgePatternSchema | `schemas/knowledge.ts` | RAG knowledge base entry (no embedding field) |
 | GateResultSchema | `schemas/gate.ts` | Relevance gate output |
 | ParsedClauseSchema, PositionedClauseSchema | `schemas/parse.ts` | Parse agent output (text + position) and orchestrator-enriched version (with startIndex/endIndex) |

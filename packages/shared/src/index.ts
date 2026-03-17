@@ -29,12 +29,18 @@ export {
   RiskLevelSchema,
 } from "./schemas/enums";
 export {
+  type ClauseAnalyzingEvent,
+  ClauseAnalyzingEventSchema,
   type ClauseEvent,
   ClauseEventSchema,
   type ClausePositionsEvent,
   ClausePositionsEventSchema,
+  type DocumentTextEvent,
+  DocumentTextEventSchema,
   type ErrorEvent,
   ErrorEventSchema,
+  type FileType,
+  FileTypeSchema,
   type SSEEvent,
   SSEEventSchema,
   type StatusEvent,
