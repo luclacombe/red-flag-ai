@@ -47,6 +47,11 @@ export async function checkRateLimit(
   identifier: string,
   isAuthenticated = false,
 ): Promise<RateLimitResult> {
+  // Skip rate limiting in local development
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1")) {
+    return { limited: false, resetAt: nextMidnightUTC() };
+  }
+
   const db = getDb();
   const today = todayUTC();
   const resetAt = nextMidnightUTC();

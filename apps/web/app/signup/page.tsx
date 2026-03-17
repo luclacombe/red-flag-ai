@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BackgroundPaths } from "@/components/background-paths";
 import { createClient } from "@/lib/supabase/client";
@@ -11,6 +12,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -18,7 +20,7 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -27,6 +29,13 @@ export default function SignupPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
+      return;
+    }
+
+    // If email confirmations are disabled (local dev), the session is
+    // immediately active — redirect to home instead of showing "check email"
+    if (data.session) {
+      router.push("/");
       return;
     }
 
