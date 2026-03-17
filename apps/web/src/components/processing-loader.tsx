@@ -20,7 +20,7 @@ export function ProcessingLoader({
           />
         ))}
       </div>
-      <span className="text-sm font-medium text-slate-600">{text}</span>
+      <span className="text-sm font-medium text-slate-400">{text}</span>
     </div>
   );
 }

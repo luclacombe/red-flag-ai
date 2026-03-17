@@ -34,12 +34,12 @@ export function AnalysisActions({ analysisId }: AnalysisActionsProps) {
       <button
         type="button"
         onClick={handleShare}
-        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors duration-150 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-[#0B1120]"
       >
         {copied ? (
           <>
-            <Check className="size-4 text-green-600" />
-            <span className="text-green-600">Copied!</span>
+            <Check className="size-4 text-green-400" />
+            <span className="text-green-400">Copied!</span>
           </>
         ) : (
           <>
@@ -51,7 +51,7 @@ export function AnalysisActions({ analysisId }: AnalysisActionsProps) {
       <a
         href={`/api/report/${analysisId}`}
         download
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors duration-150 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-[#0B1120]"
       >
         <Download className="size-4" />
         Download PDF

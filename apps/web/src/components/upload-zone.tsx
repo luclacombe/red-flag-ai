@@ -219,15 +219,14 @@ export function UploadZone() {
           state.status === "error" || state.status === "rejection" ? "upload-message" : undefined
         }
         className={cn(
-          "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-colors duration-150 md:p-12",
+          "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center backdrop-blur-sm transition-all duration-200 md:p-12",
           isInteractive && "cursor-pointer",
           state.status === "drag-over"
-            ? "border-amber-500 bg-amber-50/50"
+            ? "scale-[1.02] border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10"
             : state.status === "error" || state.status === "rejection"
-              ? "border-red-300 bg-red-50/30"
-              : "border-slate-300 bg-slate-50 hover:border-slate-400",
-          (state.status === "uploading" || state.status === "processing") &&
-            "pointer-events-none opacity-80",
+              ? "border-red-500/40 bg-red-500/5"
+              : "border-slate-600/50 bg-white/5 hover:border-slate-500 hover:bg-white/8",
+          (state.status === "uploading" || state.status === "processing") && "pointer-events-none",
         )}
       >
         <input
@@ -244,11 +243,15 @@ export function UploadZone() {
         {(state.status === "idle" || state.status === "drag-over") && (
           <>
             <Upload className="size-10 text-slate-400" strokeWidth={1.5} />
-            <p className="mt-4 font-heading text-base font-semibold text-slate-700">
+            <p className="mt-4 font-heading text-base font-semibold text-slate-200">
               Drop your contract here
             </p>
-            <p className="mt-1 text-sm text-slate-500">or click to browse</p>
-            <p className="mt-3 text-xs text-slate-400">PDF, DOCX, or TXT &middot; Max 10MB</p>
+            <p className="mt-1 text-sm text-slate-400">or click to browse</p>
+            <p className="mt-3 text-xs text-slate-500">PDF, DOCX, or TXT &middot; Max 10MB</p>
+            <p className="mt-2 text-xs text-slate-500">
+              <span className="text-green-500/80">&bull;</span> AES-256 protected &middot;
+              auto-deleted after 30 days
+            </p>
           </>
         )}
 
@@ -256,15 +259,15 @@ export function UploadZone() {
         {state.status === "uploading" && (
           <>
             <FileText className="size-10 text-amber-500" strokeWidth={1.5} />
-            <p className="mt-3 text-sm font-medium text-slate-700">{state.filename}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{formatFileSize(state.size)}</p>
-            <div className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-slate-200">
+            <p className="mt-3 text-sm font-medium text-slate-200">{state.filename}</p>
+            <p className="mt-0.5 text-xs text-slate-400">{formatFileSize(state.size)}</p>
+            <div className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-slate-700">
               <div
                 className="h-full rounded-full bg-amber-500 transition-all duration-300 ease-out"
                 style={{ width: `${state.progress}%` }}
               />
             </div>
-            <p className="mt-2 text-xs text-slate-500">Uploading... {state.progress}%</p>
+            <p className="mt-2 text-xs text-slate-400">Uploading... {state.progress}%</p>
           </>
         )}
 
@@ -272,7 +275,7 @@ export function UploadZone() {
         {state.status === "processing" && (
           <>
             <FileText className="size-10 text-amber-500" strokeWidth={1.5} />
-            <p className="mt-3 text-sm font-medium text-slate-700">{state.filename}</p>
+            <p className="mt-3 text-sm font-medium text-slate-200">{state.filename}</p>
             <div className="mt-4">
               <ProcessingLoader />
             </div>
@@ -295,15 +298,15 @@ export function UploadZone() {
       {state.status === "error" && (
         <div
           id="upload-message"
-          className="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-4"
+          className="mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-4"
         >
-          <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-400" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-red-700">{state.message}</p>
+            <p className="text-sm font-medium text-red-300">{state.message}</p>
             <button
               type="button"
               onClick={resetState}
-              className="mt-2 cursor-pointer text-sm font-semibold text-red-700 underline underline-offset-2 hover:text-red-800"
+              className="mt-2 cursor-pointer text-sm font-semibold text-red-300 underline underline-offset-2 hover:text-red-200"
             >
               Try again
             </button>
@@ -314,15 +317,15 @@ export function UploadZone() {
       {state.status === "rejection" && (
         <div
           id="upload-message"
-          className="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-4"
+          className="mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-4"
         >
-          <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-400" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-red-700">{state.reason}</p>
+            <p className="text-sm font-medium text-red-300">{state.reason}</p>
             <button
               type="button"
               onClick={resetState}
-              className="mt-2 cursor-pointer text-sm font-semibold text-red-700 underline underline-offset-2 hover:text-red-800"
+              className="mt-2 cursor-pointer text-sm font-semibold text-red-300 underline underline-offset-2 hover:text-red-200"
             >
               Upload a different file
             </button>
@@ -333,10 +336,10 @@ export function UploadZone() {
       {state.status === "rate-limit" && (
         <div
           id="upload-message"
-          className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4"
+          className="mt-4 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4"
         >
-          <Clock className="mt-0.5 size-4 shrink-0 text-amber-600" />
-          <p className="text-sm font-medium text-amber-700">
+          <Clock className="mt-0.5 size-4 shrink-0 text-amber-400" />
+          <p className="text-sm font-medium text-amber-300">
             You&apos;ve reached the daily analysis limit. You can try again at {state.resetTime}.
           </p>
         </div>

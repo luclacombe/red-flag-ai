@@ -11,7 +11,7 @@ export function ProgressBar({ current, total, className }: ProgressBarProps) {
 
   return (
     <div
-      className={cn("h-1 w-full bg-slate-200", className)}
+      className={cn("h-1.5 w-full bg-slate-800", className)}
       role="progressbar"
       aria-valuenow={current}
       aria-valuemin={0}
@@ -19,7 +19,7 @@ export function ProgressBar({ current, total, className }: ProgressBarProps) {
       aria-label={`Analysis progress: ${current} of ${total} clauses`}
     >
       <div
-        className="h-full bg-amber-500 transition-[width] duration-300 ease-out"
+        className="h-full rounded-r-full bg-gradient-to-r from-amber-500 to-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-[width] duration-300 ease-out"
         style={{ width: `${percent}%` }}
       />
     </div>

@@ -1,0 +1,220 @@
+"use client";
+
+import type { RiskLevel } from "@redflag/shared";
+import { useCallback, useEffect, useRef } from "react";
+
+interface ConnectingLinesProps {
+  activeClause: number | null;
+  leftPanelRef: React.RefObject<HTMLDivElement | null>;
+  rightPanelRef: React.RefObject<HTMLDivElement | null>;
+  /** The actual scrollable element inside the document panel (overflow-y-auto) */
+  docScrollContainer: HTMLDivElement | null;
+  clauseRiskLevels: Map<number, RiskLevel>;
+}
+
+const RISK_COLORS: Record<string, string> = {
+  red: "rgba(239, 68, 68, 1)",
+  yellow: "rgba(245, 158, 11, 1)",
+  green: "rgba(34, 197, 94, 0.8)",
+};
+
+const CORNER_RADIUS = 8;
+/** Gap between clause highlight right edge and the vertical connector line */
+const CLAUSE_GAP = 12;
+
+/**
+ * SVG overlay that draws orthogonal (elbow) connecting lines between
+ * clause highlights (left panel) and analysis cards (right panel).
+ * Uses direct DOM manipulation for lag-free scroll tracking.
+ */
+export function ConnectingLines({
+  activeClause,
+  leftPanelRef,
+  rightPanelRef,
+  docScrollContainer,
+  clauseRiskLevels,
+}: ConnectingLinesProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+
+  // Store volatile props in refs so computeLine doesn't recreate on prop changes
+  const activeClauseRef = useRef(activeClause);
+  const clauseRiskLevelsRef = useRef(clauseRiskLevels);
+
+  const computeLine = useCallback(() => {
+    const pathEl = pathRef.current;
+    if (!pathEl) return;
+
+    const currentClause = activeClauseRef.current;
+    if (currentClause === null || !leftPanelRef.current || !rightPanelRef.current) {
+      pathEl.style.display = "none";
+      return;
+    }
+
+    const clauseEl = leftPanelRef.current.querySelector(
+      `[data-clause-position="${currentClause}"]`,
+    );
+    const cardEl = rightPanelRef.current.querySelector(`[data-card-position="${currentClause}"]`);
+
+    if (!clauseEl || !cardEl || !svgRef.current) {
+      pathEl.style.display = "none";
+      return;
+    }
+
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const clauseRect = clauseEl.getBoundingClientRect();
+    const cardRect = cardEl.getBoundingClientRect();
+
+    const leftPanel = leftPanelRef.current.getBoundingClientRect();
+    const rightPanel = rightPanelRef.current.getBoundingClientRect();
+
+    const clauseVisible = clauseRect.bottom > leftPanel.top && clauseRect.top < leftPanel.bottom;
+    const cardVisible = cardRect.bottom > rightPanel.top && cardRect.top < rightPanel.bottom;
+
+    if (!clauseVisible && !cardVisible) {
+      pathEl.style.display = "none";
+      return;
+    }
+
+    const clampedClauseY = Math.max(
+      leftPanel.top,
+      Math.min(leftPanel.bottom, clauseRect.top + clauseRect.height / 2),
+    );
+    const clampedCardY = Math.max(
+      rightPanel.top,
+      Math.min(rightPanel.bottom, cardRect.top + cardRect.height / 2),
+    );
+
+    const x1 = clauseRect.right - svgRect.left;
+    const y1 = clampedClauseY - svgRect.top;
+    const x2 = cardRect.left - svgRect.left;
+    const y2 = clampedCardY - svgRect.top;
+
+    // Vertical line sits just to the right of clause highlights, inside the document panel
+    const midX = x1 + CLAUSE_GAP;
+    const dy = y2 - y1;
+    const exitDist = x2 - midX; // vertical line → card left edge
+
+    // Is the clause's center scrolled outside the document panel?
+    const clauseCenterY = clauseRect.top + clauseRect.height / 2;
+    const clauseIsClamped = clauseCenterY < leftPanel.top || clauseCenterY > leftPanel.bottom;
+
+    let path: string;
+    if (exitDist < 4 || (Math.abs(dy) < 2 && !clauseIsClamped)) {
+      // Panels too close or near-zero vertical distance — straight line
+      path = `M ${x1} ${y1} L ${x2} ${y2}`;
+    } else if (clauseIsClamped) {
+      // Clause scrolled off-screen: vertical line → corner → horizontal to card
+      // No horizontal segment into the clause — just points toward it
+      const dirY = dy > 0 ? 1 : -1;
+      const r = Math.min(CORNER_RADIUS, exitDist / 2, Math.abs(dy) / 2);
+      if (Math.abs(dy) < 2) {
+        path = `M ${midX} ${y1} L ${x2} ${y2}`;
+      } else {
+        path = [
+          `M ${midX} ${y1}`,
+          `L ${midX} ${y2 - r * dirY}`,
+          `Q ${midX} ${y2}, ${midX + r} ${y2}`,
+          `L ${x2} ${y2}`,
+        ].join(" ");
+      }
+    } else {
+      // Full elbow: clause → H right to vertical → V → H right to card
+      const dirY = dy > 0 ? 1 : -1;
+      const r = Math.min(CORNER_RADIUS, CLAUSE_GAP / 2, exitDist / 2, Math.abs(dy) / 2);
+
+      path = [
+        `M ${x1} ${y1}`,
+        `L ${midX - r} ${y1}`,
+        `Q ${midX} ${y1}, ${midX} ${y1 + r * dirY}`,
+        `L ${midX} ${y2 - r * dirY}`,
+        `Q ${midX} ${y2}, ${midX + r} ${y2}`,
+        `L ${x2} ${y2}`,
+      ].join(" ");
+    }
+
+    const riskLevel = clauseRiskLevelsRef.current.get(currentClause) ?? "green";
+    const color = RISK_COLORS[riskLevel] ?? "rgba(34, 197, 94, 0.8)";
+
+    pathEl.setAttribute("d", path);
+    pathEl.setAttribute("stroke", color);
+    pathEl.style.display = "";
+  }, [leftPanelRef, rightPanelRef]);
+
+  // Sync volatile props into refs and recompute
+  useEffect(() => {
+    activeClauseRef.current = activeClause;
+    computeLine();
+  }, [activeClause, computeLine]);
+
+  useEffect(() => {
+    clauseRiskLevelsRef.current = clauseRiskLevels;
+    computeLine();
+  }, [clauseRiskLevels, computeLine]);
+
+  // Scroll, resize, and DOM size listeners
+  useEffect(() => {
+    computeLine();
+
+    const scrollEl = docScrollContainer;
+    const rightEl = rightPanelRef.current;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          computeLine();
+          ticking = false;
+        });
+      }
+    };
+
+    scrollEl?.addEventListener("scroll", onScroll, { passive: true });
+    rightEl?.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", computeLine);
+
+    // ResizeObserver catches card height changes (e.g. collapsible expand/collapse)
+    let ro: ResizeObserver | undefined;
+    if (rightEl) {
+      ro = new ResizeObserver(() => {
+        computeLine();
+      });
+      ro.observe(rightEl);
+    }
+
+    return () => {
+      scrollEl?.removeEventListener("scroll", onScroll);
+      rightEl?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", computeLine);
+      ro?.disconnect();
+    };
+  }, [computeLine, docScrollContainer, rightPanelRef]);
+
+  return (
+    <svg
+      ref={svgRef}
+      aria-hidden="true"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        pointerEvents: "none",
+        zIndex: 10,
+      }}
+    >
+      <path
+        ref={pathRef}
+        fill="none"
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ display: "none" }}
+      />
+    </svg>
+  );
+}

@@ -5,38 +5,39 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.809 0.105 251.813);
-    --chart-2: oklch(0.623 0.214 259.815);
-    --chart-3: oklch(0.546 0.245 262.881);
-    --chart-4: oklch(0.488 0.243 264.376);
-    --chart-5: oklch(0.424 0.199 265.638);
+    /* Dark foundation — Authority navy + trust gold (UI/UX Pro Max: Legal Services) */
+    --background: oklch(0.12 0.025 255);        /* #0B1120 — deep navy-black */
+    --foreground: oklch(0.97 0.005 250);         /* #F1F5F9 — light text on dark */
+    --card: oklch(1 0 0);                        /* #FFFFFF — white cards/panels */
+    --card-foreground: oklch(0.15 0.03 260);     /* #0F172A — dark text on cards */
+    --popover: oklch(0.17 0.025 255);            /* #131B2E — dark surface */
+    --popover-foreground: oklch(0.97 0.005 250); /* light text */
+    --primary: oklch(0.55 0.18 260);             /* #2563EB — trust blue */
+    --primary-foreground: oklch(0.98 0 0);       /* white on primary */
+    --secondary: oklch(0.17 0.025 255);          /* #131B2E — dark surface */
+    --secondary-foreground: oklch(0.93 0.005 250); /* #E2E8F0 — light text */
+    --muted: oklch(0.22 0.02 255);               /* dark muted bg */
+    --muted-foreground: oklch(0.65 0.01 250);    /* #94A3B8 — muted text */
+    --accent: oklch(0.77 0.16 75);               /* #F59E0B — gold/amber CTA */
+    --accent-foreground: oklch(0.15 0.03 260);   /* dark text on accent */
+    --destructive: oklch(0.58 0.22 29);          /* #DC2626 — red */
+    --border: oklch(0.25 0.02 255);              /* #1E293B — dark border */
+    --input: oklch(0.25 0.02 255);               /* dark input border */
+    --ring: oklch(0.55 0.18 260);                /* trust blue ring */
+    --chart-1: oklch(0.61 0.18 260);             /* blue */
+    --chart-2: oklch(0.77 0.16 75);              /* amber */
+    --chart-3: oklch(0.67 0.19 150);             /* green */
+    --chart-4: oklch(0.58 0.22 29);              /* red */
+    --chart-5: oklch(0.55 0.18 260);             /* blue darker */
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: oklch(0.14 0.025 255);
+    --sidebar-foreground: oklch(0.97 0.005 250);
+    --sidebar-primary: oklch(0.55 0.18 260);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.22 0.02 255);
+    --sidebar-accent-foreground: oklch(0.97 0.005 250);
+    --sidebar-border: oklch(0.25 0.02 255);
+    --sidebar-ring: oklch(0.55 0.18 260);
 }
 
 @theme inline {
@@ -122,36 +123,107 @@
     }
 }
 
-/* Status bar text shimmer (CSS-only, no motion library) */
-@keyframes text-shimmer {
+/* Shared shimmer keyframe — all shimmer animations use the same timing */
+@keyframes shimmer-sweep {
     from {
-        background-position: 200% center;
+        background-position: -200% center;
     }
     to {
-        background-position: -200% center;
+        background-position: 200% center;
     }
 }
 
+/* Text shimmer for status text and processing steps */
 .text-shimmer {
     background: linear-gradient(
         90deg,
-        rgb(29, 78, 216) 0%,
-        rgb(29, 78, 216) 40%,
-        rgb(30, 64, 175) 50%,
-        rgb(29, 78, 216) 60%,
-        rgb(29, 78, 216) 100%
+        rgb(59, 130, 246) 0%,
+        rgb(59, 130, 246) 40%,
+        rgb(147, 197, 253) 50%,
+        rgb(59, 130, 246) 60%,
+        rgb(59, 130, 246) 100%
     );
     background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: text-shimmer 3s linear infinite;
+    animation: shimmer-sweep 2.5s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .text-shimmer {
         animation: none;
         background: none;
-        color: rgb(29, 78, 216);
+        color: rgb(59, 130, 246);
+    }
+}
+
+/* Clause highlight shimmer — synced with text-shimmer */
+.clause-analyzing {
+    background: linear-gradient(
+        90deg,
+        rgba(148, 163, 184, 0.15) 0%,
+        rgba(148, 163, 184, 0.15) 40%,
+        rgba(148, 163, 184, 0.3) 50%,
+        rgba(148, 163, 184, 0.15) 60%,
+        rgba(148, 163, 184, 0.15) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 2.5s linear infinite;
+}
+
+/* Skeleton bar shimmer — synced with clause-analyzing */
+.skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(51, 65, 85, 0.8) 0%,
+        rgba(51, 65, 85, 0.8) 40%,
+        rgba(71, 85, 105, 0.9) 50%,
+        rgba(51, 65, 85, 0.8) 60%,
+        rgba(51, 65, 85, 0.8) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 2.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clause-analyzing {
+        animation: none;
+        background: rgba(148, 163, 184, 0.2);
+    }
+    .skeleton-shimmer {
+        animation: none;
+    }
+}
+
+/* Flash overlay when clause analysis completes */
+@keyframes clause-flash {
+    0% {
+        background-color: rgba(255, 255, 255, 0.6);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.clause-flash-overlay {
+    animation: clause-flash 450ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clause-flash-overlay {
+        animation: none;
+    }
+}
+
+/* Scroll reveal animation */
+@keyframes reveal-up {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

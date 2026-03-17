@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 const config: Record<Recommendation, { label: string; className: string }> = {
   sign: {
     label: "Safe to Sign",
-    className: "bg-green-100 text-green-800 border-green-300",
+    className: "bg-green-500/10 text-green-300 border-green-500/20",
   },
   caution: {
     label: "Proceed with Caution",
-    className: "bg-amber-100 text-amber-800 border-amber-300",
+    className: "bg-amber-500/10 text-amber-300 border-amber-500/20",
   },
   do_not_sign: {
     label: "Do Not Sign",
-    className: "bg-red-100 text-red-800 border-red-300",
+    className: "bg-red-500/10 text-red-300 border-red-500/20",
   },
 };
 

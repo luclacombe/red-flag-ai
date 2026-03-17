@@ -43,7 +43,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
   }
 
   return (
-    <nav className={cn("w-full bg-slate-900 px-4 py-4 md:px-6", className)}>
+    <nav className={cn("w-full bg-transparent px-4 py-4 md:px-6", className)}>
       <div className="mx-auto flex max-w-5xl items-center justify-between">
         <Link
           href="/"
@@ -53,12 +53,15 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
         </Link>
         <div className="flex items-center gap-4">
           {!hideHowItWorks && (
-            <a
-              href="#how-it-works"
-              className="text-sm font-medium text-slate-300 transition-colors duration-150 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+            <button
+              type="button"
+              onClick={() =>
+                document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="cursor-pointer text-sm font-medium text-slate-300 transition-colors duration-150 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
             >
               How it works
-            </a>
+            </button>
           )}
           {!loading && (
             <>

@@ -8,17 +8,17 @@ const riskConfig = {
   red: {
     label: "High Risk",
     icon: AlertTriangle,
-    className: "bg-red-50 text-red-700 border-red-200",
+    className: "bg-red-500/10 text-red-400 border-red-500/20",
   },
   yellow: {
     label: "Caution",
     icon: TriangleAlert,
-    className: "bg-amber-50 text-amber-700 border-amber-200",
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
   green: {
     label: "Low Risk",
     icon: CircleCheck,
-    className: "bg-green-50 text-green-700 border-green-200",
+    className: "bg-green-500/10 text-green-400 border-green-500/20",
   },
 } as const;
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BackgroundPaths } from "@/components/background-paths";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -57,17 +58,18 @@ export default function LoginPage() {
 
   if (magicLinkSent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg">
-          <h1 className="font-heading text-xl font-semibold text-slate-900">Check your email</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            We sent a magic link to <strong>{email}</strong>. Click the link in the email to sign
-            in.
+      <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+        <BackgroundPaths variant="auth" />
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          <h1 className="font-heading text-xl font-semibold text-white">Check your email</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            We sent a magic link to <strong className="text-white">{email}</strong>. Click the link
+            in the email to sign in.
           </p>
           <button
             type="button"
             onClick={() => setMagicLinkSent(false)}
-            className="mt-6 text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="mt-6 cursor-pointer text-sm font-medium text-blue-400 hover:text-blue-300"
           >
             Back to sign in
           </button>
@@ -77,19 +79,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+      <BackgroundPaths variant="auth" />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
         <Link
           href="/"
-          className="font-heading text-lg font-semibold text-slate-900 hover:text-slate-700"
+          className="font-heading text-lg font-semibold text-white transition-colors hover:text-slate-300"
         >
           RedFlag AI
         </Link>
-        <h1 className="mt-4 font-heading text-xl font-semibold text-slate-900">Sign in</h1>
+        <h1 className="mt-4 font-heading text-xl font-semibold text-white">Sign in</h1>
 
         <form onSubmit={handleSignIn} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="email" className="block text-sm font-medium text-slate-300">
               Email
             </label>
             <input
@@ -98,12 +101,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-300">
               Password
             </label>
             <input
@@ -112,13 +115,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="Your password"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
@@ -126,30 +129,30 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="w-full cursor-pointer rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition-all hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs text-slate-400">or</span>
-          <div className="h-px flex-1 bg-slate-200" />
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs text-slate-500">or</span>
+          <div className="h-px flex-1 bg-white/10" />
         </div>
 
         <button
           type="button"
           onClick={handleMagicLink}
           disabled={loading}
-          className="w-full rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+          className="w-full cursor-pointer rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
         >
           Sign in with magic link
         </button>
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-700">
+          <Link href="/signup" className="font-medium text-blue-400 hover:text-blue-300">
             Create account
           </Link>
         </p>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BackgroundPaths } from "@/components/background-paths";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -35,16 +36,17 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg">
-          <h1 className="font-heading text-xl font-semibold text-slate-900">Check your email</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your
-            account.
+      <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+        <BackgroundPaths variant="auth" />
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          <h1 className="font-heading text-xl font-semibold text-white">Check your email</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            We sent a confirmation link to <strong className="text-white">{email}</strong>. Click it
+            to activate your account.
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="mt-6 inline-block text-sm font-medium text-blue-400 hover:text-blue-300"
           >
             Back to sign in
           </Link>
@@ -54,19 +56,20 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-lg">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+      <BackgroundPaths variant="auth" />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
         <Link
           href="/"
-          className="font-heading text-lg font-semibold text-slate-900 hover:text-slate-700"
+          className="font-heading text-lg font-semibold text-white transition-colors hover:text-slate-300"
         >
           RedFlag AI
         </Link>
-        <h1 className="mt-4 font-heading text-xl font-semibold text-slate-900">Create account</h1>
+        <h1 className="mt-4 font-heading text-xl font-semibold text-white">Create account</h1>
 
         <form onSubmit={handleSignUp} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="email" className="block text-sm font-medium text-slate-300">
               Email
             </label>
             <input
@@ -75,12 +78,12 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-300">
               Password
             </label>
             <input
@@ -90,13 +93,13 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="Minimum 6 characters"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
@@ -104,7 +107,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="w-full cursor-pointer rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition-all hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
@@ -112,7 +115,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
+          <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300">
             Sign in
           </Link>
         </p>

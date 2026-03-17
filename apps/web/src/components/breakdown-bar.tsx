@@ -18,7 +18,7 @@ export function BreakdownBar({ red, yellow, green, className }: BreakdownBarProp
   return (
     <div className={cn("space-y-2", className)}>
       {/* Stacked bar */}
-      <div className="flex h-3 overflow-hidden rounded-full bg-slate-100">
+      <div className="flex h-3 overflow-hidden rounded-full bg-slate-800">
         {red > 0 && (
           <div
             className="bg-red-500 transition-all duration-500"
@@ -40,7 +40,7 @@ export function BreakdownBar({ red, yellow, green, className }: BreakdownBarProp
       </div>
 
       {/* Counts */}
-      <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+      <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-400">
         {red > 0 && (
           <span className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-red-500" />

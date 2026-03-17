@@ -19,7 +19,7 @@ export function RiskScore({ value, max = 100, className }: RiskScoreProps) {
   const percentPx = circumference / 100;
   const currentPercent = Math.min(Math.max((value / max) * 100, 0), 100);
   const primaryColor = getScoreColor(value);
-  const secondaryColor = "#e2e8f0"; // slate-200
+  const secondaryColor = "#334155"; // slate-700
 
   return (
     <div
@@ -95,7 +95,7 @@ export function RiskScore({ value, max = 100, className }: RiskScoreProps) {
           }
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-heading font-bold tabular-nums">
+      <span className="absolute inset-0 flex items-center justify-center font-heading font-bold tabular-nums text-white">
         {Math.round(value)}
       </span>
     </div>

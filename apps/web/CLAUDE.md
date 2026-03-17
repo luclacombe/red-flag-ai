@@ -38,19 +38,23 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/auth/callback` | API (GET) | Exchanges auth code for session (magic link + OAuth). |
 | `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
 | `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` bearer token. `runtime = "nodejs"`, `maxDuration = 60`. |
+| `/api/document/[id]` | API (GET) | Serve decrypted document binary. Owner-only (auth + userId check). Returns raw file bytes with appropriate Content-Type. `Cache-Control: private, max-age=3600`. `runtime = "nodejs"`. |
 
 ## Components
 
 ### Landing page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" anchor + auth state right. Client component: `getUser()` + `onAuthStateChange`. Shows "Sign in" link or user email + "Sign out" button. |
-| `HeroSection` | `hero-section.tsx` | Dark bg, BackgroundPaths + headline + TextShimmer subtitle + CTA |
-| `BackgroundPaths` | `background-paths.tsx` | Animated SVG paths in risk colors (motion library). 16 paths, 2-4px strokes. `prefers-reduced-motion` respected. |
+| `NavBar` | `nav-bar.tsx` | Dark bg, logo left, "How it works" smooth-scroll button + auth state right. Client component: `getUser()` + `onAuthStateChange`. Shows "Sign in" link or user email + "Sign out" button. |
+| `HeroSection` | `hero-section.tsx` | Dark bg, BackgroundPaths (pill shapes) + headline + SlidingWords + CTA button (smooth scroll to #upload) |
+| `BackgroundPaths` | `background-paths.tsx` | Animated glassmorphism pill shapes in risk colors (motion library). `variant="hero"` (7 pills with risk labels like "Safe Clause ✓", "Penalty Clause") or `variant="auth"` (3 pills, no labels, subtler). ElegantPill subcomponent: entry animation + 12s floating loop. `prefers-reduced-motion` renders static. Used on hero, login, signup pages. |
+| `ScrollReveal` | `scroll-reveal.tsx` | Intersection Observer wrapper using `useInView` from motion library. Fades children in (opacity 0→1, y 20→0) when scrolled into viewport. Props: `delay`, `once`, `direction`. `prefers-reduced-motion` renders plain div. |
+| `SecuritySection` | `security-section.tsx` | 6 security feature cards in bento-grid layout (lg:3-col, md:2-col, 1-col mobile). Features: AES-256 encryption (col-span-2), auto-delete, no sharing, EU data center, anonymous analysis, per-document keys. Each card wrapped in ScrollReveal with staggered delay. |
 | `TextShimmer` | `text-shimmer.tsx` | Gradient text animation (motion library). `prefers-reduced-motion` respected. |
 | `UploadZone` | `upload-zone.tsx` | Native HTML5 drag-drop + file input. States: idle, drag-over, uploading (progress bar), processing (dots), error, rejection, rate-limit. Handles POST to `/api/upload`. Includes LanguageSelector below drop zone. |
 | `LanguageSelector` | `language-selector.tsx` | Globe icon + native `<select>` with 15 languages (native names). Persists to `localStorage`. Defaults to `navigator.language`. Also exports `useResponseLanguage()` hook. |
-| `HowItWorks` | `how-it-works.tsx` | 3 steps with Lucide icons. Horizontal on desktop, vertical on mobile. |
+| `SlidingWords` | `sliding-words.tsx` | Animated word carousel for hero headline. All words rendered simultaneously as absolute spans; active word slides to y:0/opacity:1, others to y:±150/opacity:0. Soft spring (stiffness:50). Container handles two-line text on mobile (`min-h-[2.6em]`). Respects `prefers-reduced-motion`. |
+| `HowItWorks` | `how-it-works.tsx` | Client component. 3 steps with Lucide icons + ScrollReveal staggered animation. Horizontal on desktop, vertical on mobile. |
 | `LegalDisclaimer` | `legal-disclaimer.tsx` | Footer. Not dismissable. |
 
 ### Shared components (used in landing + results pages)
@@ -65,11 +69,15 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 ### Analysis page components
 | Component | File | Notes |
 |-----------|------|-------|
-| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. Handles `clause_positions` event for instant skeleton cards, replaces each with a `ClauseCard` as `clause_analysis` events arrive. Determinate progress ("Analyzed X of N clauses"). Manages all 5 page states (loading, streaming, complete, failed, 404). Shows `AnalysisActions` (Share + Download PDF) when analysis is complete. |
-| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`). Appears in complete state (from DB) and after streaming finishes. |
-| `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). CSS fade-slide-in animation. |
-| `StatusBar` | `status-bar.tsx` | Blue bar below nav. CSS-only text shimmer animation (no motion library). `prefers-reduced-motion`: static text + pulsing dot. `aria-live="polite"`. |
-| `ProgressBar` | `progress-bar.tsx` | Thin amber bar showing determinate progress (X of N clauses). CSS transition on width. `role="progressbar"` with `aria-valuenow/min/max`. |
+| `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. `ProcessingSteps` shown before clauses arrive. Interaction model: `hoveredClause` (visual only, no scroll) + `pinnedClause` (click → scroll other panel with `block: "nearest"`). Scroll suppression via `isScrollingRef` (150ms debounce) prevents hover during scroll. Minimum 400ms shimmer per clause via `shimmerStartTimes` + `pendingResults` buffering — `analyzingPositions` is a `Set<number>`. Auto-scroll follows analysis progress (`skeletonRef`) until `userHasInteracted` (wheel/touchmove). Summary skeleton shown between last clause and summary arrival. `GreenClauseCompact` inline for green clauses. DB render path shows side-by-side layout. |
+| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`). Centered below summary in both DB and streaming paths. |
+| `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). `compact` prop hides clause text (used in side-by-side layout). CSS fade-slide-in animation. |
+| `ConnectingLines` | `connecting-lines.tsx` | Fixed SVG overlay with cubic bezier curves connecting clause highlights to analysis cards. Risk-colored (3px stroke, full opacity for red/yellow). `docScrollContainer` ref for accurate scroll tracking (attached to TextDocumentPanel's inner scrollable div). rAF-throttled updates. |
+| `DocumentPanel` | `document-panel.tsx` | Dispatcher routing to `TextDocumentPanel`. Passes through `onScrollContainerRef`. Future: PDF viewer dispatch. Exports `ClauseHighlight` type. |
+| `TextDocumentPanel` | `text-document-panel.tsx` | Block-level clause highlighting (full-width `<div>` blocks, not inline spans). Paragraph detection, alternating shade for same-risk clauses. Exposes scroll container via `onScrollContainerRef` callback. No auto-scroll on hover (click-to-scroll handled by parent). Risk colors, analyzing shimmer, pending gray, flash overlay. |
+| `ProcessingSteps` | `processing-steps.tsx` | Animated step-by-step processing indicator (connecting → gate → extracting → parsing → analyzing). Active: spinning `Loader2` + shimmer text with staggered delay. Done: green `CheckCircle2`. "Analyzing" step shows dynamic clause count. |
+| `StatusBar` | `status-bar.tsx` | Blue bar below nav. Pulsing dot indicator + status message text. `aria-live="polite"`. CSS-only, no animation library. |
+| `ProgressBar` | `progress-bar.tsx` | Thin amber gradient bar with glow shadow showing determinate progress (X of N clauses). CSS transition on width. `role="progressbar"` with `aria-valuenow/min/max` and descriptive `aria-label`. |
 | `RecommendationBadge` | `recommendation-badge.tsx` | Large pill: "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red). Uses `Recommendation` type. |
 | `BreakdownBar` | `breakdown-bar.tsx` | Horizontal stacked bar (red|amber|green segments) with dot + count labels. Pure div widths, no charting library. |
 | `SummaryPanel` | `summary-panel.tsx` | Composed: RiskScore + RecommendationBadge + BreakdownBar + top concerns list + contract type/language. Fade-in animation. |
@@ -124,6 +132,6 @@ Returns:
 - No package may import from `@redflag/web` — dependency direction is one-way
 - File upload uses a raw route handler, not tRPC (multipart/form-data)
 - Mobile-first responsive design — design for 375px, scale up
-- `motion` library used ONLY on landing page (BackgroundPaths, TextShimmer). Analysis page is CSS-only.
+- `motion` library used ONLY on landing page + auth pages (BackgroundPaths, SlidingWords, ScrollReveal, SecuritySection, HowItWorks). Analysis page is CSS-only.
 - All animated components must respect `prefers-reduced-motion`
 - Native HTML5 drag-drop for upload — no `react-dropzone`
