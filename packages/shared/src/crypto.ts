@@ -10,7 +10,7 @@ const TAG_LENGTH = 16; // GCM auth tag length
  */
 export function getMasterKey(): Buffer {
   const hex = process.env.MASTER_ENCRYPTION_KEY;
-  if (!hex || hex.length !== 64) {
+  if (!hex || !/^[0-9a-fA-F]{64}$/.test(hex)) {
     throw new Error(
       "MASTER_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
     );
@@ -62,7 +62,7 @@ export function decrypt(ciphertext: string, key: Buffer): string {
 
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
-  return decipher.update(encrypted) + decipher.final("utf8");
+  return decipher.update(encrypted, undefined, "utf8") + decipher.final("utf8");
 }
 
 /**
@@ -82,6 +82,11 @@ export function encryptBuffer(buffer: Buffer, key: Buffer): Buffer {
  * Input: iv (12 bytes) + tag (16 bytes) + ciphertext
  */
 export function decryptBuffer(encrypted: Buffer, key: Buffer): Buffer {
+  if (encrypted.length < IV_LENGTH + TAG_LENGTH) {
+    throw new Error(
+      `Invalid encrypted buffer: expected at least ${IV_LENGTH + TAG_LENGTH} bytes, got ${encrypted.length}`,
+    );
+  }
   const iv = encrypted.subarray(0, IV_LENGTH);
   const tag = encrypted.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
   const ciphertext = encrypted.subarray(IV_LENGTH + TAG_LENGTH);
