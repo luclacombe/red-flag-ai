@@ -8,7 +8,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 - `app/fonts.ts` — Google Fonts: Space Grotesk (headings) + DM Sans (body)
 - `app/globals.css` — Tailwind v4 theme tokens, shadcn colors, custom keyframes (`bounce-dots`, `fade-slide-in`, `text-shimmer`), `.text-shimmer` class with `prefers-reduced-motion` fallback
 - `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST). `runtime = "nodejs"`, `maxDuration = 300`.
-- `app/api/upload/route.ts` — Upload handler (POST, multipart/form-data). Auth-aware rate limiting (userId 10/day, IP 2/day). Sets `userId` on document when authenticated. `runtime = "nodejs"`, `maxDuration = 300`.
+- `app/api/upload/route.ts` — Upload handler (POST, multipart/form-data). Auth-aware rate limiting (userId 10/day, IP 2/day). Sets `userId` on document when authenticated. Rate limit DB failure returns 503 (fail-closed). `runtime = "nodejs"`, `maxDuration = 300`.
 - `app/api/upload/__tests__/route.test.ts` — Upload route tests (26 tests — validation, gate, rate limiting, auth)
 - `app/login/page.tsx` — Sign in page (email/password + magic link)
 - `app/signup/page.tsx` — Registration page (email/password)
@@ -31,13 +31,13 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/analysis/[id]` | Dynamic | Analysis results page. `generateMetadata()` fetches analysis for dynamic OG tags. Server component passes id to `AnalysisView` client component. Dual path: SSE streaming for pending/processing, DB render for complete/failed. Share + Download PDF buttons appear when analysis is complete. |
 | `/api/trpc/[trpc]` | API | tRPC endpoint |
 | `/api/upload` | API | PDF upload → validate → extract → gate → create records |
-| `/api/report/[id]` | API (GET) | PDF report generation. Fetches analysis + clauses, renders PDF via `@react-pdf/renderer`, returns with `Content-Disposition: attachment`. `runtime = "nodejs"`, `maxDuration = 30`. |
-| `/api/og/[id]` | API (GET) | Dynamic OG image generation. Uses `next/og` `ImageResponse` to render risk score circle + recommendation badge + clause breakdown. `runtime = "edge"`. |
+| `/api/report/[id]` | API (GET) | PDF report generation. Auth + ownership check (owner, anonymous uploads, or active share link). Fetches analysis + clauses, renders PDF via `@react-pdf/renderer`, returns with `Content-Disposition: attachment`. `runtime = "nodejs"`, `maxDuration = 30`. |
+| `/api/og/[id]` | API (GET) | Dynamic OG image generation. Only shows detailed image for shared or anonymous analyses; private analyses get generic fallback. Uses `next/og` `ImageResponse`. `runtime = "edge"`. |
 | `/login` | Static | Email/password + magic link sign in. Redirects to `/` on success. |
 | `/signup` | Static | Registration form. Shows confirmation message on success. |
 | `/auth/callback` | API (GET) | Exchanges auth code for session (magic link + OAuth). |
 | `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
-| `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` bearer token. `runtime = "nodejs"`, `maxDuration = 60`. |
+| `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` via `timingSafeEqual`. `runtime = "nodejs"`, `maxDuration = 60`. |
 | `/api/document/[id]` | API (GET) | Serve decrypted document binary. Owner-only (auth + userId check). Returns raw file bytes with appropriate Content-Type. `Cache-Control: private, max-age=3600`. `runtime = "nodejs"`. |
 | `/admin` | Dynamic | Pipeline observability dashboard. Server component checks auth + `ADMIN_EMAIL` env var, redirects non-admins. `AdminDashboard` client component with `admin.dashboard` tRPC query. Stats cards, recent analyses table, error log. No NavBar link. |
 | `/history` | Static | Analysis history page. Protected by middleware (redirects to `/login` if unauthenticated). `HistoryView` client component with infinite scroll via `analysis.list` tRPC query. |
@@ -73,7 +73,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | Component | File | Notes |
 |-----------|------|-------|
 | `AnalysisView` | `analysis-view.tsx` | Client component. Dual-path: tRPC query for initial state, SSE subscription for streaming. `ProcessingSteps` shown before clauses arrive. Interaction model: `hoveredClause` (visual only, no scroll) + `pinnedClause` (click → scroll other panel with `block: "nearest"`). Scroll suppression via `isScrollingRef` (150ms debounce) prevents hover during scroll. Minimum 400ms shimmer per clause via `shimmerStartTimes` + `pendingResults` buffering — `analyzingPositions` is a `Set<number>`. Auto-scroll follows analysis progress (`skeletonRef`) until `userHasInteracted` (wheel/touchmove). Summary skeleton shown between last clause and summary arrival. `GreenClauseCompact` inline for green clauses. DB render path shows side-by-side layout. |
-| `AnalysisActions` | `analysis-actions.tsx` | Share button (clipboard copy with "Copied!" feedback) + Download PDF link (`/api/report/[id]`) + Delete button (with ConfirmDialog, redirects to `/history` on success). Centered below summary in both DB and streaming paths. |
+| `AnalysisActions` | `analysis-actions.tsx` | Props: `analysisId`, `isOwner`, `isPublic`, `shareExpiresAt`. Owner view: share toggle (enables 7-day link + copies URL), stop-sharing button (`Link2Off` icon), Download PDF, Delete (with ConfirmDialog). Non-owner view: copy link + Download PDF only. Shows "Shared · Expires {date}" when active. Uses `analysis.toggleShare` mutation. Centered below summary in both DB and streaming paths. |
 | `ClauseCard` | `clause-card.tsx` | 4px left border (risk color), category tag, RiskBadge, collapsible clause text (line-clamp-3), explanation, collapsible safer alternative (green-50 bg, chevron). `compact` prop hides clause text (used in side-by-side layout). CSS fade-slide-in animation. |
 | `ConnectingLines` | `connecting-lines.tsx` | Fixed SVG overlay with cubic bezier curves connecting clause highlights to analysis cards. Risk-colored (3px stroke, full opacity for red/yellow). `docScrollContainer` ref for accurate scroll tracking (attached to TextDocumentPanel's inner scrollable div). rAF-throttled updates. |
 | `DocumentPanel` | `document-panel.tsx` | Dispatcher routing to `TextDocumentPanel`. Passes through `onScrollContainerRef`. Future: PDF viewer dispatch. Exports `ClauseHighlight` type. |
@@ -102,7 +102,7 @@ Accepts PDF, DOCX, and TXT files. Order: **rate limit check** → MIME type (pdf
 
 After validation: upload to Supabase Storage → create document record → run relevance gate → if contract: update document + create analysis record.
 
-Rate limit uses `checkRateLimit(ip)` from `@redflag/api/rateLimit`. If DB fails, degrades gracefully (continues without rate limiting).
+Rate limit uses `checkRateLimit(ip)` from `@redflag/api/rateLimit`. If DB fails, returns 503 (fail-closed — pipeline would fail anyway).
 
 Returns:
 - Not contract: `{ isContract: false, reason: "..." }`
@@ -138,7 +138,7 @@ Returns:
 
 ## Config
 
-- `next.config.ts` — `transpilePackages` for all `@redflag/*` packages
+- `next.config.ts` — `transpilePackages` for all `@redflag/*` packages, `async headers()` with security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
 - `tsconfig.json` — `declaration: false` (web app doesn't emit .d.ts), `@/*` path alias for `./src/*`
 
 ## Rules

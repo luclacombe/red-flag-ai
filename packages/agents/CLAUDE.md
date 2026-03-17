@@ -54,7 +54,7 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 - **clause_positions event**: Emitted immediately after parse (both fresh and resume) for frontend skeleton cards.
 - **max_tokens estimation**: `Math.min(clauseCount * 300 + 4096, 64000)` — ~300 tokens per clause average (green clauses use ~50 tokens with brief explanations, red/yellow use ~600 with conciseness guidance) + 4K buffer. Cap at 64K (Sonnet 4.6 max output).
 - **RAG degradation**: If Voyage API is down, `computeMatchedPatterns` fails gracefully — `matchedPatterns` stays empty, analysis proceeds normally.
-- **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared`.
+- **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared`. Error logs for malformed JSON use `jsonBufLength` (not content) to avoid leaking user contract text.
 
 ## Rules
 

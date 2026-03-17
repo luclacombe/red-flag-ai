@@ -5,9 +5,9 @@ Leaf package — all other packages import from here, this imports nothing inter
 ## What's Here
 
 - `src/schemas/` — Zod schemas for all data shapes crossing package boundaries
-- `src/constants.ts` — Shared constants (MAX_PAGES, RATE_LIMIT_PER_DAY, VOYAGE_DIMENSIONS, MAX_FILE_SIZE_BYTES, MAX_TEXT_LENGTH, ACCEPTED_MIME_TYPES, DOCX_MIME, TXT_MIME, SUPPORTED_LANGUAGES)
+- `src/constants.ts` — Shared constants (MAX_PAGES, RATE_LIMIT_PER_DAY, VOYAGE_DIMENSIONS, MAX_FILE_SIZE_BYTES, MAX_TEXT_LENGTH, ACCEPTED_MIME_TYPES, DOCX_MIME, TXT_MIME, SUPPORTED_LANGUAGES, SHARE_LINK_EXPIRY_DAYS)
 - `src/logger.ts` — Structured JSON logger (`logger.info/warn/error`). Uses `console.log` + `JSON.stringify` — Vercel captures natively.
-- `src/crypto.ts` — Encryption utilities (AES-256-GCM, HKDF key derivation, HMAC IP hashing). **Exported via `@redflag/shared/crypto` subpath, NOT the main barrel** — `node:crypto` is incompatible with edge runtime.
+- `src/crypto.ts` — Encryption utilities (AES-256-GCM, HKDF key derivation, HMAC IP hashing). `getMasterKey()` validates hex format via regex. `decryptBuffer()` validates minimum input length. `decrypt()` uses explicit UTF-8 encoding. **Exported via `@redflag/shared/crypto` subpath, NOT the main barrel** — `node:crypto` is incompatible with edge runtime.
 - `src/index.ts` — Barrel export (Biome enforces alphabetical import ordering)
 
 ## Schemas

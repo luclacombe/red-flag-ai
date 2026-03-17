@@ -32,6 +32,7 @@ pnpm --filter @redflag/db db:studio     # Open Drizzle Studio
 - **Cascading deletes:** `documents → analyses → clauses` cascade on delete
 - **jsonb columns:** `top_concerns`, `matched_patterns`, `contract_type` — typed with `$type<string[]>()`; `parsed_clauses` typed with `$type<PositionedClause[]>()`
 - **response_language:** `analyses.response_language` text NOT NULL DEFAULT 'en' — user-selected language for AI explanations
+- **Share columns:** `analyses.is_public` boolean NOT NULL DEFAULT false, `analyses.share_expires_at` timestamptz nullable. Control public access to analyses. Migration: `supabase/migrations/00000000000004_share_links.sql`.
 
 ## Embedding Functions
 
