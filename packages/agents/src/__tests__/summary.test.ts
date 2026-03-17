@@ -13,7 +13,10 @@ vi.mock("../client", () => ({
 const { summarize } = await import("../summary");
 
 function makeTextResponse(text: string) {
-  return { content: [{ type: "text" as const, text }] };
+  return {
+    content: [{ type: "text" as const, text }],
+    usage: { input_tokens: 500, output_tokens: 200 },
+  };
 }
 
 const sampleAnalyses = [

@@ -18,6 +18,7 @@ const { relevanceGate } = await import("../gate");
 function makeTextResponse(text: string) {
   return {
     content: [{ type: "text" as const, text }],
+    usage: { input_tokens: 100, output_tokens: 50 },
   };
 }
 

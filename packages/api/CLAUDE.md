@@ -10,6 +10,7 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 - `src/routers/health.ts` — Health check router (`health.check` query)
 - `src/routers/analysis.ts` — Analysis router: `analysis.stream` (SSE subscription) + `analysis.get` (query) + `analysis.list` (protectedProcedure, paginated) + `analysis.delete` (protectedProcedure, ownership-verified)
 - `src/rateLimit.ts` — Auth-aware rate limiting: `checkRateLimit(identifier, isAuthenticated?)` → `{ limited, resetAt }`. Uses userId (10/day) or IP (2/day). Atomic UPSERT on `rate_limits` table. Exported via `@redflag/api/rateLimit`.
+- `src/routers/admin.ts` — Admin router: `admin.dashboard` (adminProcedure, aggregated pipeline metrics by period). `adminProcedure` extends `protectedProcedure` with `ADMIN_EMAIL` env var check.
 - `src/index.ts` — Barrel export: `appRouter`, `AppRouter` type, `TRPCContext` type, `createTRPCContext`, `createCallerFactory`, `protectedProcedure`
 
 ## tRPC v11 Patterns

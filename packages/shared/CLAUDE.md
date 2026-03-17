@@ -28,6 +28,7 @@ Leaf package — all other packages import from here, this imports nothing inter
 
 ## Rules
 
+- `src/schemas/metrics.ts` — Pipeline observability types: `TokenUsage` (`{ inputTokens, outputTokens }`), `PipelineStep` union (`"gate" | "parse" | "combined_analysis" | "summary_fallback"`), `PIPELINE_STEPS` const array.
 - Every new data shape that crosses a package boundary gets a Zod schema here
 - Export both the schema and its inferred `type` from the barrel
 - After modifying `index.ts`, run `npx biome check --write src/` to fix import ordering

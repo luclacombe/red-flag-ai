@@ -1,4 +1,12 @@
-import { analyses, clauses, eq, getDb, getPatternsByContractType, sql } from "@redflag/db";
+import {
+  analyses,
+  clauses,
+  eq,
+  getDb,
+  getPatternsByContractType,
+  recordPipelineMetric,
+  sql,
+} from "@redflag/db";
 import {
   type ClauseAnalysis,
   type FileType,
@@ -7,6 +15,7 @@ import {
   type PositionedClause,
   type SSEEvent,
   type Summary,
+  type TokenUsage,
 } from "@redflag/shared";
 import { decrypt, deriveKey, encrypt, getMasterKey } from "@redflag/shared/crypto";
 import { findAnchorPosition } from "./boundary-detect";
@@ -224,7 +233,11 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       }
     } else {
       // Fresh parse — heuristic first, LLM fallback if suspicious
-      const rawClauses = await parseClausesSmart(text, contractType, language);
+      const parseStart = Date.now();
+      let parseUsage: TokenUsage | undefined;
+      const rawClauses = await parseClausesSmart(text, contractType, language, (u) => {
+        parseUsage = u;
+      });
 
       if (rawClauses.length === 0) {
         yield {
@@ -250,6 +263,16 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
       }
 
       logger.info("Clauses parsed and cached", { clauseCount: positionedClauses.length });
+
+      // Record parse metric
+      recordPipelineMetric({
+        analysisId,
+        step: "parse",
+        durationMs: Date.now() - parseStart,
+        usage: parseUsage,
+        model: parseUsage ? "haiku" : undefined,
+        success: true,
+      }).catch(() => {});
 
       // Emit clause positions for frontend skeleton cards
       yield {
@@ -307,14 +330,21 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         yield { type: "clause_analyzing", data: { position: remainingClauses[0].position } };
       }
 
+      const analysisStart = Date.now();
+      const analysisUsage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
+      let analysisHadError = false;
+
       let nextAnalyzingPosition = 0;
-      for await (const event of analyzeAllClauses({
-        clauses: remainingClauses,
-        contractType,
-        language,
-        responseLanguage,
-        ragPatterns,
-      })) {
+      for await (const event of analyzeAllClauses(
+        {
+          clauses: remainingClauses,
+          contractType,
+          language,
+          responseLanguage,
+          ragPatterns,
+        },
+        analysisUsage,
+      )) {
         if (event.type === "clause_analysis") {
           // Emit analyzing indicator for the NEXT clause (look-ahead)
           const nextPos = nextAnalyzingPosition + 1;
@@ -350,9 +380,22 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
         if (event.type === "summary") {
           combinedSummary = event.data;
         }
+        if (event.type === "error") {
+          analysisHadError = true;
+        }
         yield event;
         await heartbeat(analysisId);
       }
+
+      // Record combined analysis metric
+      recordPipelineMetric({
+        analysisId,
+        step: "combined_analysis",
+        durationMs: Date.now() - analysisStart,
+        usage: analysisUsage,
+        model: "sonnet",
+        success: !analysisHadError,
+      }).catch(() => {});
 
       // Enrich clauses with matchedPatterns after embedding completes
       const matchedMap = await embeddingPromise;
@@ -388,6 +431,8 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
     } else {
       yield { type: "status", message: "Generating summary..." };
 
+      const summaryStart = Date.now();
+      let summaryUsage: TokenUsage | undefined;
       try {
         const summaryResult = await summarize(
           allAnalyses.map((a) => ({
@@ -399,6 +444,9 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
           contractType,
           language,
           responseLanguage,
+          (u) => {
+            summaryUsage = u;
+          },
         );
 
         const clauseBreakdown = {
@@ -409,7 +457,25 @@ export async function* analyzeContract(params: AnalyzeContractParams): AsyncGene
 
         summary = { ...summaryResult, clauseBreakdown };
         yield { type: "summary", data: summary };
+
+        recordPipelineMetric({
+          analysisId,
+          step: "summary_fallback",
+          durationMs: Date.now() - summaryStart,
+          usage: summaryUsage,
+          model: "sonnet",
+          success: true,
+        }).catch(() => {});
       } catch {
+        recordPipelineMetric({
+          analysisId,
+          step: "summary_fallback",
+          durationMs: Date.now() - summaryStart,
+          usage: summaryUsage,
+          model: "sonnet",
+          success: false,
+          errorMessage: "Summary agent failed",
+        }).catch(() => {});
         yield {
           type: "error",
           message: "Failed to generate summary. Individual clause analyses are still available.",

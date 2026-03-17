@@ -1,4 +1,4 @@
-import { logger, RecommendationSchema, type Summary } from "@redflag/shared";
+import { logger, RecommendationSchema, type Summary, type TokenUsage } from "@redflag/shared";
 import { z } from "zod";
 import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildSummaryUserMessage, SUMMARY_SYSTEM_PROMPT } from "./prompts/summary";
@@ -35,6 +35,7 @@ export async function summarize(
   contractType: string,
   documentLanguage: string,
   responseLanguage: string,
+  onUsage?: (usage: TokenUsage) => void,
 ): Promise<Omit<Summary, "clauseBreakdown">> {
   const client = getAnthropicClient();
   let lastError: unknown;
@@ -69,6 +70,10 @@ export async function summarize(
 
       const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = SummaryResponseSchema.parse(parsed);
+      onUsage?.({
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      });
       logger.info("Summary complete", {
         overallRiskScore: result.overallRiskScore,
         recommendation: result.recommendation,

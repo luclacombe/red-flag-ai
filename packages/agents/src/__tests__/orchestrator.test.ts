@@ -34,6 +34,7 @@ vi.mock("../summary", () => ({
 
 vi.mock("@redflag/db", () => ({
   getPatternsByContractType: (...args: unknown[]) => mockGetPatternsByContractType(...args),
+  recordPipelineMetric: vi.fn().mockResolvedValue(undefined),
   getDb: () => ({
     insert: mockInsert,
     update: mockUpdate,
@@ -211,7 +212,12 @@ describe("analyzeContract orchestrator", () => {
 
     await collectEvents(baseParams);
 
-    expect(mockParseClausesSmart).toHaveBeenCalledWith(baseParams.text, "residential_lease", "en");
+    expect(mockParseClausesSmart).toHaveBeenCalledWith(
+      baseParams.text,
+      "residential_lease",
+      "en",
+      expect.any(Function),
+    );
   });
 
   it("fetches RAG patterns and passes them to combined analysis", async () => {
@@ -231,6 +237,7 @@ describe("analyzeContract orchestrator", () => {
         contractType: "residential_lease",
         language: "en",
       }),
+      expect.any(Object),
     );
   });
 
@@ -370,6 +377,7 @@ describe("analyzeContract orchestrator", () => {
       expect.objectContaining({
         clauses: [expect.objectContaining({ position: 1 })],
       }),
+      expect.any(Object),
     );
   });
 
@@ -433,6 +441,7 @@ describe("analyzeContract orchestrator", () => {
       expect.any(String),
       expect.any(String),
       "en",
+      expect.any(Function),
     );
   });
 

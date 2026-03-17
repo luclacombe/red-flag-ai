@@ -758,7 +758,7 @@ Must pass before committing. No exceptions.
 ### Tasks
 
 #### 9.1 — Pipeline metrics table
-- [ ] Create Drizzle migration for `pipeline_metrics` table:
+- [x] Create Drizzle migration for `pipeline_metrics` table:
   ```
   id: uuid PK
   analysisId: uuid FK → analyses
@@ -771,19 +771,19 @@ Must pass before committing. No exceptions.
   errorMessage: text (nullable)
   createdAt: timestamp
   ```
-- [ ] Apply migration
+- [x] Apply migration
 
 #### 9.2 — Instrument the pipeline
-- [ ] Update orchestrator to record timing + token usage for each step:
+- [x] Update orchestrator to record timing + token usage for each step:
   - Gate agent: duration, tokens, success
   - Smart parse: duration, tokens (if Haiku fallback used), heuristic-only flag
   - Combined analysis: duration, total tokens, clause count
   - Summary fallback (if triggered): duration, tokens
-- [ ] Insert metrics into `pipeline_metrics` after each step completes
-- [ ] Use `response.usage` from the Anthropic SDK for token counts
+- [x] Insert metrics into `pipeline_metrics` after each step completes
+- [x] Use `response.usage` from the Anthropic SDK for token counts
 
 #### 9.3 — Admin API
-- [ ] Create `admin` tRPC router with protectedProcedure (plus admin check — hardcode your email for MVP):
+- [x] Create `admin` tRPC router with protectedProcedure (plus admin check — hardcode your email for MVP):
   - `admin.metrics`: Aggregated stats over time period (last 24h, 7d, 30d)
     - Total analyses, success rate, avg duration by step
     - Total tokens used (input + output), estimated cost
@@ -793,28 +793,28 @@ Must pass before committing. No exceptions.
   - `admin.errors`: Recent errors with stack traces
 
 #### 9.4 — Admin page
-- [ ] Create `apps/web/app/admin/page.tsx`:
+- [x] Create `apps/web/app/admin/page.tsx`:
   - Gate behind admin email check (redirect non-admins)
   - Stats cards: total analyses, success rate, avg total duration, estimated cost
   - Table: recent analyses with step-by-step timing breakdown
   - Error log: recent failures with step + error message
   - Simple Tailwind table/card layout — no charting library needed
-- [ ] No link in NavBar — accessed by direct URL only (`/admin`)
+- [x] No link in NavBar — accessed by direct URL only (`/admin`)
 
 #### 9.5 — Tests
-- [ ] Unit test: pipeline metrics are recorded correctly
-- [ ] Unit test: admin router rejects non-admin users
-- [ ] Unit test: metrics aggregation query returns correct shape
+- [x] Unit test: pipeline metrics are recorded correctly
+- [x] Unit test: admin router rejects non-admin users
+- [x] Unit test: metrics aggregation query returns correct shape
 
 #### 9.6 — Documentation
-- [ ] Update CLAUDE.md: add `pipeline_metrics` table, admin router, observability notes
+- [x] Update CLAUDE.md: add `pipeline_metrics` table, admin router, observability notes
 
 ### Exit Criteria
-- [ ] Quality gate passes: `pnpm turbo lint type-check test build`
-- [ ] `/admin` shows pipeline metrics for recent analyses
-- [ ] Non-admin users are redirected away from `/admin`
-- [ ] Token usage and timing visible per analysis step
-- [ ] Documentation updated
+- [x] Quality gate passes: `pnpm turbo lint type-check test build`
+- [x] `/admin` shows pipeline metrics for recent analyses
+- [x] Non-admin users are redirected away from `/admin`
+- [x] Token usage and timing visible per analysis step
+- [x] Documentation updated
 
 ---
 

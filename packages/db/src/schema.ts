@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   integer,
@@ -99,6 +100,28 @@ export const knowledgePatterns = pgTable(
       "hnsw",
       table.embedding.op("vector_cosine_ops"),
     ),
+  ],
+);
+
+// ── Pipeline Metrics ──────────────────────────────────────
+
+export const pipelineMetrics = pgTable(
+  "pipeline_metrics",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    analysisId: uuid("analysis_id").references(() => analyses.id, { onDelete: "cascade" }),
+    step: text("step").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    model: text("model"),
+    success: boolean("success").notNull().default(true),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("pipeline_metrics_analysis_id_idx").on(table.analysisId),
+    index("pipeline_metrics_created_at_idx").on(table.createdAt),
   ],
 );
 

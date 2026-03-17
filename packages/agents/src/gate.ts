@@ -1,4 +1,4 @@
-import { type GateResult, GateResultSchema, logger } from "@redflag/shared";
+import { type GateResult, GateResultSchema, logger, type TokenUsage } from "@redflag/shared";
 import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildGateUserMessage, GATE_SYSTEM_PROMPT } from "./prompts/gate";
 
@@ -13,7 +13,10 @@ const GATE_TEXT_LIMIT = 2000;
  * @returns GateResult with classification details
  * @throws Error if both attempts fail
  */
-export async function relevanceGate(text: string): Promise<GateResult> {
+export async function relevanceGate(
+  text: string,
+  onUsage?: (usage: TokenUsage) => void,
+): Promise<GateResult> {
   const truncated = text.slice(0, GATE_TEXT_LIMIT);
   const client = getAnthropicClient();
 
@@ -37,6 +40,10 @@ export async function relevanceGate(text: string): Promise<GateResult> {
 
       const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
       const result = GateResultSchema.parse(parsed);
+      onUsage?.({
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      });
       logger.info("Gate result", {
         isContract: result.isContract,
         contractType: result.contractType,

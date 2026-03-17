@@ -1,4 +1,4 @@
-import { logger, type ParsedClause } from "@redflag/shared";
+import { logger, type ParsedClause, type TokenUsage } from "@redflag/shared";
 import { getAnthropicClient, MODELS } from "./client";
 import {
   BOUNDARY_DETECT_SYSTEM_PROMPT,
@@ -262,6 +262,7 @@ export async function detectClauseBoundaries(
   text: string,
   contractType: string,
   language: string,
+  onUsage?: (usage: TokenUsage) => void,
 ): Promise<ParsedClause[]> {
   const client = getAnthropicClient();
 
@@ -298,6 +299,11 @@ export async function detectClauseBoundaries(
       }
 
       const anchors = input.clauseAnchors.map((a) => a.anchor);
+
+      onUsage?.({
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      });
 
       logger.info("Boundary detection result", {
         anchorCount: anchors.length,

@@ -64,7 +64,13 @@ function buildHappyPathStream(
   const events: Record<string, unknown>[] = [
     {
       type: "message_start",
-      message: { id: "msg_1", type: "message", role: "assistant", content: [] },
+      message: {
+        id: "msg_1",
+        type: "message",
+        role: "assistant",
+        content: [],
+        usage: { input_tokens: 1000, output_tokens: 1 },
+      },
     },
   ];
 

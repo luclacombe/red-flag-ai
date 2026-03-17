@@ -15,7 +15,6 @@ export {
 
 // Logger
 export { logger } from "./logger";
-
 // Schemas
 export { type ClauseAnalysis, ClauseAnalysisSchema } from "./schemas/clause";
 export {
@@ -51,6 +50,8 @@ export {
 export { type GateResult, GateResultSchema } from "./schemas/gate";
 export { type KnowledgePattern, KnowledgePatternSchema } from "./schemas/knowledge";
 export { type ResponseLanguage, ResponseLanguageSchema } from "./schemas/language";
+// Metrics
+export { PIPELINE_STEPS, type PipelineStep, type TokenUsage } from "./schemas/metrics";
 export {
   ParseClausesResponseSchema,
   type ParsedClause,

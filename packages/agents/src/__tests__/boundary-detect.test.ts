@@ -177,6 +177,7 @@ describe("detectClauseBoundaries", () => {
 
   it("calls Haiku with report_boundaries tool and strict: true", async () => {
     mockCreate.mockResolvedValueOnce({
+      usage: { input_tokens: 200, output_tokens: 100 },
       content: [
         {
           type: "tool_use",
@@ -230,6 +231,7 @@ describe("detectClauseBoundaries", () => {
 
   it("sends raw document text (no line numbering)", async () => {
     mockCreate.mockResolvedValueOnce({
+      usage: { input_tokens: 200, output_tokens: 100 },
       content: [
         {
           type: "tool_use",

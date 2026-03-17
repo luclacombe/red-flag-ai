@@ -39,6 +39,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `/auth/confirm` | API (GET) | Verifies email OTP (token_hash + type). |
 | `/api/cron/cleanup` | API (GET) | Vercel Cron auto-deletion. Deletes documents >30 days (decrypts storagePath → deletes from Storage → CASCADE deletes analyses+clauses). Deletes rate_limits >7 days. Verifies `CRON_SECRET` bearer token. `runtime = "nodejs"`, `maxDuration = 60`. |
 | `/api/document/[id]` | API (GET) | Serve decrypted document binary. Owner-only (auth + userId check). Returns raw file bytes with appropriate Content-Type. `Cache-Control: private, max-age=3600`. `runtime = "nodejs"`. |
+| `/admin` | Dynamic | Pipeline observability dashboard. Server component checks auth + `ADMIN_EMAIL` env var, redirects non-admins. `AdminDashboard` client component with `admin.dashboard` tRPC query. Stats cards, recent analyses table, error log. No NavBar link. |
 | `/history` | Static | Analysis history page. Protected by middleware (redirects to `/login` if unauthenticated). `HistoryView` client component with infinite scroll via `analysis.list` tRPC query. |
 | `/api/account/delete` | API (DELETE) | Delete user account. Deletes all documents + storage files + auth user. Returns `{ ok, docsDeleted, storageDeleted }`. |
 
@@ -83,6 +84,11 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 | `RecommendationBadge` | `recommendation-badge.tsx` | Large pill: "Safe to Sign" (green) / "Proceed with Caution" (amber) / "Do Not Sign" (red). Uses `Recommendation` type. |
 | `BreakdownBar` | `breakdown-bar.tsx` | Horizontal stacked bar (red|amber|green segments) with dot + count labels. Pure div widths, no charting library. |
 | `SummaryPanel` | `summary-panel.tsx` | Composed: RiskScore + RecommendationBadge + BreakdownBar + top concerns list + contract type/language. Fade-in animation. |
+
+### Admin page components
+| Component | File | Notes |
+|-----------|------|-------|
+| `AdminDashboard` | `admin-dashboard.tsx` | Client component. `trpc.admin.dashboard.useQuery` with period selector (24h/7d/30d). Stats cards (total analyses, success rate, avg duration, estimated cost, token totals). Recent analyses table with per-step timing. Error log with step + message. Simple Tailwind tables, no charting library. |
 
 ### History page components
 | Component | File | Notes |

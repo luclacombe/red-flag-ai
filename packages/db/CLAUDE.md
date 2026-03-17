@@ -4,12 +4,13 @@ Database layer — Drizzle schema, client, migrations, and query functions (incl
 
 ## What's Here
 
-- `src/schema.ts` — 5 tables: documents, analyses, clauses, knowledge_patterns, rate_limits
+- `src/schema.ts` — 6 tables: documents, analyses, clauses, knowledge_patterns, rate_limits, pipeline_metrics
 - `src/client.ts` — Lazy-initialized Drizzle client (`db` proxy + `getDb()`) with `{ prepare: false }` for Supabase pooler
 - `src/embeddings.ts` — Voyage AI embedding functions (`embedText`, `embedTexts`) using `voyage-law-2` model (1024 dims)
 - `src/queries/findSimilarPatterns.ts` — pgvector cosine similarity search against knowledge_patterns
 - `src/queries/getPatternsByContractType.ts` — **NEW (Phase 1):** Bulk fetch all patterns for a contract type. Returns `KnowledgePatternWithEmbedding[]` (includes embedding vectors for in-memory similarity). Single SQL query with jsonb `@>` containment filter.
 - `src/index.ts` — Barrel export (re-exports `eq`, `sql` from `drizzle-orm`, all schema, embeddings, queries)
+- `src/queries/recordPipelineMetric.ts` — Insert pipeline metrics (`recordPipelineMetric(input)` → `void`). Fire-and-forget from orchestrator/upload route.
 - `drizzle.config.ts` — Drizzle Kit config (`dialect: "postgresql"`)
 - `drizzle/` — Generated migration SQL files (gitignored from Biome linting)
 

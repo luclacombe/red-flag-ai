@@ -1,6 +1,6 @@
 import { relevanceGate } from "@redflag/agents";
 import { checkRateLimit } from "@redflag/api/rateLimit";
-import { analyses, db, documents, eq } from "@redflag/db";
+import { analyses, db, documents, eq, recordPipelineMetric } from "@redflag/db";
 import {
   DOCX_MIME,
   type GateResult,
@@ -8,6 +8,7 @@ import {
   MAX_FILE_SIZE_BYTES,
   MAX_PAGES,
   MAX_TEXT_LENGTH,
+  type TokenUsage,
   TXT_MIME,
 } from "@redflag/shared";
 import { deriveKey, encrypt, encryptBuffer, getMasterKey } from "@redflag/shared/crypto";
@@ -290,22 +291,42 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Run relevance gate ─────────────────────────────────────
+    const gateStart = Date.now();
+    let gateUsage: TokenUsage | undefined;
     let gateResult: GateResult;
     try {
-      gateResult = await relevanceGate(trimmedText);
+      gateResult = await relevanceGate(trimmedText, (u) => {
+        gateUsage = u;
+      });
     } catch (gateErr) {
       logger.error("Gate failed", {
         step: "gate",
         error: gateErr instanceof Error ? gateErr.message : String(gateErr),
       });
+      recordPipelineMetric({
+        step: "gate",
+        durationMs: Date.now() - gateStart,
+        usage: gateUsage,
+        model: "haiku",
+        success: false,
+        errorMessage: gateErr instanceof Error ? gateErr.message : String(gateErr),
+      }).catch(() => {});
       return errorResponse(
         "Analysis temporarily unavailable. Please try again in a few minutes.",
         503,
       );
     }
+    const gateDuration = Date.now() - gateStart;
 
     // ── Handle gate result ─────────────────────────────────────
     if (!gateResult.isContract) {
+      recordPipelineMetric({
+        step: "gate",
+        durationMs: gateDuration,
+        usage: gateUsage,
+        model: "haiku",
+        success: true,
+      }).catch(() => {});
       return NextResponse.json({
         isContract: false,
         reason:
@@ -335,6 +356,16 @@ export async function POST(request: NextRequest) {
     if (!analysis) {
       return errorResponse("Failed to create analysis record.", 500);
     }
+
+    // Record gate metric now that we have an analysisId
+    recordPipelineMetric({
+      analysisId: analysis.id,
+      step: "gate",
+      durationMs: gateDuration,
+      usage: gateUsage,
+      model: "haiku",
+      success: true,
+    }).catch(() => {});
 
     return NextResponse.json({
       isContract: true,

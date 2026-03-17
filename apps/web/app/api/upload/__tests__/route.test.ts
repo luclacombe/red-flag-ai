@@ -17,6 +17,7 @@ vi.mock("@redflag/db", () => ({
   documents: { id: "documents.id" },
   analyses: { id: "analyses.id" },
   eq: vi.fn(),
+  recordPipelineMetric: vi.fn(() => Promise.resolve()),
 }));
 
 const mockRelevanceGate = vi.fn();

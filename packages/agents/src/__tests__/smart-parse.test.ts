@@ -125,7 +125,7 @@ describe("parseClausesSmart", () => {
     const result = await parseClausesSmart(largeText, "lease", "nl");
 
     expect(result).toEqual(llmResult);
-    expect(mockDetectClauseBoundaries).toHaveBeenCalledWith(largeText, "lease", "nl");
+    expect(mockDetectClauseBoundaries).toHaveBeenCalledWith(largeText, "lease", "nl", undefined);
   });
 
   it("triggers LLM fallback when heuristic produces 2 clauses for large document", async () => {
@@ -181,6 +181,11 @@ describe("parseClausesSmart", () => {
     await parseClausesSmart(text, "residential_lease", "nl");
 
     expect(mockParseClausesHeuristic).toHaveBeenCalledWith(text, "residential_lease", "nl");
-    expect(mockDetectClauseBoundaries).toHaveBeenCalledWith(text, "residential_lease", "nl");
+    expect(mockDetectClauseBoundaries).toHaveBeenCalledWith(
+      text,
+      "residential_lease",
+      "nl",
+      undefined,
+    );
   });
 });

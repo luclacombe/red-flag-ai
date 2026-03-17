@@ -1,4 +1,4 @@
-import { logger, type ParsedClause } from "@redflag/shared";
+import { logger, type ParsedClause, type TokenUsage } from "@redflag/shared";
 import { detectClauseBoundaries } from "./boundary-detect";
 import { parseClausesHeuristic } from "./heuristic-parse";
 
@@ -40,6 +40,7 @@ export async function parseClausesSmart(
   text: string,
   contractType: string,
   language: string,
+  onUsage?: (usage: TokenUsage) => void,
 ): Promise<ParsedClause[]> {
   // Step 1: Heuristic parse (instant, synchronous)
   const heuristicResult = parseClausesHeuristic(text, contractType, language);
@@ -60,7 +61,7 @@ export async function parseClausesSmart(
   });
 
   try {
-    const llmResult = await detectClauseBoundaries(text, contractType, language);
+    const llmResult = await detectClauseBoundaries(text, contractType, language, onUsage);
     logger.info("Smart parse: LLM fallback succeeded", {
       clauseCount: llmResult.length,
       path: "llm_fallback",

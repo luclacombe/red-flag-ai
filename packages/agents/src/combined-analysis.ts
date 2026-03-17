@@ -8,6 +8,7 @@ import {
   RiskLevelSchema,
   type SSEEvent,
   type Summary,
+  type TokenUsage,
 } from "@redflag/shared";
 import { z } from "zod";
 import { getAnthropicClient, MODELS } from "./client";
@@ -135,7 +136,10 @@ function estimateMaxTokens(clauseCount: number): number {
  *
  * Retries once on API failure (2-attempt pattern matching existing agents).
  */
-export async function* analyzeAllClauses(params: CombinedAnalysisParams): AsyncGenerator<SSEEvent> {
+export async function* analyzeAllClauses(
+  params: CombinedAnalysisParams,
+  usageRef?: TokenUsage,
+): AsyncGenerator<SSEEvent> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -144,7 +148,7 @@ export async function* analyzeAllClauses(params: CombinedAnalysisParams): AsyncG
         logger.info("Combined analysis retry", { attempt: attempt + 1 });
         await new Promise((r) => setTimeout(r, 2000));
       }
-      yield* analyzeAllClausesInternal(params);
+      yield* analyzeAllClausesInternal(params, usageRef);
       return;
     } catch (error) {
       lastError = error;
@@ -169,6 +173,7 @@ export async function* analyzeAllClauses(params: CombinedAnalysisParams): AsyncG
 
 async function* analyzeAllClausesInternal(
   params: CombinedAnalysisParams,
+  usageRef?: TokenUsage,
 ): AsyncGenerator<SSEEvent> {
   const client = getAnthropicClient();
   const clauseMap = new Map(params.clauses.map((c) => [c.position, c]));
@@ -208,6 +213,13 @@ async function* analyzeAllClausesInternal(
 
   for await (const event of stream) {
     switch (event.type) {
+      case "message_start": {
+        if (usageRef) {
+          usageRef.inputTokens = event.message.usage.input_tokens;
+        }
+        break;
+      }
+
       case "content_block_start": {
         if (event.content_block.type === "tool_use") {
           activeTools.set(event.index, {
@@ -248,6 +260,9 @@ async function* analyzeAllClausesInternal(
 
       case "message_delta": {
         stopReason = event.delta.stop_reason;
+        if (usageRef) {
+          usageRef.outputTokens = event.usage.output_tokens;
+        }
         break;
       }
     }
