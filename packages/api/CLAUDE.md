@@ -35,11 +35,11 @@ tRPC v11 routers, procedures, and context. Consumed by `apps/web`.
 - **`analysis.stream`** — SSE subscription. Input: `{ analysisId: string (uuid) }`. Access-checked (same logic as `get`: owner, anonymous, or active share). Dual path:
   - Complete → emits `document_text` (with fileType) → `clause_positions` (with startIndex/endIndex) → replays clauses + summary from DB
   - Processing (not stale) → emits `clause_positions` (from cached parse if available, with positions) → polls DB every 3s until analysis completes or fails, replays results. Falls through to claim if it becomes stale.
-  - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline (passes `fileType`)
+  - Pending / stale processing → atomic `claimAnalysis()` then runs `analyzeContract()` pipeline **detached** (survives SSE disconnect). Events forwarded via in-memory queue.
   - Failed → yields error event
 - **`analysis.get`** — Query. Access-checked: owner always passes, anonymous uploads pass, others need `isPublic = true && shareExpiresAt > now()`. Returns analysis record + all clauses + `extractedText` (decrypted from documents table) + `fileType` + `documentId` + `isOwner: boolean`. Throws `FORBIDDEN` for private/expired analyses.
-- **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>90s without heartbeat).
-- **Polling path** — When another connection is processing, replays existing clauses immediately, then polls every 3s for new clauses and status changes. Shows real-time progress even when not running the pipeline.
+- **`claimAnalysis()`** — Atomic UPDATE with `RETURNING *`. Prevents duplicate pipeline runs. Handles stale processing (>30s without heartbeat).
+- **Polling path** — When another connection is processing, replays existing clauses immediately, then polls every 2s for new clauses and status changes. Shows real-time progress even when not running the pipeline.
 - **`analysis.list`** — protectedProcedure query. Input: `{ cursor?: string, limit?: number (default 20) }`. Returns paginated user analyses joined with documents. Decrypts filenames. Cursor-based pagination via `createdAt` ordering. Returns `{ items, nextCursor }`.
 - **`analysis.toggleShare`** — protectedProcedure mutation. Input: `{ analysisId: string, enabled: boolean }`. Verifies ownership. When enabling: sets `isPublic = true`, `shareExpiresAt = now + SHARE_LINK_EXPIRY_DAYS`. When disabling: sets `isPublic = false`, `shareExpiresAt = null`. Returns `{ isPublic, shareExpiresAt }`.
 - **`analysis.delete`** — protectedProcedure mutation. Input: `{ analysisId: string }`. Verifies document ownership (`userId === ctx.user.id`). Decrypts `storagePath` → deletes from Supabase Storage → deletes document (CASCADE handles analyses + clauses). Uses `@supabase/supabase-js` service role client for storage deletion.
