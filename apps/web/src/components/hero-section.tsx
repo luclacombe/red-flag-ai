@@ -22,6 +22,8 @@ export function HeroSection() {
     <section className="relative flex min-h-[70vh] items-center justify-center px-4 py-20 md:py-28">
       <BackgroundPaths />
 
+      {/* Top fade — blends nav into hero seamlessly */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#0B1120] to-transparent" />
       {/* Bottom fade — blends hero into page seamlessly */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0B1120] to-transparent" />
 

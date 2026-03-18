@@ -23,7 +23,7 @@ const steps = [
     icon: ShieldCheck,
     title: "Get results with rewrites",
     description:
-      "Risk scores, plain-English explanations, and safer alternatives. All results encrypted and auto-deleted after 30 days.",
+      "Risk scores, plain-language explanations, and safer alternatives. All results encrypted and auto-deleted after 30 days.",
   },
 ] as const;
 
