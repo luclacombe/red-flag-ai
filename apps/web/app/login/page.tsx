@@ -28,7 +28,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   }
 
@@ -58,8 +58,15 @@ export default function LoginPage() {
 
   if (magicLinkSent) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0B1120] px-4">
         <BackgroundPaths variant="auth" />
+        <Link
+          href="/"
+          className="relative z-10 mb-6 flex items-center gap-2 font-heading text-2xl font-bold text-white transition-colors hover:text-slate-200"
+        >
+          <img src="/logo.svg" alt="" className="size-6" />
+          RedFlag AI
+        </Link>
         <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
           <h1 className="font-heading text-xl font-semibold text-white">Check your email</h1>
           <p className="mt-2 text-sm text-slate-300">
@@ -79,16 +86,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#0B1120] px-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0B1120] px-4">
       <BackgroundPaths variant="auth" />
+      <Link
+        href="/"
+        className="relative z-10 mb-6 flex items-center gap-2 font-heading text-2xl font-bold text-white transition-colors hover:text-slate-200"
+      >
+        <img src="/logo.svg" alt="" className="size-6" />
+        RedFlag AI
+      </Link>
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
-        <Link
-          href="/"
-          className="font-heading text-lg font-semibold text-white transition-colors hover:text-slate-300"
-        >
-          RedFlag AI
-        </Link>
-        <h1 className="mt-4 font-heading text-xl font-semibold text-white">Sign in</h1>
+        <h1 className="font-heading text-xl font-semibold text-white">Sign in</h1>
 
         <form onSubmit={handleSignIn} className="mt-6 space-y-4">
           <div>

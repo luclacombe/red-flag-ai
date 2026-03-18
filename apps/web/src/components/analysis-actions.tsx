@@ -31,7 +31,7 @@ export function AnalysisActions({
 
   const deleteMutation = trpc.analysis.delete.useMutation({
     onSuccess: () => {
-      router.push("/history");
+      router.push("/dashboard");
     },
   });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
-import { ChevronDown, Clock, LogOut, Trash2 } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -96,8 +96,9 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link
             href="/"
-            className="font-heading text-lg font-semibold text-white transition-colors duration-150 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+            className="flex items-center gap-2 font-heading text-lg font-semibold text-white transition-colors duration-150 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
+            <img src="/logo.svg" alt="" className="size-5" />
             RedFlag AI
           </Link>
           <div className="flex items-center gap-4">
@@ -107,7 +108,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
                 onClick={() =>
                   document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })
                 }
-                className="cursor-pointer text-sm font-medium text-slate-300 transition-colors duration-150 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="cursor-pointer text-sm font-medium text-slate-300 transition-colors duration-150 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 How it works
               </button>
@@ -118,7 +119,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
                   <button
                     type="button"
                     onClick={() => setMenuOpen((prev) => !prev)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors duration-150 hover:border-slate-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors duration-150 hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                     aria-expanded={menuOpen}
                     aria-haspopup="true"
                   >
@@ -133,16 +134,16 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
                   </button>
 
                   {menuOpen && (
-                    <div className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl border border-white/10 bg-[#131B2E] py-1 shadow-2xl animate-[fade-slide-in_150ms_ease-out_both]">
+                    <div className="absolute right-0 z-50 mt-2 w-56 origin-top-right overflow-hidden rounded-xl border border-white/10 bg-[#131B2E] shadow-2xl animate-[fade-slide-in_150ms_ease-out_both]">
                       <Link
-                        href="/history"
+                        href="/dashboard"
                         onClick={() => setMenuOpen(false)}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition-colors duration-100 hover:bg-white/5 hover:text-white"
                       >
-                        <Clock className="size-4" />
-                        History
+                        <LayoutDashboard className="size-4" />
+                        Dashboard
                       </Link>
-                      <div className="my-1 border-t border-white/5" />
+                      <div className="border-t border-white/5" />
                       <button
                         type="button"
                         onClick={handleSignOut}
@@ -151,7 +152,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
                         <LogOut className="size-4" />
                         Sign out
                       </button>
-                      <div className="my-1 border-t border-white/5" />
+                      <div className="border-t border-white/5" />
                       <button
                         type="button"
                         onClick={() => {
@@ -169,7 +170,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
               ) : (
                 <Link
                   href="/login"
-                  className="rounded-md border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors duration-150 hover:border-slate-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="rounded-md border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors duration-150 hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   Sign in
                 </Link>

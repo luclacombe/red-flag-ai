@@ -19,8 +19,6 @@ const RISK_COLORS: Record<string, string> = {
 };
 
 const CORNER_RADIUS = 8;
-/** Gap between clause highlight right edge and the vertical connector line */
-const CLAUSE_GAP = 12;
 
 /**
  * SVG overlay that draws orthogonal (elbow) connecting lines between
@@ -90,27 +88,29 @@ export function ConnectingLines({
     const x2 = cardRect.left - svgRect.left;
     const y2 = clampedCardY - svgRect.top;
 
-    // Vertical line sits just to the right of clause highlights, inside the document panel
-    const midX = x1 + CLAUSE_GAP;
+    // Vertical connector in the gap between the two panels
+    const midX = (leftPanel.right + rightPanel.left) / 2 - svgRect.left;
     const dy = y2 - y1;
-    const exitDist = x2 - midX; // vertical line → card left edge
 
-    // Is the clause's center scrolled outside the document panel?
+    // Is the element's center scrolled outside its panel?
     const clauseCenterY = clauseRect.top + clauseRect.height / 2;
     const clauseIsClamped = clauseCenterY < leftPanel.top || clauseCenterY > leftPanel.bottom;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+    const cardIsClamped = cardCenterY < rightPanel.top || cardCenterY > rightPanel.bottom;
 
     let path: string;
-    if (exitDist < 4 || (Math.abs(dy) < 2 && !clauseIsClamped)) {
-      // Panels too close or near-zero vertical distance — straight line
-      path = `M ${x1} ${y1} L ${x2} ${y2}`;
+
+    if (clauseIsClamped && cardIsClamped) {
+      // Both off-screen: vertical line in the gap
+      path = `M ${midX} ${y1} L ${midX} ${y2}`;
     } else if (clauseIsClamped) {
-      // Clause scrolled off-screen: vertical line → corner → horizontal to card
-      // No horizontal segment into the clause — just points toward it
-      const dirY = dy > 0 ? 1 : -1;
-      const r = Math.min(CORNER_RADIUS, exitDist / 2, Math.abs(dy) / 2);
+      // Clause off-screen: start from gap midpoint → vertical → corner → horizontal to card
+      const exitDist = x2 - midX;
+      const r = Math.min(CORNER_RADIUS, Math.max(exitDist / 2, 1), Math.abs(dy) / 2);
       if (Math.abs(dy) < 2) {
         path = `M ${midX} ${y1} L ${x2} ${y2}`;
       } else {
+        const dirY = dy > 0 ? 1 : -1;
         path = [
           `M ${midX} ${y1}`,
           `L ${midX} ${y2 - r * dirY}`,
@@ -118,19 +118,39 @@ export function ConnectingLines({
           `L ${x2} ${y2}`,
         ].join(" ");
       }
+    } else if (cardIsClamped) {
+      // Card off-screen: clause → horizontal → corner → vertical to gap midpoint
+      const clauseGap = midX - x1;
+      const r = Math.min(CORNER_RADIUS, Math.max(clauseGap / 2, 1), Math.abs(dy) / 2);
+      if (Math.abs(dy) < 2) {
+        path = `M ${x1} ${y1} L ${midX} ${y2}`;
+      } else {
+        const dirY = dy > 0 ? 1 : -1;
+        path = [
+          `M ${x1} ${y1}`,
+          `L ${midX - r} ${y1}`,
+          `Q ${midX} ${y1}, ${midX} ${y1 + r * dirY}`,
+          `L ${midX} ${y2}`,
+        ].join(" ");
+      }
     } else {
-      // Full elbow: clause → H right to vertical → V → H right to card
-      const dirY = dy > 0 ? 1 : -1;
-      const r = Math.min(CORNER_RADIUS, CLAUSE_GAP / 2, exitDist / 2, Math.abs(dy) / 2);
-
-      path = [
-        `M ${x1} ${y1}`,
-        `L ${midX - r} ${y1}`,
-        `Q ${midX} ${y1}, ${midX} ${y1 + r * dirY}`,
-        `L ${midX} ${y2 - r * dirY}`,
-        `Q ${midX} ${y2}, ${midX + r} ${y2}`,
-        `L ${x2} ${y2}`,
-      ].join(" ");
+      // Both visible: full elbow through gap midpoint
+      const clauseGap = midX - x1;
+      const exitDist = x2 - midX;
+      if (clauseGap < 4 || exitDist < 4 || Math.abs(dy) < 2) {
+        path = `M ${x1} ${y1} L ${x2} ${y2}`;
+      } else {
+        const dirY = dy > 0 ? 1 : -1;
+        const r = Math.min(CORNER_RADIUS, clauseGap / 2, exitDist / 2, Math.abs(dy) / 2);
+        path = [
+          `M ${x1} ${y1}`,
+          `L ${midX - r} ${y1}`,
+          `Q ${midX} ${y1}, ${midX} ${y1 + r * dirY}`,
+          `L ${midX} ${y2 - r * dirY}`,
+          `Q ${midX} ${y2}, ${midX + r} ${y2}`,
+          `L ${x2} ${y2}`,
+        ].join(" ");
+      }
     }
 
     const riskLevel = clauseRiskLevelsRef.current.get(currentClause) ?? "green";

@@ -1,15 +1,10 @@
 "use client";
 
-import type {
-  ClauseAnalysis,
-  PositionedClause,
-  Recommendation,
-  RiskLevel,
-  Summary,
-} from "@redflag/shared";
-import { Home } from "lucide-react";
+import type { ClauseAnalysis, Recommendation, RiskLevel, Summary } from "@redflag/shared";
+import { Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStreamContext } from "@/context/stream-context";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/react";
 import { AnalysisActions } from "./analysis-actions";
@@ -29,27 +24,22 @@ interface AnalysisViewProps {
   id: string;
 }
 
-type ProcessingStep = "connecting" | "gate" | "extracting" | "parsing" | "analyzing";
+type ProcessingStep = "connecting" | "gate" | "extracting" | "parsing" | "preparing" | "analyzing";
 
 /** Minimum time (ms) a clause shimmer must be visible before transitioning to its final color */
 const MIN_SHIMMER_MS = 400;
 
 export function AnalysisView({ id }: AnalysisViewProps) {
-  // Streaming state
-  const [streamClauses, setStreamClauses] = useState<ClauseAnalysis[]>([]);
-  const [totalClauses, setTotalClauses] = useState<number>(0);
-  const [streamSummary, setStreamSummary] = useState<Summary | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [streamError, setStreamError] = useState<{
-    message: string;
-    recoverable: boolean;
-  } | null>(null);
-  const [streamDone, setStreamDone] = useState(false);
+  const stream = useStreamContext();
 
-  // Side-by-side layout state
-  const [documentText, setDocumentText] = useState<string | null>(null);
-  const [positionedClauses, setPositionedClauses] = useState<PositionedClause[]>([]);
-  const [analyzingPositions, setAnalyzingPositions] = useState<Set<number>>(new Set());
+  // Local shimmer-buffered display state — initialized from context for instant navigate-back
+  const [displayedClauses, setDisplayedClauses] = useState<ClauseAnalysis[]>(() =>
+    stream.analysisId === id ? [...stream.streamClauses] : [],
+  );
+  const processedPositions = useRef(
+    new Set(stream.analysisId === id ? stream.streamClauses.map((c) => c.position) : []),
+  );
+
   const [flashingPosition, setFlashingPosition] = useState<number | null>(null);
 
   // Hover/click interaction — split to prevent scroll cascade
@@ -73,8 +63,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   const userHasInteracted = useRef(false);
   const skeletonRef = useRef<HTMLDivElement>(null);
 
-  // Processing step tracking
-  const [processingStep, setProcessingStep] = useState<ProcessingStep>("connecting");
+  // Processing step fade state
   const [processingFadingOut, setProcessingFadingOut] = useState(false);
   const [processingVisible, setProcessingVisible] = useState(true);
 
@@ -89,115 +78,66 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     error: queryError,
   } = trpc.analysis.get.useQuery({ analysisId: id });
 
-  // Subscribe to SSE when analysis is pending/processing
-  const needsStreaming =
-    !streamDone &&
-    analysis !== undefined &&
-    analysis !== null &&
-    (analysis.status === "pending" || analysis.status === "processing");
+  // Start streaming when analysis needs it
+  const analysisStatus = analysis?.status;
+  useEffect(() => {
+    if (analysisStatus === "pending" || analysisStatus === "processing") {
+      stream.startStream(id);
+    }
+  }, [analysisStatus, id, stream.startStream]);
+
+  // Derived stream state
+  const activeStream = stream.analysisId === id;
+  const needsStreaming = activeStream && !stream.streamDone;
+  const hasStreamResults = activeStream && displayedClauses.length > 0;
 
   // ── Commit a clause result to display (after minimum shimmer time) ──
   const commitClauseResult = useCallback((result: ClauseAnalysis) => {
-    setStreamClauses((prev) => {
+    setDisplayedClauses((prev) => {
       if (prev.some((c) => c.position === result.position)) return prev;
       return [...prev, result];
     });
     setFlashingPosition(result.position);
     setTimeout(() => setFlashingPosition(null), 450);
-    setAnalyzingPositions((prev) => {
-      const next = new Set(prev);
-      next.delete(result.position);
-      return next;
-    });
     shimmerStartTimes.current.delete(result.position);
     pendingResults.current.delete(result.position);
   }, []);
 
-  trpc.analysis.stream.useSubscription(
-    { analysisId: id },
-    {
-      enabled: needsStreaming,
-      onData(event: { type: string; [key: string]: unknown }) {
-        const e = event as
-          | { type: "status"; message: string }
-          | {
-              type: "clause_positions";
-              data: { totalClauses: number; clauses: PositionedClause[] };
-            }
-          | { type: "document_text"; data: { text: string; fileType: string } }
-          | { type: "clause_analyzing"; data: { position: number } }
-          | { type: "clause_analysis"; data: ClauseAnalysis }
-          | { type: "summary"; data: Summary }
-          | {
-              type: "error";
-              message: string;
-              recoverable: boolean;
-            };
+  // Track new analyzing positions → record shimmer start time
+  useEffect(() => {
+    if (!activeStream) return;
+    for (const pos of stream.analyzingPositions) {
+      if (!shimmerStartTimes.current.has(pos)) {
+        shimmerStartTimes.current.set(pos, Date.now());
+      }
+    }
+  }, [stream.analyzingPositions, activeStream]);
 
-        switch (e.type) {
-          case "status": {
-            setStatusMessage(e.message);
-            const msg = e.message.toLowerCase();
-            if (msg.includes("relevance") || msg.includes("checking")) {
-              setProcessingStep("gate");
-            } else if (msg.includes("extract")) {
-              setProcessingStep("extracting");
-            } else if (msg.includes("found") || msg.includes("identif") || msg.includes("pars")) {
-              setProcessingStep("parsing");
-            } else if (msg.includes("analyz") || msg.includes("resum")) {
-              setProcessingStep("analyzing");
-            }
-            break;
-          }
-          case "document_text":
-            setDocumentText(e.data.text);
-            setProcessingStep("extracting");
-            break;
-          case "clause_positions":
-            setTotalClauses(e.data.totalClauses);
-            setPositionedClauses(e.data.clauses);
-            setProcessingStep("analyzing");
-            break;
-          case "clause_analyzing":
-            setAnalyzingPositions((prev) => new Set(prev).add(e.data.position));
-            shimmerStartTimes.current.set(e.data.position, Date.now());
-            break;
-          case "clause_analysis": {
-            const startTime = shimmerStartTimes.current.get(e.data.position);
-            const elapsed = startTime ? Date.now() - startTime : MIN_SHIMMER_MS;
+  // Track new stream clauses → apply shimmer timing before committing to displayedClauses
+  useEffect(() => {
+    if (!activeStream) return;
+    for (const clause of stream.streamClauses) {
+      if (processedPositions.current.has(clause.position)) continue;
+      processedPositions.current.add(clause.position);
 
-            if (elapsed >= MIN_SHIMMER_MS) {
-              commitClauseResult(e.data);
-            } else {
-              // Buffer result — let shimmer finish its minimum display time
-              pendingResults.current.set(e.data.position, e.data);
-              const remaining = MIN_SHIMMER_MS - elapsed;
-              const timer = setTimeout(() => {
-                const buffered = pendingResults.current.get(e.data.position);
-                if (buffered) commitClauseResult(buffered);
-                shimmerTimers.current.delete(e.data.position);
-              }, remaining);
-              shimmerTimers.current.set(e.data.position, timer);
-            }
-            break;
-          }
-          case "summary":
-            setStreamSummary(e.data);
-            setStatusMessage(null);
-            setStreamDone(true);
-            break;
-          case "error":
-            setStreamError({
-              message: e.message,
-              recoverable: e.recoverable,
-            });
-            setStatusMessage(null);
-            setStreamDone(true);
-            break;
-        }
-      },
-    },
-  );
+      const startTime = shimmerStartTimes.current.get(clause.position);
+      const elapsed = startTime ? Date.now() - startTime : MIN_SHIMMER_MS;
+
+      if (elapsed >= MIN_SHIMMER_MS) {
+        commitClauseResult(clause);
+      } else {
+        // Buffer result — let shimmer finish its minimum display time
+        pendingResults.current.set(clause.position, clause);
+        const remaining = MIN_SHIMMER_MS - elapsed;
+        const timer = setTimeout(() => {
+          const buffered = pendingResults.current.get(clause.position);
+          if (buffered) commitClauseResult(buffered);
+          shimmerTimers.current.delete(clause.position);
+        }, remaining);
+        shimmerTimers.current.set(clause.position, timer);
+      }
+    }
+  }, [stream.streamClauses, activeStream, commitClauseResult]);
 
   // Cleanup shimmer timers on unmount
   useEffect(() => {
@@ -208,18 +148,102 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     };
   }, []);
 
-  // Fade out processing steps when clauses arrive
-  useEffect(() => {
-    if (totalClauses > 0 && processingVisible && !processingFadingOut) {
-      setProcessingFadingOut(true);
-      const timer = setTimeout(() => setProcessingVisible(false), 600);
-      return () => clearTimeout(timer);
+  // Effective analyzing positions (includes shimmer buffer for visual consistency)
+  const effectiveAnalyzing = useMemo(() => {
+    if (!activeStream) return new Set<number>();
+    const set = new Set(stream.analyzingPositions);
+    for (const c of stream.streamClauses) {
+      if (!displayedClauses.some((d) => d.position === c.position)) {
+        set.add(c.position);
+      }
     }
-  }, [totalClauses, processingVisible, processingFadingOut]);
+    return set;
+  }, [activeStream, stream.analyzingPositions, stream.streamClauses, displayedClauses]);
+
+  // Processing step — derived from context state (raw, no hold)
+  const rawProcessingStep = useMemo((): ProcessingStep => {
+    if (!activeStream) return "connecting";
+    if (stream.analyzingPositions.size > 0) return "analyzing";
+    if (stream.positionedClauses.length > 0) return "preparing";
+    if (stream.documentText) return "extracting";
+    if (stream.statusMessage) {
+      const msg = stream.statusMessage.toLowerCase();
+      if (msg.includes("found") || msg.includes("identif") || msg.includes("pars"))
+        return "parsing";
+      if (msg.includes("extract")) return "extracting";
+      if (msg.includes("relevance") || msg.includes("checking")) return "gate";
+      if (msg.includes("analyz") || msg.includes("resum")) return "analyzing";
+    }
+    return "connecting";
+  }, [
+    activeStream,
+    stream.analyzingPositions.size,
+    stream.positionedClauses.length,
+    stream.documentText,
+    stream.statusMessage,
+  ]);
+
+  // Hold "preparing" (RAG pattern matching) step for at least 1.5s so users see it
+  const MIN_PREPARING_MS = 1500;
+  const [processingStep, setProcessingStep] = useState<ProcessingStep>("connecting");
+  const preparingStart = useRef(0);
+  const preparingHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (preparingHoldTimer.current) {
+      clearTimeout(preparingHoldTimer.current);
+      preparingHoldTimer.current = null;
+    }
+
+    if (rawProcessingStep === "preparing") {
+      preparingStart.current = Date.now();
+      setProcessingStep("preparing");
+    } else if (rawProcessingStep === "analyzing" && preparingStart.current > 0) {
+      // Advancing past "preparing" — enforce minimum hold
+      const elapsed = Date.now() - preparingStart.current;
+      const remaining = MIN_PREPARING_MS - elapsed;
+      if (remaining > 0) {
+        preparingHoldTimer.current = setTimeout(() => {
+          setProcessingStep("analyzing");
+          preparingStart.current = 0;
+        }, remaining);
+      } else {
+        setProcessingStep("analyzing");
+        preparingStart.current = 0;
+      }
+    } else {
+      setProcessingStep(rawProcessingStep);
+    }
+
+    return () => {
+      if (preparingHoldTimer.current) {
+        clearTimeout(preparingHoldTimer.current);
+        preparingHoldTimer.current = null;
+      }
+    };
+  }, [rawProcessingStep]);
+
+  // Fade out processing steps when analysis actually begins (first clause_analyzing event),
+  // not when clause_positions arrives — keeps the steps box visible during RAG fetch + Sonnet
+  // startup so the first clause shimmer feels shorter.
+  useEffect(() => {
+    if (activeStream && stream.analyzingPositions.size > 0 && !processingFadingOut) {
+      setProcessingFadingOut(true);
+    }
+  }, [activeStream, stream.analyzingPositions.size, processingFadingOut]);
+
+  // After the CSS fade-out animation completes, hide processing overlay and reveal the grid
+  useEffect(() => {
+    if (!processingFadingOut) return;
+    const timer = setTimeout(() => setProcessingVisible(false), 600);
+    return () => clearTimeout(timer);
+  }, [processingFadingOut]);
 
   // Scroll suppression — set isScrolling on scroll events, debounce clear
+  // Covers document panel, clause panel, and window scroll
   useEffect(() => {
     const el = docScrollEl;
+    const rightEl = rightPanelRef.current;
     const onScroll = () => {
       isScrollingRef.current = true;
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
@@ -229,41 +253,92 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     };
 
     el?.addEventListener("scroll", onScroll, { passive: true });
+    rightEl?.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       el?.removeEventListener("scroll", onScroll);
+      rightEl?.removeEventListener("scroll", onScroll);
       window.removeEventListener("scroll", onScroll);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     };
   }, [docScrollEl]);
 
-  // Detect user interaction — wheel/touch only (not programmatic scroll)
+  // Detect user interaction — only flag as interacted on upward scroll (away from latest content).
+  // If user scrolls back to the bottom, re-engage auto-scroll.
+  const lastTouchY = useRef<number | null>(null);
   useEffect(() => {
-    const onUserInput = () => {
-      userHasInteracted.current = true;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0) {
+        // Scrolling up — user wants to read earlier content
+        userHasInteracted.current = true;
+      }
     };
-    window.addEventListener("wheel", onUserInput, { passive: true });
-    window.addEventListener("touchmove", onUserInput, { passive: true });
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY.current = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0]?.clientY ?? null;
+      if (lastTouchY.current !== null && currentY !== null && currentY > lastTouchY.current) {
+        // Finger moving down = scrolling up
+        userHasInteracted.current = true;
+      }
+    };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     return () => {
-      window.removeEventListener("wheel", onUserInput);
-      window.removeEventListener("touchmove", onUserInput);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
     };
   }, []);
 
+  // Re-engage auto-scroll when user scrolls near the bottom of the page or clause panel
+  useEffect(() => {
+    if (stream.streamDone || stream.streamError) return;
+    const rightEl = rightPanelRef.current;
+    const onWindowScroll = () => {
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+      if (nearBottom && userHasInteracted.current) {
+        userHasInteracted.current = false;
+      }
+    };
+    const onPanelScroll = () => {
+      if (!rightEl) return;
+      const nearBottom = rightEl.scrollTop + rightEl.clientHeight >= rightEl.scrollHeight - 200;
+      if (nearBottom && userHasInteracted.current) {
+        userHasInteracted.current = false;
+      }
+    };
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    rightEl?.addEventListener("scroll", onPanelScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onWindowScroll);
+      rightEl?.removeEventListener("scroll", onPanelScroll);
+    };
+  }, [stream.streamDone, stream.streamError]);
+
   // Auto-scroll skeleton into view during streaming (until user takes over)
   useEffect(() => {
-    if (userHasInteracted.current || streamDone || streamError) return;
-    if (analyzingPositions.size === 0) return;
+    if (userHasInteracted.current || stream.streamDone || stream.streamError) return;
+    if (stream.analyzingPositions.size === 0) return;
+    // Scroll analysis cards panel
     skeletonRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [analyzingPositions, streamDone, streamError]);
+    // Scroll document panel to the topmost analyzing clause
+    if (docScrollEl) {
+      const minPos = Math.min(...stream.analyzingPositions);
+      const clauseEl = docScrollEl.querySelector(`[data-clause-position="${minPos}"]`);
+      clauseEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [stream.analyzingPositions, stream.streamDone, stream.streamError, docScrollEl]);
 
   // Smooth scroll to summary when analysis completes
   useEffect(() => {
-    if (streamSummary && summaryRef.current) {
+    if (stream.streamSummary && summaryRef.current) {
       summaryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [streamSummary]);
+  }, [stream.streamSummary]);
 
   // ── Interaction handlers ──
   const handleClauseHover = useCallback((position: number | null) => {
@@ -295,6 +370,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
 
   // Build clause highlights from positioned clauses + analyzed results
   const clauseHighlights = useMemo(() => {
+    if (!activeStream) return [];
     const highlights: Array<{
       startIndex: number;
       endIndex: number;
@@ -302,9 +378,9 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       riskLevel: RiskLevel | "analyzing" | "pending" | "flashing";
     }> = [];
 
-    for (const pc of positionedClauses) {
+    for (const pc of stream.positionedClauses) {
       if (pc.startIndex < 0) continue;
-      const analyzed = streamClauses.find((c) => c.position === pc.position);
+      const analyzed = displayedClauses.find((c) => c.position === pc.position);
       if (analyzed) {
         highlights.push({
           startIndex: pc.startIndex,
@@ -312,7 +388,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           position: pc.position,
           riskLevel: flashingPosition === pc.position ? "flashing" : analyzed.riskLevel,
         });
-      } else if (analyzingPositions.has(pc.position)) {
+      } else if (effectiveAnalyzing.has(pc.position)) {
         highlights.push({
           startIndex: pc.startIndex,
           endIndex: pc.endIndex,
@@ -330,27 +406,31 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     }
 
     return highlights;
-  }, [positionedClauses, streamClauses, analyzingPositions, flashingPosition]);
+  }, [
+    activeStream,
+    stream.positionedClauses,
+    displayedClauses,
+    effectiveAnalyzing,
+    flashingPosition,
+  ]);
 
   // Build risk level map for connecting lines
   const clauseRiskLevels = useMemo(() => {
     const map = new Map<number, RiskLevel>();
-    for (const c of streamClauses) {
+    for (const c of displayedClauses) {
       map.set(c.position, c.riskLevel);
     }
     return map;
-  }, [streamClauses]);
+  }, [displayedClauses]);
 
   // ── LOADING ──────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0B1120]">
         <NavBar hideHowItWorks />
-        <main className="mx-auto max-w-3xl space-y-4 px-4 py-8">
+        <main className="flex min-h-[50vh] items-center justify-center">
           <h1 className="sr-only">Loading analysis</h1>
-          <ClauseSkeleton />
-          <ClauseSkeleton />
-          <ClauseSkeleton />
+          <Loader2 className="size-8 animate-spin text-slate-500" />
         </main>
       </div>
     );
@@ -415,7 +495,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   }
 
   // ── COMPLETE (from DB) — side-by-side with document panel ──
-  if (analysis.status === "complete" && !needsStreaming && streamClauses.length === 0) {
+  if (analysis.status === "complete" && !needsStreaming && !hasStreamResults) {
     const dbClauses: ClauseAnalysis[] = analysis.clauses.map((c) => ({
       clauseText: c.clauseText,
       startIndex: c.startIndex,
@@ -488,7 +568,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
             <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
               <div
                 ref={leftPanelRef}
-                className="min-w-0 max-h-[70vh] overflow-hidden lg:sticky lg:top-20"
+                className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
               >
                 <DocumentPanel
                   text={dbDocText}
@@ -499,39 +579,44 @@ export function AnalysisView({ id }: AnalysisViewProps) {
                   onScrollContainerRef={setDocScrollEl}
                 />
               </div>
-              <div ref={rightPanelRef} className="min-w-0 space-y-3">
-                {dbClauses.map((clause) => {
-                  const isGreen = clause.riskLevel === "green";
-                  const isActive = activeClause === clause.position;
-                  return (
-                    // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
-                    <div
-                      key={clause.position}
-                      data-card-position={clause.position}
-                      className={cn(
-                        "cursor-pointer rounded-xl transition-all duration-200",
-                        isActive && "ring-2 ring-blue-400/40 brightness-110",
-                      )}
-                      onMouseEnter={() => handleClauseHover(clause.position)}
-                      onMouseLeave={() => handleClauseHover(null)}
-                      onClick={() => handleClauseClick(clause.position)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleClauseClick(clause.position);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                    >
-                      {isGreen ? (
-                        <GreenClauseCompact clause={clause} />
-                      ) : (
-                        <ClauseCard clause={clause} compact={hasDocPanel} />
-                      )}
-                    </div>
-                  );
-                })}
+              <div
+                ref={rightPanelRef}
+                className="min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
+              >
+                <div className="space-y-3 lg:p-4">
+                  {dbClauses.map((clause) => {
+                    const isGreen = clause.riskLevel === "green";
+                    const isActive = activeClause === clause.position;
+                    return (
+                      // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
+                      <div
+                        key={clause.position}
+                        data-card-position={clause.position}
+                        className={cn(
+                          "cursor-pointer rounded-xl transition-all duration-200",
+                          isActive && "ring-2 ring-blue-400/40 brightness-110",
+                        )}
+                        onMouseEnter={() => handleClauseHover(clause.position)}
+                        onMouseLeave={() => handleClauseHover(null)}
+                        onClick={() => handleClauseClick(clause.position)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleClauseClick(clause.position);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                      >
+                        {isGreen ? (
+                          <GreenClauseCompact clause={clause} />
+                        ) : (
+                          <ClauseCard clause={clause} compact={hasDocPanel} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           ) : (
@@ -548,7 +633,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   }
 
   // ── FAILED (from DB) ───────────────────────
-  if (analysis.status === "failed" && !needsStreaming && streamClauses.length === 0) {
+  if (analysis.status === "failed" && !needsStreaming && !hasStreamResults) {
     const failedClauses: ClauseAnalysis[] = analysis.clauses.map((c) => ({
       clauseText: c.clauseText,
       startIndex: c.startIndex,
@@ -582,27 +667,27 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   }
 
   // ── STREAMING ──────────────────────────────
-  const showSummary = streamSummary !== null;
-  const isAnalyzing = !streamDone && !streamError;
-  const hasDocPanel = documentText !== null;
-  const allClausesAnalyzed = totalClauses > 0 && streamClauses.length === totalClauses;
-  const showSummarySkeleton = allClausesAnalyzed && !streamSummary && !streamDone;
+  const isAnalyzing = needsStreaming;
+  const hasDocPanel = activeStream && stream.documentText !== null;
+  const allClausesAnalyzed =
+    activeStream && stream.totalClauses > 0 && stream.streamClauses.length === stream.totalClauses;
+  const showSummarySkeleton = allClausesAnalyzed && !stream.streamSummary && !stream.streamDone;
 
   const showProcessingSteps = isAnalyzing && processingVisible;
 
   const progressMessage =
-    totalClauses > 0 && streamClauses.length > 0 && isAnalyzing
-      ? `Analyzed ${streamClauses.length} of ${totalClauses} clauses...`
+    stream.totalClauses > 0 && displayedClauses.length > 0 && isAnalyzing
+      ? `Analyzed ${displayedClauses.length} of ${stream.totalClauses} clauses...`
       : !showProcessingSteps
-        ? statusMessage
+        ? stream.statusMessage
         : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0B1120]">
       <NavBar hideHowItWorks />
       {progressMessage && <StatusBar message={progressMessage} />}
-      {totalClauses > 0 && isAnalyzing && (
-        <ProgressBar current={streamClauses.length} total={totalClauses} />
+      {stream.totalClauses > 0 && isAnalyzing && (
+        <ProgressBar current={displayedClauses.length} total={stream.totalClauses} />
       )}
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
@@ -613,7 +698,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           <div
             className={`transition-opacity duration-500 ${processingFadingOut ? "opacity-0" : "opacity-100"}`}
           >
-            <ProcessingSteps currentStep={processingStep} className="mt-12" />
+            <ProcessingSteps currentStep={processingStep} className="mt-6" />
           </div>
         )}
 
@@ -639,9 +724,9 @@ export function AnalysisView({ id }: AnalysisViewProps) {
         )}
 
         {/* Summary appears at top when done */}
-        {showSummary && (
+        {activeStream && stream.streamSummary && (
           <div ref={summaryRef}>
-            <SummaryPanel summary={streamSummary} animate className="mb-4" />
+            <SummaryPanel summary={stream.streamSummary} animate className="mb-4" />
             <div className="mb-6 flex justify-center">
               <AnalysisActions
                 analysisId={id}
@@ -663,15 +748,20 @@ export function AnalysisView({ id }: AnalysisViewProps) {
         />
 
         {/* Side-by-side layout when document text and clause positions are available */}
-        {hasDocPanel && totalClauses > 0 ? (
-          <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+        {hasDocPanel && stream.totalClauses > 0 ? (
+          <div
+            className={cn(
+              "grid gap-6 transition-opacity duration-500 lg:grid-cols-[1fr_1fr]",
+              processingVisible ? "opacity-0" : "opacity-100",
+            )}
+          >
             {/* Document panel */}
             <div
               ref={leftPanelRef}
-              className="min-w-0 max-h-[70vh] overflow-hidden lg:sticky lg:top-20"
+              className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
             >
               <DocumentPanel
-                text={documentText}
+                text={stream.documentText ?? ""}
                 clauses={clauseHighlights}
                 activeClause={activeClause}
                 onClauseHover={handleClauseHover}
@@ -681,54 +771,59 @@ export function AnalysisView({ id }: AnalysisViewProps) {
             </div>
 
             {/* Analysis cards */}
-            <div ref={rightPanelRef} className="min-w-0 space-y-3">
-              {streamClauses
-                .slice()
-                .sort((a, b) => a.position - b.position)
-                .map((clause) => {
-                  const isGreen = clause.riskLevel === "green";
-                  const isActive = activeClause === clause.position;
-                  return (
-                    // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
-                    <div
-                      key={`pos-${clause.position}`}
-                      data-card-position={clause.position}
-                      className={cn(
-                        "cursor-pointer rounded-xl transition-all duration-200",
-                        isActive && "ring-2 ring-blue-400/40 brightness-110",
-                      )}
-                      onMouseEnter={() => handleClauseHover(clause.position)}
-                      onMouseLeave={() => handleClauseHover(null)}
-                      onClick={() => handleClauseClick(clause.position)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleClauseClick(clause.position);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                    >
-                      {isGreen ? (
-                        <GreenClauseCompact clause={clause} animate />
-                      ) : (
-                        <ClauseCard clause={clause} compact animate animationDelay={0} />
-                      )}
-                    </div>
-                  );
-                })}
-              {/* Skeleton for currently-analyzing clauses */}
-              {isAnalyzing && analyzingPositions.size > 0 && (
-                <div ref={skeletonRef}>
-                  <ClauseSkeleton analyzing />
-                </div>
-              )}
+            <div
+              ref={rightPanelRef}
+              className="min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
+            >
+              <div className="space-y-3 lg:p-4">
+                {displayedClauses
+                  .slice()
+                  .sort((a, b) => a.position - b.position)
+                  .map((clause) => {
+                    const isGreen = clause.riskLevel === "green";
+                    const isActive = activeClause === clause.position;
+                    return (
+                      // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
+                      <div
+                        key={`pos-${clause.position}`}
+                        data-card-position={clause.position}
+                        className={cn(
+                          "cursor-pointer rounded-xl transition-all duration-200",
+                          isActive && "ring-2 ring-blue-400/40 brightness-110",
+                        )}
+                        onMouseEnter={() => handleClauseHover(clause.position)}
+                        onMouseLeave={() => handleClauseHover(null)}
+                        onClick={() => handleClauseClick(clause.position)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleClauseClick(clause.position);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                      >
+                        {isGreen ? (
+                          <GreenClauseCompact clause={clause} animate />
+                        ) : (
+                          <ClauseCard clause={clause} compact animate animationDelay={0} />
+                        )}
+                      </div>
+                    );
+                  })}
+                {/* Skeleton for currently-analyzing clauses */}
+                {isAnalyzing && effectiveAnalyzing.size > 0 && (
+                  <div ref={skeletonRef}>
+                    <ClauseSkeleton analyzing />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        ) : totalClauses > 0 ? (
+        ) : stream.totalClauses > 0 ? (
           /* Fallback: vertical stack (no document text) */
           <div className="mx-auto max-w-3xl space-y-4">
-            {streamClauses
+            {displayedClauses
               .slice()
               .sort((a, b) => a.position - b.position)
               .map((clause) => (
@@ -739,7 +834,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
                   animationDelay={0}
                 />
               ))}
-            {isAnalyzing && analyzingPositions.size > 0 && (
+            {isAnalyzing && effectiveAnalyzing.size > 0 && (
               <div ref={skeletonRef}>
                 <ClauseSkeleton analyzing />
               </div>
@@ -748,11 +843,11 @@ export function AnalysisView({ id }: AnalysisViewProps) {
         ) : null}
 
         {/* Stream error */}
-        {streamError && (
+        {stream.streamError && activeStream && (
           <div className="mx-auto mt-8 max-w-3xl">
             <ErrorState
-              message={streamError.message}
-              onRetry={streamError.recoverable ? () => window.location.reload() : undefined}
+              message={stream.streamError.message}
+              onRetry={stream.streamError.recoverable ? () => window.location.reload() : undefined}
             />
           </div>
         )}

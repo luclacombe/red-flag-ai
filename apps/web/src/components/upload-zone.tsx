@@ -25,7 +25,14 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function UploadZone() {
+interface UploadZoneProps {
+  /** Called on successful upload instead of navigating. If not provided, navigates to /analysis/[id]. */
+  onUploadSuccess?: (analysisId: string) => void;
+  /** Use compact styling (smaller padding, no security line) */
+  compact?: boolean;
+}
+
+export function UploadZone({ onUploadSuccess, compact }: UploadZoneProps) {
   const [state, setState] = useState<UploadState>({ status: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -132,7 +139,12 @@ export function UploadZone() {
         }
 
         if (data.isContract === true && data.analysisId) {
-          router.push(`/analysis/${data.analysisId}`);
+          if (onUploadSuccess) {
+            onUploadSuccess(data.analysisId);
+            setState({ status: "idle" });
+          } else {
+            router.push(`/analysis/${data.analysisId}`);
+          }
           return;
         }
 
@@ -147,7 +159,7 @@ export function UploadZone() {
         });
       }
     },
-    [router, responseLanguage],
+    [router, responseLanguage, onUploadSuccess],
   );
 
   const handleDrop = useCallback(
@@ -219,7 +231,8 @@ export function UploadZone() {
           state.status === "error" || state.status === "rejection" ? "upload-message" : undefined
         }
         className={cn(
-          "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center backdrop-blur-sm transition-all duration-200 md:p-12",
+          "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center backdrop-blur-sm transition-all duration-200",
+          compact ? "p-6" : "p-8 md:p-12",
           isInteractive && "cursor-pointer",
           state.status === "drag-over"
             ? "scale-[1.02] border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10"
@@ -242,16 +255,26 @@ export function UploadZone() {
         {/* Idle + drag-over state */}
         {(state.status === "idle" || state.status === "drag-over") && (
           <>
-            <Upload className="size-10 text-slate-400" strokeWidth={1.5} />
-            <p className="mt-4 font-heading text-base font-semibold text-slate-200">
+            <Upload
+              className={compact ? "size-8 text-slate-400" : "size-10 text-slate-400"}
+              strokeWidth={1.5}
+            />
+            <p
+              className={cn(
+                "mt-4 font-heading font-semibold text-slate-200",
+                compact ? "text-sm" : "text-base",
+              )}
+            >
               Drop your contract here
             </p>
             <p className="mt-1 text-sm text-slate-400">or click to browse</p>
             <p className="mt-3 text-xs text-slate-500">PDF, DOCX, or TXT &middot; Max 10MB</p>
-            <p className="mt-2 text-xs text-slate-500">
-              <span className="text-green-500/80">&bull;</span> AES-256 protected &middot;
-              auto-deleted after 30 days
-            </p>
+            {!compact && (
+              <p className="mt-2 text-xs text-slate-500">
+                <span className="text-green-500/80">&bull;</span> AES-256 protected &middot;
+                auto-deleted after 30 days
+              </p>
+            )}
           </>
         )}
 

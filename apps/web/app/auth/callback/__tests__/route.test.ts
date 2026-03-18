@@ -32,7 +32,7 @@ describe("GET /auth/callback", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
   });
 
-  it("exchanges code for session and redirects to /", async () => {
+  it("exchanges code for session and redirects to /dashboard", async () => {
     mockExchangeCodeForSession.mockResolvedValue({ error: null });
 
     const req = new Request("http://localhost:3000/auth/callback?code=test-auth-code");
@@ -40,17 +40,17 @@ describe("GET /auth/callback", () => {
 
     expect(mockExchangeCodeForSession).toHaveBeenCalledWith("test-auth-code");
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/");
+    expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("redirects to custom next path after successful exchange", async () => {
     mockExchangeCodeForSession.mockResolvedValue({ error: null });
 
-    const req = new Request("http://localhost:3000/auth/callback?code=test-code&next=/history");
+    const req = new Request("http://localhost:3000/auth/callback?code=test-code&next=/dashboard");
     const res = await GET(req);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/history");
+    expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("uses x-forwarded-host in non-dev environments", async () => {
@@ -63,7 +63,7 @@ describe("GET /auth/callback", () => {
     const res = await GET(req);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("https://red-flag-ai.com/");
+    expect(res.headers.get("location")).toBe("https://red-flag-ai.com/dashboard");
   });
 
   it("redirects to /login?error=auth when no code is provided", async () => {

@@ -3,7 +3,7 @@
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type StepId = "connecting" | "gate" | "extracting" | "parsing" | "analyzing";
+type StepId = "connecting" | "gate" | "extracting" | "parsing" | "preparing" | "analyzing";
 
 interface Step {
   id: StepId;
@@ -15,6 +15,7 @@ const STEPS: Step[] = [
   { id: "gate", label: "Checking document relevance" },
   { id: "extracting", label: "Extracting document text" },
   { id: "parsing", label: "Identifying clause boundaries" },
+  { id: "preparing", label: "Matching known risk patterns" },
   { id: "analyzing", label: "Analyzing clauses" },
 ];
 
@@ -40,8 +41,8 @@ export function ProcessingSteps({ currentStep, clauseCount, className }: Process
           const isActive = idx === currentIdx;
           const isPending = idx > currentIdx;
 
-          // Don't show "analyzing" step until we're there
-          if (step.id === "analyzing" && isPending) return null;
+          // Don't show "preparing" or "analyzing" steps until we're there
+          if ((step.id === "preparing" || step.id === "analyzing") && isPending) return null;
 
           let label = step.label;
           if (step.id === "analyzing" && clauseCount) {

@@ -33,7 +33,7 @@ describe("GET /auth/confirm", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
   });
 
-  it("verifies OTP and redirects to / on success", async () => {
+  it("verifies OTP and redirects to /dashboard on success", async () => {
     mockVerifyOtp.mockResolvedValue({ error: null });
 
     const req = new NextRequest("http://localhost:3000/auth/confirm?token_hash=abc123&type=signup");
@@ -44,19 +44,19 @@ describe("GET /auth/confirm", () => {
       token_hash: "abc123",
     });
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/");
+    expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("redirects to custom next path after successful verification", async () => {
     mockVerifyOtp.mockResolvedValue({ error: null });
 
     const req = new NextRequest(
-      "http://localhost:3000/auth/confirm?token_hash=abc&type=signup&next=/history",
+      "http://localhost:3000/auth/confirm?token_hash=abc&type=signup&next=/dashboard",
     );
     const res = await GET(req);
 
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/history");
+    expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("handles magiclink type", async () => {
@@ -72,7 +72,7 @@ describe("GET /auth/confirm", () => {
       token_hash: "xyz789",
     });
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toBe("http://localhost:3000/");
+    expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("redirects to /login?error=confirmation when token_hash is missing", async () => {
