@@ -7,8 +7,6 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** Documents older than 30 days are deleted */
-const RETENTION_DAYS = 30;
 /** Rate limit rows older than 7 days are deleted */
 const RATE_LIMIT_RETENTION_DAYS = 7;
 
@@ -43,13 +41,15 @@ export async function GET(request: Request) {
     const masterKey = getMasterKey();
 
     // ── Delete old documents (CASCADE handles analyses + clauses) ──
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
+    // If expires_at is set (user renewed), use that; otherwise use created_at + 30 days
+    const now = new Date().toISOString();
 
     const oldDocs = await db
       .select({ id: documents.id, storagePath: documents.storagePath })
       .from(documents)
-      .where(sql`${documents.createdAt} < ${cutoffDate.toISOString()}`);
+      .where(
+        sql`COALESCE(${documents.expiresAt}, ${documents.createdAt} + INTERVAL '30 days') < ${now}`,
+      );
 
     let storageDeleted = 0;
     let storageFailed = 0;
@@ -75,7 +75,11 @@ export async function GET(request: Request) {
     // Delete document rows (CASCADE deletes analyses + clauses)
     let docsDeleted = 0;
     if (oldDocs.length > 0) {
-      await db.delete(documents).where(sql`${documents.createdAt} < ${cutoffDate.toISOString()}`);
+      await db
+        .delete(documents)
+        .where(
+          sql`COALESCE(${documents.expiresAt}, ${documents.createdAt} + INTERVAL '30 days') < ${now}`,
+        );
       docsDeleted = oldDocs.length;
     }
 

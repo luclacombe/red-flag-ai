@@ -28,6 +28,7 @@ export const documents = pgTable(
     language: text("language"),
     contractType: text("contract_type"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
   (table) => [index("documents_user_id_idx").on(table.userId)],
 );
@@ -48,6 +49,7 @@ export const analyses = pgTable(
     summaryText: text("summary_text"),
     parsedClauses: text("parsed_clauses"),
     responseLanguage: text("response_language").notNull().default("en"),
+    displayName: text("display_name"),
     errorMessage: text("error_message"),
     isPublic: boolean("is_public").notNull().default(false),
     shareExpiresAt: timestamp("share_expires_at", { withTimezone: true }),

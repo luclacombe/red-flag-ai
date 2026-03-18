@@ -16,9 +16,7 @@ TOOLING.md
 test.pdf
 /test-documents/
 /testing_screenshots
-/docs/screenshots/*
-!/docs/screenshots/v3-db-render-top.png
-!/docs/screenshots/v3-connecting-line.png
+/docs/screenshots/
 /design-system/
 /docs/BUILD_PLAN*.md
 /docs/UI_SPEC.md

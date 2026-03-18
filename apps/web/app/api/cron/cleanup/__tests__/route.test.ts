@@ -11,7 +11,12 @@ vi.mock("@redflag/db", () => ({
     select: mockSelect,
     delete: mockDelete,
   }),
-  documents: { id: "id", storagePath: "storage_path", createdAt: "created_at" },
+  documents: {
+    id: "id",
+    storagePath: "storage_path",
+    createdAt: "created_at",
+    expiresAt: "expires_at",
+  },
   rateLimits: { date: "date" },
   sql: vi.fn((...args: unknown[]) => args),
 }));

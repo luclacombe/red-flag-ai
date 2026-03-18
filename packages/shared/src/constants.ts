@@ -10,6 +10,9 @@ export const MAX_TEXT_LENGTH = 90_000;
 /** Share links expire after this many days */
 export const SHARE_LINK_EXPIRY_DAYS = 7;
 
+/** Special language code meaning "use the document's detected language" */
+export const AUTO_LANGUAGE_CODE = "auto" as const;
+
 export const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document" as const;
 export const TXT_MIME = "text/plain" as const;
@@ -22,6 +25,11 @@ export const ACCEPTED_MIME_TYPES = ["application/pdf", DOCX_MIME, TXT_MIME] as c
  * code = ISO 639-1, name = English, nativeName = endonym.
  */
 export const SUPPORTED_LANGUAGES = [
+  {
+    code: "auto",
+    name: "Document's original language",
+    nativeName: "Document's original language",
+  },
   { code: "en", name: "English", nativeName: "English" },
   { code: "fr", name: "French", nativeName: "Français" },
   { code: "de", name: "German", nativeName: "Deutsch" },
@@ -39,4 +47,6 @@ export const SUPPORTED_LANGUAGES = [
   { code: "tr", name: "Turkish", nativeName: "Türkçe" },
 ] as const;
 
-export type SupportedLanguageCode = (typeof SUPPORTED_LANGUAGES)[number]["code"];
+export type SupportedLanguageCode =
+  | typeof AUTO_LANGUAGE_CODE
+  | (typeof SUPPORTED_LANGUAGES)[number]["code"];

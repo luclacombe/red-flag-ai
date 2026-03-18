@@ -1,12 +1,22 @@
-# RedFlag AI
+<p align="center">
+  <img src="docs/brand/banner.png" alt="RedFlag AI — AI-powered contract risk analysis" width="100%" />
+</p>
 
-AI-powered contract red-flag detector. Upload a contract, get clause-by-clause risk analysis streamed in real time — each clause scored, explained, and rewritten with a safer alternative.
+<p align="center">
+  <a href="https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml"><img src="https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  <a href="https://red-flag-ai.com"><img src="https://img.shields.io/badge/Live-red--flag--ai.com-black?logo=vercel" alt="Live on Vercel" /></a>
+  <img src="https://img.shields.io/badge/Built_with-Claude-cc785c?logo=anthropic&logoColor=white" alt="Built with Claude" />
+</p>
 
-[![CI](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/luclacombe/red-flag-ai/actions/workflows/ci.yml)
-
-**Live at [red-flag-ai.com](https://red-flag-ai.com)**
-
-![RedFlag AI — analysis results with risk score and top concerns](docs/screenshots/v3-db-render-top.png)
+<p align="center">
+  <b><a href="https://red-flag-ai.com">Live Demo</a></b> &middot;
+  <a href="#features">Features</a> &middot;
+  <a href="#architecture">Architecture</a> &middot;
+  <a href="#engineering-highlights">Engineering</a> &middot;
+  <a href="#local-setup">Setup</a>
+</p>
 
 ---
 
@@ -21,7 +31,9 @@ AI-powered contract red-flag detector. Upload a contract, get clause-by-clause r
 - **Shareable reports** — expiring share links + downloadable PDF reports
 - **Privacy-first** — AES-256-GCM encryption at rest, 30-day auto-deletion, GDPR-compliant IP hashing
 
-![Side-by-side clause analysis with connecting lines](docs/screenshots/v3-connecting-line.png)
+<p align="center">
+  <img src="docs/brand/screenshot-analysis.png" alt="Side-by-side clause analysis with risk badges and connecting lines" width="100%" />
+</p>
 
 ## How It Works
 
@@ -31,6 +43,10 @@ AI-powered contract red-flag detector. Upload a contract, get clause-by-clause r
 4. Each clause is analyzed against a RAG knowledge base of 150 predatory patterns
 5. Results stream clause by clause: risk score, explanation, and safer alternative
 6. Summary with overall risk score, top concerns, and a sign/don't-sign recommendation
+
+<p align="center">
+  <img src="docs/brand/screenshot-landing.png" alt="RedFlag AI landing page" width="100%" />
+</p>
 
 ## Architecture
 

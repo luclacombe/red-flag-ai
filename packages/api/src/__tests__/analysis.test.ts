@@ -294,10 +294,21 @@ describe("analysis.stream", () => {
         return { from: () => ({ where: () => Promise.resolve([{ userId: null }]) }) };
       }
       if (callCount === 3) {
+        // Document fetch for document_text emission
+        return {
+          from: () => ({
+            where: () =>
+              Promise.resolve([
+                { id: "doc-1", extractedText: "text", fileType: "pdf", userId: null },
+              ]),
+          }),
+        };
+      }
+      if (callCount === 4) {
         // Initial existing clauses check (empty)
         return { from: () => ({ where: () => ({ orderBy: () => Promise.resolve([]) }) }) };
       }
-      if (callCount === 4) {
+      if (callCount === 5) {
         // First poll → complete
         return { from: () => ({ where: () => Promise.resolve([completedAnalysis]) }) };
       }

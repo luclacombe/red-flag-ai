@@ -3,13 +3,13 @@ import { SUPPORTED_LANGUAGES } from "../constants";
 import { ResponseLanguageSchema } from "../schemas/language";
 
 describe("SUPPORTED_LANGUAGES", () => {
-  it("has exactly 15 language entries", () => {
-    expect(SUPPORTED_LANGUAGES).toHaveLength(15);
+  it("has 16 entries (15 languages + auto)", () => {
+    expect(SUPPORTED_LANGUAGES).toHaveLength(16);
   });
 
   it("each entry has code, name, and nativeName", () => {
     for (const lang of SUPPORTED_LANGUAGES) {
-      expect(lang.code).toMatch(/^[a-z]{2}$/);
+      expect(lang.code).toMatch(/^([a-z]{2}|auto)$/);
       expect(lang.name.length).toBeGreaterThan(0);
       expect(lang.nativeName.length).toBeGreaterThan(0);
     }
@@ -46,6 +46,7 @@ describe("SUPPORTED_LANGUAGES", () => {
 
 describe("ResponseLanguageSchema", () => {
   it("accepts valid language codes", () => {
+    expect(ResponseLanguageSchema.parse("auto")).toBe("auto");
     expect(ResponseLanguageSchema.parse("en")).toBe("en");
     expect(ResponseLanguageSchema.parse("fr")).toBe("fr");
     expect(ResponseLanguageSchema.parse("zh")).toBe("zh");

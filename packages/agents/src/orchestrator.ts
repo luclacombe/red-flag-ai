@@ -156,7 +156,11 @@ function decryptClauseRow(row: ClauseRow, key: Buffer): ClauseAnalysis {
 export async function* analyzeContract(params: AnalyzeContractParams): AsyncGenerator<SSEEvent> {
   const { analysisId, documentId, text, fileType, contractType } = params;
   const language = params.language || "en";
-  const responseLanguage = params.responseLanguage || "en";
+  // Resolve "auto" → use the document's detected language
+  const responseLanguage =
+    params.responseLanguage === "auto" || !params.responseLanguage
+      ? language
+      : params.responseLanguage;
   const db = getDb();
 
   // Derive encryption keys

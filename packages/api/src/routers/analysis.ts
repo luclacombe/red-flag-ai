@@ -1,10 +1,17 @@
 import { analyzeContract } from "@redflag/agents";
 import { analyses, clauses, documents, eq, getDb, sql } from "@redflag/db";
-import { type ClauseAnalysis, logger, SHARE_LINK_EXPIRY_DAYS } from "@redflag/shared";
+import {
+  type ClauseAnalysis,
+  logger,
+  ResponseLanguageSchema,
+  SHARE_LINK_EXPIRY_DAYS,
+  type SSEEvent,
+} from "@redflag/shared";
 import { decrypt, deriveKey, getMasterKey } from "@redflag/shared/crypto";
 import { createClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { checkRateLimit } from "../rateLimit";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 
 /** Check if a shared analysis is currently accessible */
@@ -14,14 +21,15 @@ function isShareActive(analysis: { isPublic: boolean; shareExpiresAt: Date | nul
   return true;
 }
 
-/** 90 seconds — fast recovery from dead functions while heartbeat keeps active ones alive */
-const STALE_THRESHOLD_MS = 90 * 1000;
+/** 30 seconds — fast recovery from dead functions while heartbeat keeps active ones alive.
+ * Normal heartbeat gap during analysis is ~1-10s (Claude API latency), so 30s gives 3x margin. */
+const STALE_THRESHOLD_MS = 30 * 1000;
 
 /**
  * Atomically claim an analysis for processing.
  * Returns the analysis row if claimed, null if already claimed by another consumer.
  *
- * Handles both pending analyses and stale processing ones (stuck > 90s without heartbeat).
+ * Handles both pending analyses and stale processing ones (stuck > 30s without heartbeat).
  */
 async function claimAnalysis(analysisId: string) {
   const db = getDb();
@@ -29,7 +37,7 @@ async function claimAnalysis(analysisId: string) {
     .update(analyses)
     .set({ status: "processing", updatedAt: new Date() })
     .where(
-      sql`${analyses.id} = ${analysisId} AND (${analyses.status} = 'pending' OR (${analyses.status} = 'processing' AND ${analyses.updatedAt} < now() - interval '90 seconds'))`,
+      sql`${analyses.id} = ${analysisId} AND (${analyses.status} = 'pending' OR (${analyses.status} = 'processing' AND ${analyses.updatedAt} < now() - interval '30 seconds'))`,
     )
     .returning();
 
@@ -235,6 +243,27 @@ export const analysisRouter = router({
           const clauseKey = await deriveKey(masterKey, analysis.documentId, "clause");
           const docKey = await deriveKey(masterKey, analysis.documentId, "document");
 
+          // Emit document text so frontend can render the side-by-side layout
+          const pollingDocRows = await db
+            .select()
+            .from(documents)
+            .where(eq(documents.id, analysis.documentId));
+          const pollingDoc = pollingDocRows[0];
+          if (pollingDoc) {
+            try {
+              const decryptedText = decrypt(pollingDoc.extractedText, docKey);
+              yield {
+                type: "document_text" as const,
+                data: {
+                  text: decryptedText,
+                  fileType: (pollingDoc.fileType as "pdf" | "docx" | "txt") ?? "pdf",
+                },
+              };
+            } catch {
+              // Decryption failed — skip document text
+            }
+          }
+
           // Another connection is actively processing — replay existing + poll for new
           let lastYieldedCount = 0;
 
@@ -283,14 +312,14 @@ export const analysisRouter = router({
           if (lastYieldedCount > 0) {
             yield {
               type: "status" as const,
-              message: `${lastYieldedCount} clauses analyzed. Waiting for more...`,
+              message: `Analyzing clauses — ${lastYieldedCount} done so far...`,
             };
           } else {
-            yield { type: "status" as const, message: "Analysis in progress..." };
+            yield { type: "status" as const, message: "Resuming analysis..." };
           }
 
           for (;;) {
-            await new Promise((r) => setTimeout(r, 3_000));
+            await new Promise((r) => setTimeout(r, 2_000));
             const rows = await db.select().from(analyses).where(eq(analyses.id, input.analysisId));
             const current = rows[0];
             if (!current) return;
@@ -417,17 +446,55 @@ export const analysisRouter = router({
         language: doc.language,
       });
 
-      // Run the pipeline, forwarding all events to the client
-      for await (const event of analyzeContract({
-        analysisId: input.analysisId,
-        documentId: doc.id,
-        text: decryptedText,
-        fileType: (doc.fileType as "pdf" | "docx" | "txt") ?? "pdf",
-        contractType: doc.contractType ?? "other",
-        language: doc.language ?? "en",
-        responseLanguage: analysis.responseLanguage ?? input.responseLanguage ?? "en",
-      })) {
-        yield event;
+      // Run the pipeline as a detached async operation so it survives SSE disconnect.
+      // Events are pushed to a queue and forwarded to the client in real-time.
+      // If the client disconnects, the pipeline keeps running and persisting results to DB.
+      // On reconnect, the "processing, not stale" polling path picks up from DB.
+      const eventQueue: SSEEvent[] = [];
+      let pipelineDone = false;
+
+      (async () => {
+        try {
+          for await (const event of analyzeContract({
+            analysisId: input.analysisId,
+            documentId: doc.id,
+            text: decryptedText,
+            fileType: (doc.fileType as "pdf" | "docx" | "txt") ?? "pdf",
+            contractType: doc.contractType ?? "other",
+            language: doc.language ?? "en",
+            responseLanguage: analysis.responseLanguage ?? input.responseLanguage ?? "en",
+          })) {
+            eventQueue.push(event);
+          }
+          logger.info("Detached pipeline complete", { analysisId: input.analysisId });
+        } catch (error) {
+          logger.error("Detached pipeline error", {
+            analysisId: input.analysisId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          eventQueue.push({
+            type: "error",
+            message: "An unexpected error occurred during analysis.",
+            recoverable: false,
+          });
+        }
+        pipelineDone = true;
+      })();
+
+      // Forward events to SSE client in real-time via queue polling
+      const pipelineStart = Date.now();
+      const MAX_WAIT_MS = 5 * 60 * 1000; // Safety: stop forwarding after 5 min
+      while (!pipelineDone || eventQueue.length > 0) {
+        while (eventQueue.length > 0) {
+          yield eventQueue.shift()!;
+        }
+        if (!pipelineDone) {
+          if (Date.now() - pipelineStart > MAX_WAIT_MS) {
+            logger.warn("Pipeline forwarding timeout", { analysisId: input.analysisId });
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 50));
+        }
       }
       logger.info("Pipeline stream complete", { analysisId: input.analysisId });
     }),
@@ -589,12 +656,20 @@ export const analysisRouter = router({
         .select({
           analysisId: analyses.id,
           documentId: analyses.documentId,
+          displayName: analyses.displayName,
           status: analyses.status,
           overallRiskScore: analyses.overallRiskScore,
           recommendation: analyses.recommendation,
           createdAt: analyses.createdAt,
+          updatedAt: analyses.updatedAt,
+          isPublic: analyses.isPublic,
+          shareExpiresAt: analyses.shareExpiresAt,
+          responseLanguage: analyses.responseLanguage,
           filename: documents.filename,
           contractType: documents.contractType,
+          documentCreatedAt: documents.createdAt,
+          documentExpiresAt: documents.expiresAt,
+          analyzedClauseCount: sql<number>`(SELECT COUNT(*)::int FROM clauses WHERE clauses.analysis_id = ${analyses.id})`,
         })
         .from(analyses)
         .innerJoin(documents, eq(analyses.documentId, documents.id))
@@ -619,14 +694,24 @@ export const analysisRouter = router({
           } catch {
             // Pre-encryption data or decryption failure — show fallback
           }
+          // Prefer analysis-level display name (set by rerun) over document filename
+          const effectiveName = row.displayName ?? documentName;
           return {
             id: row.analysisId,
-            documentName,
+            documentId: row.documentId,
+            documentName: effectiveName,
             contractType: row.contractType,
             riskScore: row.overallRiskScore,
             recommendation: row.recommendation as "sign" | "caution" | "do_not_sign" | null,
             status: row.status,
             createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            isPublic: row.isPublic,
+            shareExpiresAt: row.shareExpiresAt,
+            responseLanguage: row.responseLanguage,
+            documentCreatedAt: row.documentCreatedAt,
+            documentExpiresAt: row.documentExpiresAt,
+            analyzedClauseCount: row.analyzedClauseCount ?? 0,
           };
         }),
       );
@@ -704,5 +789,162 @@ export const analysisRouter = router({
       });
 
       return { ok: true };
+    }),
+
+  /**
+   * Rename — update the display name of a document.
+   * Encrypts the new name using the document's key.
+   */
+  rename: protectedProcedure
+    .input(
+      z.object({
+        analysisId: z.string().uuid(),
+        newName: z.string().min(1).max(255),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+
+      // Look up analysis → document, verify ownership
+      const analysisRows = await db
+        .select({ documentId: analyses.documentId })
+        .from(analyses)
+        .where(eq(analyses.id, input.analysisId));
+      const analysis = analysisRows[0];
+
+      if (!analysis) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Analysis not found." });
+      }
+
+      const docRows = await db
+        .select({ id: documents.id, userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+
+      if (!doc || doc.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this analysis." });
+      }
+
+      // Set displayName on the analysis (not documents.filename) so reruns
+      // sharing the same document each have their own independent name.
+      await db
+        .update(analyses)
+        .set({ displayName: input.newName })
+        .where(eq(analyses.id, input.analysisId));
+
+      logger.info("Analysis renamed", { analysisId: input.analysisId, documentId: doc.id });
+
+      return { ok: true };
+    }),
+
+  /**
+   * Rerun — create a new analysis for the same document.
+   * Optionally with a different response language.
+   */
+  rerun: protectedProcedure
+    .input(
+      z.object({
+        analysisId: z.string().uuid(),
+        responseLanguage: ResponseLanguageSchema.optional(),
+        displayName: z.string().min(1).max(255).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+
+      // Look up original analysis → document, verify ownership
+      const analysisRows = await db
+        .select({
+          documentId: analyses.documentId,
+          responseLanguage: analyses.responseLanguage,
+        })
+        .from(analyses)
+        .where(eq(analyses.id, input.analysisId));
+      const original = analysisRows[0];
+
+      if (!original) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Analysis not found." });
+      }
+
+      const docRows = await db
+        .select({ id: documents.id, userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, original.documentId));
+      const doc = docRows[0];
+
+      if (!doc || doc.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this analysis." });
+      }
+
+      // Rate limit — reruns count against daily analysis limit
+      const { limited } = await checkRateLimit(ctx.user.id, true);
+      if (limited) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Daily analysis limit reached. Try again tomorrow.",
+        });
+      }
+
+      // Create new analysis record pointing to same document
+      const newAnalysisId = crypto.randomUUID();
+      const effectiveLanguage = input.responseLanguage ?? original.responseLanguage ?? "en";
+
+      await db.insert(analyses).values({
+        id: newAnalysisId,
+        documentId: original.documentId,
+        status: "pending",
+        responseLanguage: effectiveLanguage,
+        displayName: input.displayName ?? null,
+      });
+
+      logger.info("Analysis rerun created", {
+        originalId: input.analysisId,
+        newId: newAnalysisId,
+        responseLanguage: effectiveLanguage,
+      });
+
+      return { analysisId: newAnalysisId };
+    }),
+
+  /**
+   * Renew — extend the document's auto-deletion timer by 30 days.
+   */
+  renew: protectedProcedure
+    .input(z.object({ analysisId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = getDb();
+
+      // Look up analysis → document, verify ownership
+      const analysisRows = await db
+        .select({ documentId: analyses.documentId })
+        .from(analyses)
+        .where(eq(analyses.id, input.analysisId));
+      const analysis = analysisRows[0];
+
+      if (!analysis) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Analysis not found." });
+      }
+
+      const docRows = await db
+        .select({ id: documents.id, userId: documents.userId })
+        .from(documents)
+        .where(eq(documents.id, analysis.documentId));
+      const doc = docRows[0];
+
+      if (!doc || doc.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own this analysis." });
+      }
+
+      const newExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await db.update(documents).set({ expiresAt: newExpiresAt }).where(eq(documents.id, doc.id));
+
+      logger.info("Document renewed", {
+        analysisId: input.analysisId,
+        documentId: doc.id,
+        expiresAt: newExpiresAt.toISOString(),
+      });
+
+      return { ok: true, expiresAt: newExpiresAt };
     }),
 });
