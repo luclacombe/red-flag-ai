@@ -10,7 +10,8 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 - `app/api/trpc/[trpc]/route.ts` — tRPC route handler (GET + POST). `runtime = "nodejs"`, `maxDuration = 300`.
 - `app/api/upload/route.ts` — Upload handler (POST, multipart/form-data). Auth-aware rate limiting (userId 10/day, IP 2/day). Sets `userId` on document when authenticated. Rate limit DB failure returns 503 (fail-closed). `runtime = "nodejs"`, `maxDuration = 300`.
 - `app/api/upload/__tests__/route.test.ts` — Upload route tests (26 tests — validation, gate, rate limiting, auth)
-- `app/login/page.tsx` — Unified auth page with `mode` state (signin/signup). `BackgroundPaths` renders once. `?mode=signup` initializes signup form. Uses `Suspense` for `useSearchParams`.
+- `app/login/page.tsx` — Unified auth page with `mode` state (signin/signup). `BackgroundPaths` renders once. `?mode=signup` initializes signup form. Uses `Suspense` for `useSearchParams`. OAuth buttons (Google, Microsoft, GitHub) call `signInWithOAuth()`.
+- `src/components/oauth-icons.tsx` — Branded SVG icons for Google + Microsoft. Re-exports `Github` from lucide-react as `GithubIcon`.
 - `app/signup/page.tsx` — Server component redirect to `/login?mode=signup`
 - `app/api/cleanup/route.ts` — Best-effort anonymous data cleanup via `sendBeacon` (POST). Deletes anonymous documents + storage.
 - `app/auth/callback/route.ts` — OAuth/magic link code exchange → session

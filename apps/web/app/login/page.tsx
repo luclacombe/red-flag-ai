@@ -1,9 +1,11 @@
 "use client";
 
+import type { Provider } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { BackgroundPaths } from "@/components/background-paths";
+import { GithubIcon, GoogleIcon, MicrosoftIcon } from "@/components/oauth-icons";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "signin" | "signup";
@@ -103,6 +105,14 @@ function AuthPageInner() {
 
     setMagicLinkSent(true);
     setLoading(false);
+  }
+
+  async function handleOAuth(provider: Provider) {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   }
 
   // Confirmation sub-states (magic link sent / signup success)
@@ -216,24 +226,52 @@ function AuthPageInner() {
           </button>
         </form>
 
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs text-slate-500">or continue with</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => handleOAuth("google")}
+            disabled={loading}
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+          >
+            <GoogleIcon size={16} />
+            <span className="hidden sm:inline">Google</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOAuth("azure")}
+            disabled={loading}
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+          >
+            <MicrosoftIcon size={16} />
+            <span className="hidden sm:inline">Microsoft</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOAuth("github")}
+            disabled={loading}
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+          >
+            <GithubIcon size={16} />
+            <span className="hidden sm:inline">GitHub</span>
+          </button>
+        </div>
+
         {/* Magic link — sign in mode only */}
         {isSignIn && (
-          <>
-            <div className="my-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-xs text-slate-500">or</span>
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleMagicLink}
-              disabled={loading}
-              className="w-full cursor-pointer rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
-            >
-              Sign in with magic link
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={handleMagicLink}
+            disabled={loading}
+            className="mt-3 w-full cursor-pointer rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+          >
+            Sign in with magic link
+          </button>
         )}
 
         <p className="mt-6 text-center text-sm text-slate-500">
