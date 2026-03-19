@@ -6,12 +6,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockSelect = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
+const mockInsert = vi.fn();
 
 vi.mock("@redflag/db", () => ({
   getDb: () => ({
     select: mockSelect,
     update: mockUpdate,
     delete: mockDelete,
+    insert: mockInsert,
   }),
   analyses: {
     id: "id",
@@ -61,6 +63,14 @@ vi.mock("@supabase/supabase-js", () => ({
       }),
     },
   }),
+}));
+
+// Mock rate limiter
+const mockCheckRateLimit = vi
+  .fn()
+  .mockResolvedValue({ limited: false, resetAt: "2026-01-02T00:00:00.000Z" });
+vi.mock("../rateLimit", () => ({
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
 }));
 
 // Mock analyzeContract
@@ -661,5 +671,378 @@ describe("analysis.delete", () => {
     // Restore env vars
     process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
     process.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
+  });
+});
+
+describe("analysis.toggleShare", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("enables sharing with 7-day expiry", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        // analysis lookup
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      // document ownership check
+      return {
+        from: () => ({ where: () => Promise.resolve([{ userId: "user-1" }]) }),
+      };
+    });
+
+    mockUpdate.mockReturnValue({
+      set: () => ({ where: () => Promise.resolve() }),
+    });
+
+    const before = Date.now();
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.toggleShare({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      enabled: true,
+    });
+
+    expect(result.isPublic).toBe(true);
+    expect(result.shareExpiresAt).toBeInstanceOf(Date);
+    // Verify expiry is ~7 days from now (within 5s tolerance)
+    const expectedMs = 7 * 24 * 60 * 60 * 1000;
+    const expiresAt = result.shareExpiresAt as Date;
+    const diff = expiresAt.getTime() - before;
+    expect(diff).toBeGreaterThanOrEqual(expectedMs - 5000);
+    expect(diff).toBeLessThanOrEqual(expectedMs + 5000);
+  });
+
+  it("disables sharing and clears expiry", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ userId: "user-1" }]) }),
+      };
+    });
+
+    mockUpdate.mockReturnValue({
+      set: () => ({ where: () => Promise.resolve() }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.toggleShare({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      enabled: false,
+    });
+
+    expect(result.isPublic).toBe(false);
+    expect(result.shareExpiresAt).toBeNull();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(
+      caller.analysis.toggleShare({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        enabled: true,
+      }),
+    ).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("rejects if document not owned by user", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      // Different owner
+      return {
+        from: () => ({ where: () => Promise.resolve([{ userId: "other-user" }]) }),
+      };
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.toggleShare({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        enabled: true,
+      }),
+    ).rejects.toThrow("You do not own this analysis.");
+  });
+});
+
+describe("analysis.rename", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renames successfully and returns ok", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "user-1" }]) }),
+      };
+    });
+
+    mockUpdate.mockReturnValue({
+      set: () => ({ where: () => Promise.resolve() }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.rename({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      newName: "My Contract",
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(mockUpdate).toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(
+      caller.analysis.rename({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        newName: "New Name",
+      }),
+    ).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("rejects if analysis not found", async () => {
+    mockSelect.mockReturnValue({
+      from: () => ({ where: () => Promise.resolve([]) }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.rename({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        newName: "New Name",
+      }),
+    ).rejects.toThrow("Analysis not found.");
+  });
+
+  it("rejects if document not owned by user", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "other-user" }]) }),
+      };
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.rename({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+        newName: "New Name",
+      }),
+    ).rejects.toThrow("You do not own this analysis.");
+  });
+});
+
+describe("analysis.rerun", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCheckRateLimit.mockResolvedValue({ limited: false, resetAt: "2026-01-02T00:00:00.000Z" });
+  });
+
+  it("creates new analysis for same document", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({
+            where: () => Promise.resolve([{ documentId: "doc-1", responseLanguage: "en" }]),
+          }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "user-1" }]) }),
+      };
+    });
+
+    mockInsert.mockReturnValue({
+      values: () => Promise.resolve(),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.rerun({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+
+    expect(result.analysisId).toBeDefined();
+    expect(typeof result.analysisId).toBe("string");
+    expect(mockInsert).toHaveBeenCalled();
+    expect(mockCheckRateLimit).toHaveBeenCalledWith("user-1", true);
+  });
+
+  it("respects responseLanguage override", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({
+            where: () => Promise.resolve([{ documentId: "doc-1", responseLanguage: "en" }]),
+          }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "user-1" }]) }),
+      };
+    });
+
+    mockInsert.mockReturnValue({
+      values: () => Promise.resolve(),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.rerun({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      responseLanguage: "fr",
+    });
+
+    expect(result.analysisId).toBeDefined();
+    expect(mockInsert).toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(
+      caller.analysis.rerun({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("rejects if original analysis not found", async () => {
+    mockSelect.mockReturnValue({
+      from: () => ({ where: () => Promise.resolve([]) }),
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.rerun({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).rejects.toThrow("Analysis not found.");
+  });
+
+  it("rejects when rate limit reached", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({
+            where: () => Promise.resolve([{ documentId: "doc-1", responseLanguage: "en" }]),
+          }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "user-1" }]) }),
+      };
+    });
+
+    mockCheckRateLimit.mockResolvedValue({ limited: true, resetAt: "2026-01-02T00:00:00.000Z" });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.rerun({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).rejects.toThrow("Daily analysis limit reached. Try again tomorrow.");
+  });
+});
+
+describe("analysis.renew", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sets expiresAt to 30 days from now", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "user-1" }]) }),
+      };
+    });
+
+    mockUpdate.mockReturnValue({
+      set: () => ({ where: () => Promise.resolve() }),
+    });
+
+    const before = Date.now();
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    const result = await caller.analysis.renew({
+      analysisId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.expiresAt).toBeInstanceOf(Date);
+    // Verify expiry is ~30 days from now (within 5s tolerance)
+    const expectedMs = 30 * 24 * 60 * 60 * 1000;
+    const diff = result.expiresAt.getTime() - before;
+    expect(diff).toBeGreaterThanOrEqual(expectedMs - 5000);
+    expect(diff).toBeLessThanOrEqual(expectedMs + 5000);
+    expect(mockUpdate).toHaveBeenCalled();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const caller = await createCaller(null);
+    await expect(
+      caller.analysis.renew({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).rejects.toThrow("Sign in to continue.");
+  });
+
+  it("rejects if document not owned by user", async () => {
+    let selectCount = 0;
+    mockSelect.mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        return {
+          from: () => ({ where: () => Promise.resolve([{ documentId: "doc-1" }]) }),
+        };
+      }
+      return {
+        from: () => ({ where: () => Promise.resolve([{ id: "doc-1", userId: "other-user" }]) }),
+      };
+    });
+
+    const caller = await createCaller({ id: "user-1", email: "test@example.com" });
+    await expect(
+      caller.analysis.renew({
+        analysisId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).rejects.toThrow("You do not own this analysis.");
   });
 });
