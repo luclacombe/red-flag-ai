@@ -252,8 +252,8 @@ export function UploadZone({ onUploadSuccess, compact }: UploadZoneProps) {
           tabIndex={-1}
         />
 
-        {/* Idle + drag-over state */}
-        {(state.status === "idle" || state.status === "drag-over") && (
+        {/* Idle / drag-over / error / rejection / rate-limit — keep drop zone content visible */}
+        {state.status !== "uploading" && state.status !== "processing" && (
           <>
             <Upload
               className={compact ? "size-8 text-slate-400" : "size-10 text-slate-400"}
@@ -269,12 +269,10 @@ export function UploadZone({ onUploadSuccess, compact }: UploadZoneProps) {
             </p>
             <p className="mt-1 text-sm text-slate-400">or click to browse</p>
             <p className="mt-3 text-xs text-slate-500">PDF, DOCX, or TXT &middot; Max 10MB</p>
-            {!compact && (
-              <p className="mt-2 text-xs text-slate-500">
-                <span className="text-green-500/80">&bull;</span> AES-256 protected &middot;
-                auto-deleted after 30 days
-              </p>
-            )}
+            <p className="mt-2 text-xs text-slate-500">
+              <span className="text-green-500/80">&bull;</span> AES-256 protected &middot;
+              auto-deleted after 30 days
+            </p>
           </>
         )}
 
@@ -328,7 +326,10 @@ export function UploadZone({ onUploadSuccess, compact }: UploadZoneProps) {
             <p className="text-sm font-medium text-red-300">{state.message}</p>
             <button
               type="button"
-              onClick={resetState}
+              onClick={() => {
+                resetState();
+                inputRef.current?.click();
+              }}
               className="mt-2 cursor-pointer text-sm font-semibold text-red-300 underline underline-offset-2 hover:text-red-200"
             >
               Try again
@@ -347,7 +348,10 @@ export function UploadZone({ onUploadSuccess, compact }: UploadZoneProps) {
             <p className="text-sm font-medium text-red-300">{state.reason}</p>
             <button
               type="button"
-              onClick={resetState}
+              onClick={() => {
+                resetState();
+                inputRef.current?.click();
+              }}
               className="mt-2 cursor-pointer text-sm font-semibold text-red-300 underline underline-offset-2 hover:text-red-200"
             >
               Upload a different file

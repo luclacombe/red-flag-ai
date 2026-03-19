@@ -47,18 +47,31 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
       <label htmlFor="response-language" className="text-xs text-slate-400">
         Risk analysis in
       </label>
-      <select
-        id="response-language"
-        value={language}
-        onChange={handleChange}
-        className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-sm text-slate-300 transition-colors hover:border-white/20 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-      >
-        {SUPPORTED_LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.nativeName}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          id="response-language"
+          value={language}
+          onChange={handleChange}
+          className="cursor-pointer appearance-none rounded-lg border border-white/10 bg-white/5 py-1 pl-3 pr-8 text-sm text-slate-300 transition-colors hover:border-white/20 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+        >
+          {SUPPORTED_LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.nativeName}
+            </option>
+          ))}
+        </select>
+        <svg
+          className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </div>
       <div className="group relative">
         <Info
           className="size-3.5 cursor-help text-slate-500 transition-colors group-hover:text-slate-300"

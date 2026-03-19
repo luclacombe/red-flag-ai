@@ -31,6 +31,7 @@ function AuthPageInner() {
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   function switchMode(newMode: Mode) {
     setError(null);
@@ -54,6 +55,8 @@ function AuthPageInner() {
         setErrorHint("forgot");
       } else if (msg.includes("email not confirmed")) {
         setError("Please check your email and confirm your account first.");
+      } else if (msg.includes("rate") || msg.includes("too many") || msg.includes("429")) {
+        setError("Too many sign-in attempts. Please wait a few minutes and try again.");
       } else {
         setError(error.message);
       }
@@ -80,11 +83,16 @@ function AuthPageInner() {
 
     if (error) {
       const msg = error.message.toLowerCase();
+      if (msg.includes("rate") || msg.includes("too many") || msg.includes("429")) {
+        setError("Too many attempts. Please wait a few minutes and try again.");
+        setLoading(false);
+        return;
+      }
       if (
         msg.includes("password") &&
         (msg.includes("short") || msg.includes("length") || msg.includes("at least"))
       ) {
-        setError("Password must be at least 6 characters.");
+        setError("Password must be at least 8 characters.");
         setErrorHint("password");
       } else if (msg.includes("already registered") || msg.includes("already been registered")) {
         setError("An account with this email already exists.");
@@ -134,15 +142,48 @@ function AuthPageInner() {
   }
 
   async function handleOAuth(provider: Provider) {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
+    setError(null);
+    setErrorHint(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) {
+        setError(`Sign-in with ${provider} failed. Please try again.`);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
   }
 
-  // Confirmation sub-states (magic link sent / signup success)
-  if (magicLinkSent || signupSuccess) {
+  async function handleForgotPassword() {
+    setError(null);
+    setErrorHint(null);
+    if (!email) {
+      setError("Enter your email address first.");
+      return;
+    }
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setResetSent(true);
+    setLoading(false);
+  }
+
+  // Confirmation sub-states (magic link sent / signup success / reset sent)
+  if (magicLinkSent || signupSuccess || resetSent) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0B1120] px-4">
         <BackgroundPaths variant="auth" />
@@ -156,7 +197,12 @@ function AuthPageInner() {
         <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
           <h1 className="font-heading text-xl font-semibold text-white">Check your email</h1>
           <p className="mt-2 text-sm text-slate-300">
-            {magicLinkSent ? (
+            {resetSent ? (
+              <>
+                We sent a password reset link to <strong className="text-white">{email}</strong>.
+                Click it to set a new password.
+              </>
+            ) : magicLinkSent ? (
               <>
                 We sent a magic link to <strong className="text-white">{email}</strong>. Click the
                 link in the email to sign in.
@@ -173,6 +219,7 @@ function AuthPageInner() {
             onClick={() => {
               setMagicLinkSent(false);
               setSignupSuccess(false);
+              setResetSent(false);
             }}
             className="mt-6 cursor-pointer text-sm font-medium text-blue-400 hover:text-blue-300"
           >
@@ -225,11 +272,23 @@ function AuthPageInner() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={isSignIn ? undefined : 6}
+              minLength={isSignIn ? undefined : 8}
               className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder={isSignIn ? "Your password" : "Minimum 6 characters"}
+              placeholder={isSignIn ? "Your password" : "Minimum 8 characters"}
             />
           </div>
+
+          {isSignIn && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="cursor-pointer text-xs text-slate-500 transition-colors hover:text-slate-300"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="text-sm text-red-400" role="alert">
