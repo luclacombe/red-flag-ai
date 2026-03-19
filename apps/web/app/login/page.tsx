@@ -27,25 +27,36 @@ function AuthPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<"forgot" | "create" | "password" | null>(null);
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   function switchMode(newMode: Mode) {
     setError(null);
+    setErrorHint(null);
     setMode(newMode);
   }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setErrorHint(null);
     setLoading(true);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      const msg = error.message.toLowerCase();
+      if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+        setError("Incorrect email or password.");
+        setErrorHint("forgot");
+      } else if (msg.includes("email not confirmed")) {
+        setError("Please check your email and confirm your account first.");
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
       return;
     }
@@ -57,6 +68,7 @@ function AuthPageInner() {
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setErrorHint(null);
     setLoading(true);
 
     const supabase = createClient();
@@ -67,7 +79,21 @@ function AuthPageInner() {
     });
 
     if (error) {
-      setError(error.message);
+      const msg = error.message.toLowerCase();
+      if (
+        msg.includes("password") &&
+        (msg.includes("short") || msg.includes("length") || msg.includes("at least"))
+      ) {
+        setError("Password must be at least 6 characters.");
+        setErrorHint("password");
+      } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+        setError("An account with this email already exists.");
+        setErrorHint("forgot");
+      } else if (msg.includes("valid email") || msg.includes("invalid email")) {
+        setError("Please enter a valid email address.");
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
       return;
     }
@@ -206,9 +232,47 @@ function AuthPageInner() {
           </div>
 
           {error && (
-            <p className="text-sm text-red-400" role="alert">
-              {error}
-            </p>
+            <div className="text-sm text-red-400" role="alert">
+              <p>{error}</p>
+              {errorHint === "forgot" && isSignIn && (
+                <p className="mt-1.5 text-slate-400">
+                  <button
+                    type="button"
+                    onClick={handleMagicLink}
+                    className="cursor-pointer font-medium text-blue-400 hover:text-blue-300"
+                  >
+                    Sign in with magic link instead
+                  </button>
+                  {" or "}
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signup")}
+                    className="cursor-pointer font-medium text-blue-400 hover:text-blue-300"
+                  >
+                    create an account
+                  </button>
+                </p>
+              )}
+              {errorHint === "forgot" && !isSignIn && (
+                <p className="mt-1.5 text-slate-400">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signin")}
+                    className="cursor-pointer font-medium text-blue-400 hover:text-blue-300"
+                  >
+                    Sign in instead
+                  </button>
+                  {" or "}
+                  <button
+                    type="button"
+                    onClick={handleMagicLink}
+                    className="cursor-pointer font-medium text-blue-400 hover:text-blue-300"
+                  >
+                    use a magic link
+                  </button>
+                </p>
+              )}
+            </div>
           )}
 
           <button
@@ -264,17 +328,26 @@ function AuthPageInner() {
           </button>
         </div>
 
-        {/* Magic link — sign in mode only */}
-        {isSignIn && (
-          <button
-            type="button"
-            onClick={handleMagicLink}
-            disabled={loading}
-            className="mt-3 w-full cursor-pointer rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
-          >
-            Sign in with magic link
-          </button>
-        )}
+        {/* Magic link — sign in mode only, animated height */}
+        <div
+          className="grid transition-[grid-template-rows,opacity] duration-300 ease-in-out"
+          style={{
+            gridTemplateRows: isSignIn ? "1fr" : "0fr",
+            opacity: isSignIn ? 1 : 0,
+          }}
+        >
+          <div className="overflow-hidden">
+            <button
+              type="button"
+              onClick={handleMagicLink}
+              disabled={loading || !isSignIn}
+              tabIndex={isSignIn ? 0 : -1}
+              className="mt-3 w-full cursor-pointer rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+            >
+              Sign in with magic link
+            </button>
+          </div>
+        </div>
 
         <p className="mt-6 text-center text-sm text-slate-500">
           {isSignIn ? (
