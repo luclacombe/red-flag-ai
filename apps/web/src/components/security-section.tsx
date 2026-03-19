@@ -93,13 +93,13 @@ export function SecuritySection() {
             );
 
             return (
-              <ScrollReveal key={feature.title} delay={0.08 * i}>
+              <ScrollReveal key={feature.title} delay={0.08 * i} className="h-full">
                 {feature.href ? (
                   <a
                     href={feature.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block h-full"
                   >
                     {card}
                   </a>

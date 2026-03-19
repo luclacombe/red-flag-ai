@@ -237,7 +237,7 @@ function AuthPageInner() {
             type="button"
             onClick={() => handleOAuth("google")}
             disabled={loading}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/10 py-2.5 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
           >
             <GoogleIcon size={16} />
             <span className="hidden sm:inline">Google</span>
@@ -246,16 +246,18 @@ function AuthPageInner() {
             type="button"
             onClick={() => handleOAuth("azure")}
             disabled={loading}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/10 py-2.5 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
           >
-            <MicrosoftIcon size={16} />
+            <span className="flex size-4 shrink-0 items-center justify-center">
+              <MicrosoftIcon size={16} />
+            </span>
             <span className="hidden sm:inline">Microsoft</span>
           </button>
           <button
             type="button"
             onClick={() => handleOAuth("github")}
             disabled={loading}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/10 py-2.5 text-xs font-medium text-slate-300 transition-all hover:border-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0B1120] disabled:opacity-50"
           >
             <GithubIcon size={16} />
             <span className="hidden sm:inline">GitHub</span>
