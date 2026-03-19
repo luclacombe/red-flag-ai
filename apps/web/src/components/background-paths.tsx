@@ -605,26 +605,25 @@ function ElegantPill({
     );
   }
 
-  // Auth midground: CSS-only entry + idle (no motion library overhead during typing)
+  // Auth midground: motion entry (bounce-in), no idle loop (perf)
   if (isAuth && layer === "midground") {
     return (
-      <div
-        className={cn(
-          "absolute animate-[pill-fade-in_1.2s_ease-out_both]",
-          hideOnMobile && "hidden md:block",
-          className,
-        )}
-        style={{
-          animationDelay: `${delay}s`,
-          transform: `rotate(${rotate}deg)`,
-          filter: layerStyle.filter,
-          opacity: 0,
+      <motion.div
+        initial={{ opacity: 0, y: -80, rotate: rotate - 10 }}
+        animate={{ opacity: layerStyle.opacity, y: 0, rotate }}
+        transition={{
+          duration: 1.4,
+          delay,
+          ease: [0.23, 0.86, 0.39, 0.96],
+          opacity: { duration: 0.8 },
         }}
+        className={cn("absolute", hideOnMobile && "hidden md:block", className)}
+        style={{ filter: layerStyle.filter }}
       >
         <div style={{ width, height }} className="relative">
           {pillContent}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -659,26 +658,25 @@ function ElegantPill({
     );
   }
 
-  // Auth foreground: CSS entry, no idle loop (performance)
+  // Auth foreground: motion entry (bounce-in), no idle loop (perf)
   if (isAuth) {
     return (
-      <div
-        className={cn(
-          "absolute animate-[pill-fade-in_1.6s_ease-out_both]",
-          hideOnMobile && "hidden md:block",
-          className,
-        )}
-        style={{
-          animationDelay: `${delay}s`,
-          transform: `rotate(${rotate}deg)`,
-          filter: layerStyle.filter,
-          opacity: 0,
+      <motion.div
+        initial={{ opacity: 0, y: -150, rotate: rotate - 15 }}
+        animate={{ opacity: layerStyle.opacity, y: 0, rotate }}
+        transition={{
+          duration: 1.8,
+          delay,
+          ease: [0.23, 0.86, 0.39, 0.96],
+          opacity: { duration: 1 },
         }}
+        className={cn("absolute", hideOnMobile && "hidden md:block", className)}
+        style={{ filter: layerStyle.filter }}
       >
         <div style={{ width, height }} className="relative">
           {pillContent}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
