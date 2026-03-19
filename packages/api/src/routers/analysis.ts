@@ -312,7 +312,7 @@ export const analysisRouter = router({
           if (lastYieldedCount > 0) {
             yield {
               type: "status" as const,
-              message: `Analyzing clauses — ${lastYieldedCount} done so far...`,
+              message: `Analyzing clauses: ${lastYieldedCount} done so far...`,
             };
           } else {
             yield { type: "status" as const, message: "Resuming analysis..." };

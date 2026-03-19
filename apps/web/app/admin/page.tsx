@@ -3,7 +3,7 @@ import { AdminDashboard } from "@/components/admin-dashboard";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Admin — RedFlag AI",
+  title: "Admin | RedFlag AI",
   robots: "noindex, nofollow",
 };
 

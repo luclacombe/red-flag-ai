@@ -9,7 +9,7 @@ const steps = [
     icon: FileText,
     title: "Upload your contract",
     description:
-      "Drop any contract — lease, NDA, or freelance agreement. Your file is protected the moment it arrives.",
+      "Drop any contract: lease, NDA, or freelance agreement. Your file is protected the moment it arrives.",
   },
   {
     number: 2,

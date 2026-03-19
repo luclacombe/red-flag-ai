@@ -13,6 +13,7 @@ vi.mock("@redflag/db", () => ({
   }),
   documents: {
     id: "id",
+    userId: "user_id",
     storagePath: "storage_path",
     createdAt: "created_at",
     expiresAt: "expires_at",
@@ -111,9 +112,17 @@ describe("GET /api/cron/cleanup", () => {
       { id: "doc-2", storagePath: "path/to/file2.pdf" },
     ];
 
+    // Three select queries: old docs, anon docs, rate limits
+    let selectCallCount = 0;
     mockSelect.mockReturnValue({
       from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(oldDocs),
+        where: vi.fn().mockImplementation(() => {
+          selectCallCount++;
+          // First call: old expired docs
+          if (selectCallCount === 1) return Promise.resolve(oldDocs);
+          // Subsequent calls (anon docs, rate limits): empty
+          return Promise.resolve([]);
+        }),
       }),
     });
 
@@ -139,9 +148,14 @@ describe("GET /api/cron/cleanup", () => {
   it("continues when storage delete fails", async () => {
     const oldDocs = [{ id: "doc-1", storagePath: "path/to/file.pdf" }];
 
+    let selectCallCount = 0;
     mockSelect.mockReturnValue({
       from: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(oldDocs),
+        where: vi.fn().mockImplementation(() => {
+          selectCallCount++;
+          if (selectCallCount === 1) return Promise.resolve(oldDocs);
+          return Promise.resolve([]);
+        }),
       }),
     });
 

@@ -51,7 +51,7 @@ export async function generateMetadata({
         analysis.isPublic && (!analysis.shareExpiresAt || analysis.shareExpiresAt > new Date());
       if (!isAnonymous && !isShared) {
         return {
-          title: "Contract Analysis — RedFlag AI",
+          title: "Contract Analysis | RedFlag AI",
           description: "AI-powered clause-by-clause contract risk analysis.",
         };
       }
@@ -59,7 +59,7 @@ export async function generateMetadata({
 
     if (!analysis || analysis.status !== "complete") {
       return {
-        title: "Contract Analysis — RedFlag AI",
+        title: "Contract Analysis | RedFlag AI",
         description: "AI-powered clause-by-clause contract risk analysis.",
       };
     }
@@ -85,7 +85,7 @@ export async function generateMetadata({
       recommendationLabels[analysis.recommendation ?? "caution"] ?? "Proceed with Caution";
     const score = analysis.overallRiskScore ?? 0;
 
-    const title = `${contractLabel} Analysis — RedFlag AI`;
+    const title = `${contractLabel} Analysis | RedFlag AI`;
     const description = `${recLabel} · Risk score: ${score}/100 · ${red} high risk, ${yellow} caution, ${green} safe clauses`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://redflag-ai.vercel.app";
@@ -112,7 +112,7 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: "Contract Analysis — RedFlag AI",
+      title: "Contract Analysis | RedFlag AI",
       description: "AI-powered clause-by-clause contract risk analysis.",
     };
   }

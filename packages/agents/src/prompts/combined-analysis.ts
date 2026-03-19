@@ -55,7 +55,7 @@ Use concise labels: termination, liability, payment, non_compete, ip_ownership, 
 ## Rewrite rules (for saferAlternative)
 
 For red and yellow clauses, provide a fairer rewrite:
-1. Preserve the original legal intent — do not eliminate the provision, make it balanced.
+1. Preserve the original legal intent. Do not eliminate the provision, make it balanced.
 2. Use clear, plain language.
 3. Make the clause fair to both parties.
 4. Focus on the key changes. Do not rewrite sections that are already fair.
@@ -72,7 +72,7 @@ After all clauses, call \`report_summary\` with:
 
 ## Language
 
-The contract is written in ${documentLanguage}. Analyze the original text directly — do not translate it.
+The contract is written in ${documentLanguage}. Analyze the original text directly. Do not translate it.
 Write ALL explanations, category labels, top concerns, and recommendations in ${responseLanguage}.
 Write saferAlternative rewrites in the SAME language as the original clause text (${documentLanguage}), NOT in ${responseLanguage}.
 

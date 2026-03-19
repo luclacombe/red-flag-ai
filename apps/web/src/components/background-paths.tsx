@@ -678,7 +678,11 @@ export const BackgroundPaths = memo(function BackgroundPaths({
   const isAuth = variant === "auth";
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+      style={{ contain: "layout style", willChange: "transform" }}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-green-500/[0.03] via-transparent to-red-500/[0.03] blur-3xl" />
 
       {pills.map((pill) => (

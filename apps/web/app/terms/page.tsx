@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — RedFlag AI",
+  title: "Terms of Service | RedFlag AI",
   description: "Terms and conditions for using RedFlag AI contract analysis.",
 };
 
@@ -88,10 +88,10 @@ export default function TermsPage() {
             <h2 className="font-heading text-lg font-semibold text-slate-900">5. Usage Limits</h2>
             <div className="mt-3 space-y-3">
               <p>
-                <strong>Anonymous users:</strong> 2 analyses per day.
+                <strong>Anonymous users:</strong> 1 analysis per day.
               </p>
               <p>
-                <strong>Authenticated users:</strong> 10 analyses per day.
+                <strong>Authenticated users:</strong> 3 analyses per day.
               </p>
               <p>
                 <strong>File limits:</strong> PDFs up to 30 pages; DOCX and TXT files up to 90,000
@@ -133,7 +133,7 @@ export default function TermsPage() {
                 <li>Document content is encrypted at rest using AES-256-GCM</li>
                 <li>All data is automatically deleted after 30 days</li>
                 <li>
-                  Document text is sent to Anthropic (Claude AI) and Voyage AI for analysis — these
+                  Document text is sent to Anthropic (Claude AI) and Voyage AI for analysis. These
                   providers do not use API data for model training
                 </li>
                 <li>You can delete your account and data at any time</li>

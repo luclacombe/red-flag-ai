@@ -14,9 +14,9 @@ Respond with ONLY a JSON object in this exact format, no other text:
 }
 
 Scoring guidelines:
-- 0-30: Low risk — standard, fair contract. Recommendation: "sign"
-- 31-60: Moderate risk — some concerning clauses. Recommendation: "caution"
-- 61-100: High risk — significant red flags. Recommendation: "do_not_sign"
+- 0-30: Low risk, standard fair contract. Recommendation: "sign"
+- 31-60: Moderate risk, some concerning clauses. Recommendation: "caution"
+- 61-100: High risk, significant red flags. Recommendation: "do_not_sign"
 
 The score should reflect the severity and number of flagged clauses. One red flag in a critical area (liability, termination, non-compete) weighs more than several yellow flags in minor areas.
 

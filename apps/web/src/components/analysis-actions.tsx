@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Download, Link2, Link2Off, Loader2, Trash2 } from "lucide-react";
+import { Check, Download, Link2, Link2Off, Loader2, LogIn, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { trpc } from "@/trpc/react";
@@ -11,6 +12,7 @@ interface AnalysisActionsProps {
   isOwner: boolean;
   isPublic: boolean;
   shareExpiresAt: Date | null;
+  isAuthenticated: boolean;
 }
 
 function formatExpiry(date: Date): string {
@@ -22,6 +24,7 @@ export function AnalysisActions({
   isOwner,
   isPublic: initialIsPublic,
   shareExpiresAt: initialExpiresAt,
+  isAuthenticated,
 }: AnalysisActionsProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
@@ -65,10 +68,8 @@ export function AnalysisActions({
     }
 
     if (isPublic) {
-      // Already shared — just copy the link
       await copyLink();
     } else {
-      // Enable sharing, then copy
       toggleShareMutation.mutate({ analysisId, enabled: true }, { onSuccess: () => copyLink() });
     }
   }, [analysisId, isOwner, isPublic, copyLink, toggleShareMutation]);
@@ -79,6 +80,29 @@ export function AnalysisActions({
 
   const isExpired = shareExpiresAt ? new Date(shareExpiresAt) < new Date() : false;
   const isActiveShare = isPublic && !isExpired;
+
+  // Anonymous users: only Download PDF + CTA to create account
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center gap-2">
+        <a
+          href={`/api/report/${analysisId}`}
+          download
+          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-[#0B1120]"
+        >
+          <Download className="size-4" />
+          Download PDF
+        </a>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-150 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-[#0B1120]"
+        >
+          <LogIn className="size-4" />
+          Sign in to share
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>

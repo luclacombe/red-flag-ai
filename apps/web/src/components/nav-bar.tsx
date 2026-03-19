@@ -95,7 +95,7 @@ export function NavBar({ hideHowItWorks = false, className }: NavBarProps) {
       <nav className={cn("w-full bg-transparent px-4 py-4 md:px-6", className)}>
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link
-            href="/"
+            href={user ? "/dashboard" : "/"}
             className="flex items-center gap-2 font-heading text-lg font-semibold text-white transition-colors duration-150 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             <img src="/logo.svg" alt="" className="size-5" />

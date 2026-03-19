@@ -1,7 +1,7 @@
 import { HistoryView } from "@/components/history-view";
 
 export const metadata = {
-  title: "Dashboard — RedFlag AI",
+  title: "Dashboard | RedFlag AI",
   description: "View and manage your past contract analyses.",
 };
 

@@ -5,6 +5,7 @@ import { Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStreamContext } from "@/context/stream-context";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/react";
 import { AnalysisActions } from "./analysis-actions";
@@ -31,6 +32,14 @@ const MIN_SHIMMER_MS = 400;
 
 export function AnalysisView({ id }: AnalysisViewProps) {
   const stream = useStreamContext();
+
+  // Auth state for feature gating (anonymous vs authenticated)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setIsAuthenticated(!!user));
+  }, []);
 
   // Local shimmer-buffered display state — initialized from context for instant navigate-back
   const [displayedClauses, setDisplayedClauses] = useState<ClauseAnalysis[]>(() =>
@@ -85,6 +94,18 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       stream.startStream(id);
     }
   }, [analysisStatus, id, stream.startStream]);
+
+  // Best-effort cleanup for anonymous users via sendBeacon
+  useEffect(() => {
+    if (isAuthenticated) return;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        navigator.sendBeacon("/api/cleanup", JSON.stringify({ analysisId: id }));
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [isAuthenticated, id]);
 
   // Derived stream state
   const activeStream = stream.analysisId === id;
@@ -329,7 +350,7 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     if (docScrollEl) {
       const minPos = Math.min(...stream.analyzingPositions);
       const clauseEl = docScrollEl.querySelector(`[data-clause-position="${minPos}"]`);
-      clauseEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      clauseEl?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [stream.analyzingPositions, stream.streamDone, stream.streamError, docScrollEl]);
 
@@ -551,8 +572,17 @@ export function AnalysisView({ id }: AnalysisViewProps) {
               isOwner={analysis?.isOwner ?? false}
               isPublic={analysis?.isPublic ?? false}
               shareExpiresAt={analysis?.shareExpiresAt ?? null}
+              isAuthenticated={isAuthenticated}
             />
           </div>
+          {!isAuthenticated && (
+            <div className="mb-6 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-center text-sm text-slate-300">
+              <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300">
+                Create a free account
+              </Link>{" "}
+              to save your analyses, share results, and track your contracts.
+            </div>
+          )}
 
           {/* Connecting lines — fixed overlay */}
           <ConnectingLines
@@ -733,8 +763,17 @@ export function AnalysisView({ id }: AnalysisViewProps) {
                 isOwner={analysis?.isOwner ?? false}
                 isPublic={analysis?.isPublic ?? false}
                 shareExpiresAt={analysis?.shareExpiresAt ?? null}
+                isAuthenticated={isAuthenticated}
               />
             </div>
+            {!isAuthenticated && (
+              <div className="mb-6 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-center text-sm text-slate-300">
+                <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300">
+                  Create a free account
+                </Link>{" "}
+                to save your analyses, share results, and track your contracts.
+              </div>
+            )}
           </div>
         )}
 

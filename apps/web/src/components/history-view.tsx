@@ -189,7 +189,7 @@ export function HistoryView() {
       utils.analysis.list.invalidate();
       setPending("share", null);
       if (data.isPublic) {
-        toast.success("Share link created — copied to clipboard");
+        toast.success("Share link created, copied to clipboard");
       } else {
         toast.success("Share link removed");
       }
@@ -289,7 +289,7 @@ export function HistoryView() {
   const handleUploadSuccess = useCallback(
     (analysisId: string) => {
       utils.analysis.list.invalidate();
-      toast.success("Contract uploaded — analysis starting");
+      toast.success("Contract uploaded, analysis starting");
       router.push(`/analysis/${analysisId}`);
     },
     [utils, router],
@@ -487,14 +487,14 @@ export function HistoryView() {
                       {isProcessing &&
                         (isStale ? (
                           <p className="mt-1 text-xs font-medium text-amber-400/80">
-                            Analysis interrupted — click to resume
+                            Analysis interrupted. Click to resume
                             {item.analyzedClauseCount > 0 &&
                               ` (${item.analyzedClauseCount} clauses done)`}
                           </p>
                         ) : (
                           <p className="text-shimmer mt-1 text-xs font-medium">
                             {liveClauseCount > 0
-                              ? `Analyzing clauses — ${liveClauseCount} done`
+                              ? `Analyzing clauses: ${liveClauseCount} done`
                               : "Analyzing contract..."}
                           </p>
                         ))}

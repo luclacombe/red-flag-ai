@@ -7,7 +7,7 @@ import { dmSans, spaceGrotesk } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RedFlag AI — Contract Risk Detector",
+  title: "RedFlag AI | Contract Risk Detector",
   description:
     "AI-powered clause-by-clause contract risk analysis. Upload a PDF, get instant risk scores, plain-English explanations, and safer alternatives.",
 };

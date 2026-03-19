@@ -83,6 +83,36 @@ export async function GET(request: Request) {
       docsDeleted = oldDocs.length;
     }
 
+    // ── Delete anonymous documents older than 24h ──────────────
+    const anonDocs = await db
+      .select({ id: documents.id, storagePath: documents.storagePath })
+      .from(documents)
+      .where(
+        sql`${documents.userId} IS NULL AND ${documents.createdAt} < NOW() - INTERVAL '24 hours'`,
+      );
+
+    let anonStorageDeleted = 0;
+    for (const doc of anonDocs) {
+      try {
+        const docKey = await deriveKey(masterKey, doc.id, "document");
+        const decryptedPath = decrypt(doc.storagePath, docKey);
+        const { error } = await supabase.storage.from("contracts").remove([decryptedPath]);
+        if (!error) anonStorageDeleted++;
+      } catch {
+        // Best effort
+      }
+    }
+
+    let anonDocsDeleted = 0;
+    if (anonDocs.length > 0) {
+      await db
+        .delete(documents)
+        .where(
+          sql`${documents.userId} IS NULL AND ${documents.createdAt} < NOW() - INTERVAL '24 hours'`,
+        );
+      anonDocsDeleted = anonDocs.length;
+    }
+
     // ── Delete old rate limit rows ──────────────────────────────
     const rateCutoff = new Date();
     rateCutoff.setDate(rateCutoff.getDate() - RATE_LIMIT_RETENTION_DAYS);
@@ -101,6 +131,8 @@ export async function GET(request: Request) {
       docsDeleted,
       storageDeleted,
       storageFailed,
+      anonDocsDeleted,
+      anonStorageDeleted,
       rateLimitsDeleted,
     });
 
@@ -109,6 +141,8 @@ export async function GET(request: Request) {
       docsDeleted,
       storageDeleted,
       storageFailed,
+      anonDocsDeleted,
+      anonStorageDeleted,
       rateLimitsDeleted,
     });
   } catch (error) {

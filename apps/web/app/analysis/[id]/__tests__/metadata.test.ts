@@ -55,7 +55,7 @@ describe("generateMetadata", () => {
       params: Promise.resolve({ id: "00000000-0000-0000-0000-000000000001" }),
     });
 
-    expect(result.title).toBe("Contract Analysis — RedFlag AI");
+    expect(result.title).toBe("Contract Analysis | RedFlag AI");
     expect(result.description).toBe("AI-powered clause-by-clause contract risk analysis.");
   });
 
@@ -75,7 +75,7 @@ describe("generateMetadata", () => {
       params: Promise.resolve({ id: "00000000-0000-0000-0000-000000000001" }),
     });
 
-    expect(result.title).toBe("Contract Analysis — RedFlag AI");
+    expect(result.title).toBe("Contract Analysis | RedFlag AI");
   });
 
   it("returns dynamic metadata for a complete analysis", async () => {
@@ -121,7 +121,7 @@ describe("generateMetadata", () => {
       params: Promise.resolve({ id: "00000000-0000-0000-0000-000000000001" }),
     });
 
-    expect(result.title).toBe("Residential Lease Analysis — RedFlag AI");
+    expect(result.title).toBe("Residential Lease Analysis | RedFlag AI");
     expect(result.description).toContain("Do Not Sign");
     expect(result.description).toContain("72/100");
     expect(result.description).toContain("2 high risk");
@@ -142,6 +142,6 @@ describe("generateMetadata", () => {
       params: Promise.resolve({ id: "00000000-0000-0000-0000-000000000001" }),
     });
 
-    expect(result.title).toBe("Contract Analysis — RedFlag AI");
+    expect(result.title).toBe("Contract Analysis | RedFlag AI");
   });
 });

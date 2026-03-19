@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — RedFlag AI",
+  title: "Privacy Policy | RedFlag AI",
   description: "How RedFlag AI handles your data, privacy practices, and your rights.",
 };
 
@@ -70,11 +70,11 @@ export default function PrivacyPage() {
             </h2>
             <div className="mt-3 space-y-3">
               <p>
-                <strong>Encryption at rest:</strong> All sensitive data — your uploaded document
-                text, filenames, clause analyses, explanations, and safer alternatives — is
-                encrypted with AES-256-GCM before being stored in our database. Each document has
-                its own derived encryption key. Even our database administrators cannot read your
-                contract content.
+                <strong>Encryption at rest:</strong> All sensitive data (your uploaded document
+                text, filenames, clause analyses, explanations, and safer alternatives) is encrypted
+                with AES-256-GCM before being stored in our database. Each document has its own
+                derived encryption key. Even our database administrators cannot read your contract
+                content.
               </p>
               <p>
                 <strong>Encrypted file storage:</strong> Uploaded files are encrypted before being
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong>Vercel:</strong> Our hosting provider. Serves the application and processes
-                requests. Server logs contain only metadata (file types, risk scores, timestamps) —
+                requests. Server logs contain only metadata (file types, risk scores, timestamps),
                 never contract text or analysis content.
               </p>
             </div>
