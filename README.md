@@ -182,7 +182,7 @@ See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 
 ## Cost
 
-Each analysis costs ~**$0.01–$0.05** in Claude API calls depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 2 analyses/day for anonymous users, 10/day for authenticated users.
+Each analysis costs ~**$0.01–$0.05** in Claude API calls depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 1 analysis/day for anonymous users, 3/day for authenticated users.
 
 ## License
 
