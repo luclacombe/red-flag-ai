@@ -605,7 +605,30 @@ function ElegantPill({
     );
   }
 
-  // Midground pills: motion entry + slower idle float
+  // Auth midground: CSS-only entry + idle (no motion library overhead during typing)
+  if (isAuth && layer === "midground") {
+    return (
+      <div
+        className={cn(
+          "absolute animate-[pill-fade-in_1.2s_ease-out_both]",
+          hideOnMobile && "hidden md:block",
+          className,
+        )}
+        style={{
+          animationDelay: `${delay}s`,
+          transform: `rotate(${rotate}deg)`,
+          filter: layerStyle.filter,
+          opacity: 0,
+        }}
+      >
+        <div style={{ width, height }} className="relative">
+          {pillContent}
+        </div>
+      </div>
+    );
+  }
+
+  // Hero midground: motion entry + slower idle float
   if (layer === "midground") {
     return (
       <motion.div
@@ -636,11 +659,34 @@ function ElegantPill({
     );
   }
 
-  // Foreground pills (and all hero pills): full entry + 12s idle float
+  // Auth foreground: CSS entry, no idle loop (performance)
+  if (isAuth) {
+    return (
+      <div
+        className={cn(
+          "absolute animate-[pill-fade-in_1.6s_ease-out_both]",
+          hideOnMobile && "hidden md:block",
+          className,
+        )}
+        style={{
+          animationDelay: `${delay}s`,
+          transform: `rotate(${rotate}deg)`,
+          filter: layerStyle.filter,
+          opacity: 0,
+        }}
+      >
+        <div style={{ width, height }} className="relative">
+          {pillContent}
+        </div>
+      </div>
+    );
+  }
+
+  // Hero foreground: full motion entry + 12s idle float
   return (
     <motion.div
       initial={{ opacity: 0, y: -150, rotate: rotate - 15 }}
-      animate={{ opacity: isAuth ? layerStyle.opacity : 1, y: 0, rotate }}
+      animate={{ opacity: 1, y: 0, rotate }}
       transition={{
         duration: 1.8,
         delay,
@@ -648,7 +694,6 @@ function ElegantPill({
         opacity: { duration: 1 },
       }}
       className={cn("absolute", hideOnMobile && "hidden md:block", className)}
-      style={isAuth ? { filter: layerStyle.filter } : undefined}
     >
       <motion.div
         animate={{ y: [0, 15, 0] }}
@@ -681,7 +726,7 @@ export const BackgroundPaths = memo(function BackgroundPaths({
     <div
       className="pointer-events-none absolute inset-0 overflow-hidden"
       aria-hidden="true"
-      style={{ contain: "layout style", willChange: "transform" }}
+      style={{ contain: "strict", contentVisibility: "auto" }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-green-500/[0.03] via-transparent to-red-500/[0.03] blur-3xl" />
 
