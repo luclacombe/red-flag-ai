@@ -47,10 +47,15 @@ const recommendationConfig: Record<string, { label: string; className: string }>
   },
 };
 
-function getScoreColor(score: number): string {
-  if (score <= 33) return "text-green-400";
-  if (score <= 66) return "text-amber-400";
-  return "text-red-400";
+const recommendationScoreColor: Record<string, string> = {
+  sign: "text-green-400",
+  caution: "text-amber-400",
+  do_not_sign: "text-red-400",
+};
+
+function getScoreColor(recommendation: string | null): string {
+  if (!recommendation) return "text-slate-400";
+  return recommendationScoreColor[recommendation] ?? "text-amber-400";
 }
 
 function formatContractType(type: string): string {
@@ -377,7 +382,7 @@ export function HistoryView() {
                         <span
                           className={cn(
                             "text-sm font-bold tabular-nums",
-                            getScoreColor(item.riskScore),
+                            getScoreColor(item.recommendation ?? null),
                           )}
                         >
                           {item.riskScore}
@@ -748,7 +753,7 @@ export function HistoryView() {
                           <span className="hidden sm:inline">Renew</span>
                         </button>
                         {renewMenuId === item.id && (
-                          <div className="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#131B2E] shadow-2xl animate-[fade-slide-in_150ms_ease-out_both]">
+                          <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#131B2E] shadow-2xl animate-[fade-slide-in_150ms_ease-out_both] sm:left-0 sm:right-auto">
                             <button
                               type="button"
                               onClick={() => {

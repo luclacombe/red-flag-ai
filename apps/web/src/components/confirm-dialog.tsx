@@ -59,7 +59,7 @@ export function ConfirmDialog({
       ref={dialogRef}
       onCancel={handleCancel}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 m-auto max-w-md rounded-xl border border-white/10 bg-[#131B2E] p-0 text-white shadow-2xl backdrop:bg-black/60 open:animate-[fade-slide-in_200ms_ease-out_both]"
+      className="fixed inset-0 z-50 m-auto w-[calc(100vw-2rem)] max-w-md rounded-xl border border-white/10 bg-[#131B2E] p-0 text-white shadow-2xl backdrop:bg-black/60 open:animate-[fade-slide-in_200ms_ease-out_both]"
     >
       <div className="p-6">
         <h2 className="font-heading text-lg font-semibold">{title}</h2>

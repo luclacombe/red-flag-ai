@@ -34,9 +34,20 @@ export async function updateSession(request: NextRequest) {
 
   // CRITICAL: Do not add any code between createServerClient and getUser().
   // The session refresh must happen immediately.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: import("@supabase/supabase-js").User | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (err) {
+    // @supabase/ssr uses cookie locking internally. When concurrent requests
+    // hit middleware (prefetches, parallel RSC), a second request can "steal"
+    // the lock from the first, causing an AbortError. This is safe to ignore —
+    // the session will be refreshed on the next request.
+    if (err instanceof Error && err.name === "AbortError") {
+      return response;
+    }
+    throw err;
+  }
 
   if (!user && !isPublicRoute(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url);

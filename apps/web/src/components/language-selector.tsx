@@ -6,7 +6,7 @@ import {
   type SupportedLanguageCode,
 } from "@redflag/shared";
 import { Globe, Info } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "redflag-response-language";
 
@@ -26,6 +26,8 @@ interface LanguageSelectorProps {
 
 export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
   const [language, setLanguage] = useState<SupportedLanguageCode>(AUTO_LANGUAGE_CODE);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLanguage(value ?? getStoredLanguage());
@@ -41,8 +43,20 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
     [onChange],
   );
 
+  // Close tooltip on outside click
+  useEffect(() => {
+    if (!showTooltip) return;
+    const handleClick = (e: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setShowTooltip(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showTooltip]);
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Globe className="size-4 text-slate-400" strokeWidth={1.5} />
       <label htmlFor="response-language" className="text-xs text-slate-400">
         Risk analysis in
@@ -72,12 +86,18 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
           <path d="M4 6l4 4 4-4" />
         </svg>
       </div>
-      <div className="group relative">
-        <Info
-          className="size-3.5 cursor-help text-slate-500 transition-colors group-hover:text-slate-300"
-          strokeWidth={1.5}
-        />
-        <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 rounded-lg border border-white/10 bg-[#131B2E] px-3 py-2 text-xs leading-relaxed text-slate-300 opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+      <div ref={tooltipRef} className="group relative">
+        <button
+          type="button"
+          onClick={() => setShowTooltip((prev) => !prev)}
+          className="text-slate-500 transition-colors hover:text-slate-300"
+          aria-label="Language selector info"
+        >
+          <Info className="size-3.5" strokeWidth={1.5} />
+        </button>
+        <div
+          className={`pointer-events-none absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-white/10 bg-[#131B2E] px-3 py-2 text-xs leading-relaxed text-slate-300 shadow-xl transition-opacity sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${showTooltip ? "pointer-events-auto opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+        >
           Controls the language of risk explanations. Does not translate your document. Safer
           alternatives remain in the document&apos;s original language.
         </div>

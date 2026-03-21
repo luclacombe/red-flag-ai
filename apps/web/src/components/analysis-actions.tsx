@@ -84,7 +84,7 @@ export function AnalysisActions({
   // Anonymous users: only Download PDF + CTA to create account
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <a
           href={`/api/report/${analysisId}`}
           download
@@ -106,7 +106,7 @@ export function AnalysisActions({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={handleShare}

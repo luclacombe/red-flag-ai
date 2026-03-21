@@ -33,7 +33,7 @@ export function SummaryPanel({
     >
       {/* Header: Risk Score + Recommendation */}
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-        <RiskScore value={summary.overallRiskScore} />
+        <RiskScore value={summary.overallRiskScore} recommendation={summary.recommendation} />
         <div className="flex flex-col items-center gap-2 sm:items-start">
           <h2 className="font-heading text-lg font-semibold text-white">Overall Risk Score</h2>
           <RecommendationBadge recommendation={summary.recommendation} />

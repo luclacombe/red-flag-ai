@@ -95,8 +95,8 @@ const HERO_PILLS: PillConfig[] = [
   {
     label: "",
     risk: "red",
-    width: 130,
-    height: 34,
+    width: 110,
+    height: 30,
     rotate: 18,
     delay: 0.5,
     className: "right-[8%] top-[44%]",
@@ -107,8 +107,8 @@ const HERO_PILLS: PillConfig[] = [
   {
     label: "",
     risk: "amber",
-    width: 120,
-    height: 32,
+    width: 180,
+    height: 46,
     rotate: -10,
     delay: 0.55,
     className: "left-[6%] top-[48%]",
@@ -433,19 +433,19 @@ const AUTH_PILLS: PillConfig[] = [
 
 const GRADIENT_MAP: Record<RiskColor, { gradient: string; border: string; text: string }> = {
   green: {
-    gradient: "from-green-500/[0.20]",
-    border: "border-green-400/[0.20]",
-    text: "text-green-400/50",
+    gradient: "from-green-500/[0.35]",
+    border: "border-green-400/[0.40]",
+    text: "text-green-400/70",
   },
   amber: {
-    gradient: "from-amber-500/[0.22]",
-    border: "border-amber-400/[0.22]",
-    text: "text-amber-400/50",
+    gradient: "from-amber-500/[0.38]",
+    border: "border-amber-400/[0.42]",
+    text: "text-amber-400/70",
   },
   red: {
-    gradient: "from-red-500/[0.22]",
-    border: "border-red-400/[0.22]",
-    text: "text-red-400/50",
+    gradient: "from-red-500/[0.38]",
+    border: "border-red-400/[0.42]",
+    text: "text-red-400/70",
   },
 };
 
@@ -545,9 +545,9 @@ function ElegantPill({
         useBackdropBlur && "backdrop-blur-[2px]",
         "border-2",
         colors.border,
-        "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]",
+        "shadow-[0_8px_32px_0_rgba(255,255,255,0.15)]",
         "after:absolute after:inset-0 after:rounded-full",
-        "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]",
+        "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.25),transparent_70%)]",
       )}
     >
       {label && (

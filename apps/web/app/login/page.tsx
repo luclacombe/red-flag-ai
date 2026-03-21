@@ -258,6 +258,7 @@ function AuthPageInner() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="you@example.com"
             />
@@ -273,6 +274,7 @@ function AuthPageInner() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={isSignIn ? undefined : 8}
+              autoComplete={isSignIn ? "current-password" : "new-password"}
               className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder={isSignIn ? "Your password" : "Minimum 8 characters"}
             />

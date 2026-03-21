@@ -2,6 +2,12 @@
 
 import { cn } from "@/lib/utils";
 
+const recommendationColorMap: Record<string, string> = {
+  sign: "#16a34a",
+  caution: "#d97706",
+  do_not_sign: "#dc2626",
+};
+
 function getScoreColor(score: number): string {
   if (score <= 33) return "#16a34a"; // green-600
   if (score <= 66) return "#d97706"; // amber-600
@@ -11,14 +17,18 @@ function getScoreColor(score: number): string {
 interface RiskScoreProps {
   value: number;
   max?: number;
+  /** When provided, overrides score-based color to match the recommendation */
+  recommendation?: string;
   className?: string;
 }
 
-export function RiskScore({ value, max = 100, className }: RiskScoreProps) {
+export function RiskScore({ value, max = 100, recommendation, className }: RiskScoreProps) {
   const circumference = 2 * Math.PI * 45;
   const percentPx = circumference / 100;
   const currentPercent = Math.min(Math.max((value / max) * 100, 0), 100);
-  const primaryColor = getScoreColor(value);
+  const primaryColor = recommendation
+    ? (recommendationColorMap[recommendation] ?? getScoreColor(value))
+    : getScoreColor(value);
   const secondaryColor = "#334155"; // slate-700
 
   return (
