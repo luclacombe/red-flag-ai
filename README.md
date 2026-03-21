@@ -25,7 +25,7 @@
 <h3 align="center">Streaming analysis</h3>
 
 <p align="center">
-  <video src="docs/brand/demo-analysis.mp4" autoplay loop muted playsinline width="100%"></video>
+  <img src="docs/brand/demo-analysis.gif" alt="Streaming clause-by-clause analysis with risk badges and connecting lines" width="100%" />
 </p>
 
 ## Features
@@ -44,7 +44,7 @@
 <h3 align="center">Landing page</h3>
 
 <p align="center">
-  <video src="docs/brand/demo-landing.mp4" autoplay loop muted playsinline width="100%"></video>
+  <img src="docs/brand/demo-landing.gif" alt="RedFlag AI landing page" width="100%" />
 </p>
 
 ## Architecture
