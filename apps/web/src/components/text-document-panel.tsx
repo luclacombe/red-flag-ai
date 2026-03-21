@@ -1,6 +1,7 @@
 "use client";
 
 import type { RiskLevel } from "@redflag/shared";
+import type { ReactNode } from "react";
 import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -14,36 +15,84 @@ interface ClauseHighlight {
 interface TextDocumentPanelProps {
   text: string;
   clauses: ClauseHighlight[];
-  activeClause: number | null;
+  hoveredClause: number | null;
+  pinnedClause: number | null;
   onClauseHover: (position: number | null) => void;
   onClauseClick: (position: number) => void;
   /** Callback ref to expose the inner scrollable container */
   onScrollContainerRef?: (el: HTMLDivElement | null) => void;
+  /** Optional render callback: called inside each clause highlight block.
+   *  Returns a ReactNode to render as the last child of the clause div (mobile layout). */
+  renderClauseSlot?: (position: number) => ReactNode;
+  /** Dark theme variant for mobile inline layout */
+  dark?: boolean;
 }
 
-const riskBgColors: Record<string, string> = {
-  red: "bg-red-50 border-l-red-500",
-  yellow: "bg-amber-50 border-l-amber-500",
-  green: "bg-green-50/60 border-l-green-400",
-  analyzing: "clause-analyzing border-l-slate-400",
-  pending: "bg-slate-50/40 border-l-slate-300",
-  flashing: "bg-white border-l-blue-400",
+const RISK_HEX: Record<string, string> = {
+  red: "#DC2626",
+  yellow: "#E17100",
+  green: "#00A73D",
 };
+
+const riskBgLight: Record<string, string> = {
+  red: "bg-red-50",
+  yellow: "bg-amber-50",
+  green: "bg-green-50/60",
+  analyzing: "clause-analyzing",
+  pending: "bg-slate-50/40",
+  flashing: "bg-white",
+};
+
+const riskBgDark: Record<string, string> = {
+  red: "bg-red-500/10",
+  yellow: "bg-amber-500/10",
+  green: "bg-green-500/10",
+  analyzing: "clause-analyzing",
+  pending: "bg-slate-500/10",
+  flashing: "bg-white/20",
+};
+
+const fallbackBorderColors: Record<string, string> = {
+  analyzing: "#94a3b8",
+  pending: "#cbd5e1",
+  flashing: "#60a5fa",
+};
+
+const RISK_RGBA: Record<string, string> = {
+  red: "220, 38, 38",
+  yellow: "225, 113, 0",
+  green: "0, 167, 61",
+};
+
+function getDocClauseShadow(riskLevel: string, isPinned: boolean, isHovered: boolean): string {
+  const hex = RISK_HEX[riskLevel] ?? fallbackBorderColors[riskLevel] ?? "#cbd5e1";
+  const base = `inset 4px 0 0 0 ${hex}`;
+  const rgba = RISK_RGBA[riskLevel];
+  if (isPinned && rgba) return `${base}, inset 0 0 0 2px ${hex}, 0 0 12px 2px rgba(${rgba}, 0.35)`;
+  if (isHovered && rgba) return `${base}, 0 0 8px 1px rgba(${rgba}, 0.2)`;
+  return base;
+}
 
 /**
  * Enhanced plain text document viewer with block-level clause highlighting.
  * Each clause is rendered as a full-width <div> block (not inline <span>)
  * to fix hover/selection issues. Paragraphs preserved within segments.
+ *
+ * `dark` variant uses dark background + light text for mobile inline layout.
  */
 export function TextDocumentPanel({
   text,
   clauses,
-  activeClause,
+  hoveredClause,
+  pinnedClause,
   onClauseHover,
   onClauseClick,
   onScrollContainerRef,
+  renderClauseSlot,
+  dark = false,
 }: TextDocumentPanelProps) {
   const clauseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const riskBgClasses = dark ? riskBgDark : riskBgLight;
 
   const setClauseRef = useCallback(
     (position: number) => (el: HTMLDivElement | null) => {
@@ -101,19 +150,31 @@ export function TextDocumentPanel({
   return (
     <div
       ref={scrollContainerRef}
-      className="h-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+      className={cn(
+        "scrollbar-hidden h-full overflow-y-auto rounded-xl",
+        dark ? "border border-white/10 bg-[#0F1629]" : "border border-slate-200 bg-white shadow-sm",
+      )}
     >
-      <div className="p-6 md:p-8">
+      <div className={cn("p-5", !dark && "md:p-8")}>
         {segments.map((segment) => {
           if (segment.type === "text") {
-            return <TextBlock key={segment.key} content={segment.content} />;
+            return (
+              <TextBlock
+                key={segment.key}
+                content={segment.content}
+                className={dark ? "text-slate-400" : undefined}
+              />
+            );
           }
 
           const { highlight } = segment;
-          const isActive = activeClause === highlight.position;
-          const bgClass = riskBgColors[highlight.riskLevel] ?? riskBgColors.pending;
-          // Alternate shade for adjacent same-risk clauses
+          const isPinned = pinnedClause === highlight.position;
+          const isHovered = hoveredClause === highlight.position && !isPinned;
+          const isLit = isPinned || isHovered;
+          const bgClass = riskBgClasses[highlight.riskLevel] ?? riskBgClasses.pending;
           const isEvenPos = highlight.position % 2 === 0;
+
+          const slotContent = renderClauseSlot?.(highlight.position);
 
           return (
             // biome-ignore lint/a11y/useSemanticElements: div needed for block-level highlighting
@@ -124,11 +185,15 @@ export function TextDocumentPanel({
               tabIndex={0}
               data-clause-position={highlight.position}
               className={cn(
-                "relative -mx-3 cursor-pointer rounded-lg border-l-4 px-3 py-2 transition-all duration-300",
+                "relative -mx-3 cursor-pointer rounded-lg pl-4 pr-3 py-2 transition-all duration-300",
                 bgClass,
-                isActive && "ring-2 ring-blue-400/50 brightness-95",
-                isEvenPos && "opacity-95",
+                isLit && "z-10",
+                isEvenPos && !slotContent && "opacity-95",
+                slotContent && "pb-3",
               )}
+              style={{
+                boxShadow: getDocClauseShadow(highlight.riskLevel, isPinned, isHovered),
+              }}
               onMouseEnter={() => onClauseHover(highlight.position)}
               onMouseLeave={() => onClauseHover(null)}
               onClick={() => onClauseClick(highlight.position)}
@@ -139,7 +204,11 @@ export function TextDocumentPanel({
                 }
               }}
             >
-              <TextBlock content={segment.content} className="text-slate-700" />
+              <TextBlock
+                content={segment.content}
+                className={dark ? "text-slate-200" : "text-slate-700"}
+              />
+              {slotContent}
             </div>
           );
         })}

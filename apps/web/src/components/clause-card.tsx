@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 import { RiskBadge } from "./risk-badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
-const borderColors: Record<RiskLevel, string> = {
-  red: "border-l-red-600",
-  yellow: "border-l-amber-600",
-  green: "border-l-green-600",
+const RISK_HEX: Record<RiskLevel, string> = {
+  red: "#DC2626",
+  yellow: "#E17100",
+  green: "#00A73D",
 };
 
 interface ClauseCardProps {
@@ -20,6 +20,8 @@ interface ClauseCardProps {
   /** When true, show only category + badge + brief explanation (no clause text) */
   compact?: boolean;
   className?: string;
+  /** Combined box-shadow string (left edge + optional glow) */
+  boxShadow?: string;
 }
 
 export function ClauseCard({
@@ -28,6 +30,7 @@ export function ClauseCard({
   animationDelay = 0,
   compact = false,
   className,
+  boxShadow,
 }: ClauseCardProps) {
   const [textExpanded, setTextExpanded] = useState(false);
   const [altExpanded, setAltExpanded] = useState(false);
@@ -46,13 +49,15 @@ export function ClauseCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/10 border-l-4 bg-white/5 backdrop-blur-sm transition-all duration-200",
-        compact ? "p-3" : "p-4 md:p-5",
-        borderColors[clause.riskLevel],
+        "rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-200",
+        compact ? "pl-4 pr-3 py-3" : "pl-5 pr-4 py-4 md:pl-6 md:pr-5 md:py-5",
         animate && "animate-[fade-slide-in_200ms_ease-out_both]",
         className,
       )}
-      style={animate ? { animationDelay: `${animationDelay}ms` } : undefined}
+      style={{
+        boxShadow: boxShadow ?? `inset 4px 0 0 0 ${RISK_HEX[clause.riskLevel]}`,
+        ...(animate ? { animationDelay: `${animationDelay}ms` } : {}),
+      }}
     >
       {/* Category + Badge row */}
       <div className="flex items-center justify-between gap-3">
@@ -99,7 +104,7 @@ export function ClauseCard({
           {/* stopPropagation prevents click from toggling the pin state on the parent wrapper */}
           <CollapsibleTrigger
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            className="mt-3 flex cursor-pointer items-center gap-1.5 rounded text-sm font-medium text-green-400 transition-colors duration-150 hover:text-green-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-[#0B1120]"
+            className="mt-3 flex cursor-pointer items-center gap-1.5 rounded text-sm font-medium text-green-400 transition-colors duration-150 hover:text-green-300 focus:outline-none"
           >
             <ChevronDown
               className={cn(

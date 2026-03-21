@@ -1,6 +1,7 @@
 "use client";
 
 import type { RiskLevel } from "@redflag/shared";
+import type { ReactNode } from "react";
 import { TextDocumentPanel } from "./text-document-panel";
 
 export interface ClauseHighlight {
@@ -15,13 +16,19 @@ interface DocumentPanelProps {
   text: string;
   /** Clause highlights to render */
   clauses: ClauseHighlight[];
-  /** Currently active (hovered/clicked) clause position */
-  activeClause: number | null;
+  /** Currently hovered clause position */
+  hoveredClause: number | null;
+  /** Currently pinned (clicked) clause position */
+  pinnedClause: number | null;
   /** Callback when user interacts with a clause */
   onClauseHover: (position: number | null) => void;
   onClauseClick: (position: number) => void;
   /** Callback ref to expose the inner scrollable container */
   onScrollContainerRef?: (el: HTMLDivElement | null) => void;
+  /** Optional render callback for inline clause cards (mobile layout) */
+  renderClauseSlot?: (position: number) => ReactNode;
+  /** Dark theme variant for mobile inline layout */
+  dark?: boolean;
 }
 
 /**
@@ -32,19 +39,25 @@ interface DocumentPanelProps {
 export function DocumentPanel({
   text,
   clauses,
-  activeClause,
+  hoveredClause,
+  pinnedClause,
   onClauseHover,
   onClauseClick,
   onScrollContainerRef,
+  renderClauseSlot,
+  dark,
 }: DocumentPanelProps) {
   return (
     <TextDocumentPanel
       text={text}
       clauses={clauses}
-      activeClause={activeClause}
+      hoveredClause={hoveredClause}
+      pinnedClause={pinnedClause}
       onClauseHover={onClauseHover}
       onClauseClick={onClauseClick}
       onScrollContainerRef={onScrollContainerRef}
+      renderClauseSlot={renderClauseSlot}
+      dark={dark}
     />
   );
 }

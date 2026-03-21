@@ -1,10 +1,11 @@
 "use client";
 
 import type { ClauseAnalysis, Recommendation, RiskLevel, Summary } from "@redflag/shared";
-import { Home, Loader2 } from "lucide-react";
+import { ChevronDown, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStreamContext } from "@/context/stream-context";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/react";
@@ -18,6 +19,7 @@ import { LegalDisclaimer } from "./legal-disclaimer";
 import { NavBar } from "./nav-bar";
 import { ProcessingSteps } from "./processing-steps";
 import { ProgressBar } from "./progress-bar";
+import { RiskBadge } from "./risk-badge";
 import { StatusBar } from "./status-bar";
 import { SummaryPanel } from "./summary-panel";
 
@@ -30,8 +32,46 @@ type ProcessingStep = "connecting" | "gate" | "extracting" | "parsing" | "prepar
 /** Minimum time (ms) a clause shimmer must be visible before transitioning to its final color */
 const MIN_SHIMMER_MS = 400;
 
+const RISK_HEX: Record<RiskLevel, string> = {
+  red: "#DC2626",
+  yellow: "#E17100",
+  green: "#00A73D",
+};
+
+const RISK_RGBA: Record<RiskLevel, string> = {
+  red: "220, 38, 38",
+  yellow: "225, 113, 0",
+  green: "0, 167, 61",
+};
+
+/** Padding (px) above the auto-scroll target so previous content stays visible */
+const SCROLL_PADDING = 20;
+
+/** Scroll target to the TOP of a container (with padding) — never scrolls the page */
+function scrollInContainer(container: HTMLElement, target: HTMLElement, padding = SCROLL_PADDING) {
+  const containerRect = container.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const relativeTop = targetRect.top - containerRect.top;
+  // Already at the desired top position (within tolerance) — skip
+  if (Math.abs(relativeTop - padding) < 20) return;
+  // Can't scroll higher — already at top of container
+  if (relativeTop < padding && container.scrollTop <= 0) return;
+  const desiredScrollTop = container.scrollTop + relativeTop - padding;
+  container.scrollTo({ top: Math.max(0, desiredScrollTop), behavior: "smooth" });
+}
+
+function getCardShadow(riskLevel: RiskLevel, isPinned: boolean, isHovered: boolean): string {
+  const hex = RISK_HEX[riskLevel];
+  const rgba = RISK_RGBA[riskLevel];
+  const base = `inset 4px 0 0 0 ${hex}`;
+  if (isPinned) return `${base}, inset 0 0 0 2px ${hex}, 0 0 12px 2px rgba(${rgba}, 0.35)`;
+  if (isHovered) return `${base}, 0 0 8px 1px rgba(${rgba}, 0.2)`;
+  return base;
+}
+
 export function AnalysisView({ id }: AnalysisViewProps) {
   const stream = useStreamContext();
+  const isDesktop = useIsDesktop();
 
   // Auth state for feature gating (anonymous vs authenticated)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -55,6 +95,17 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   const [hoveredClause, setHoveredClause] = useState<number | null>(null);
   const [pinnedClause, setPinnedClause] = useState<number | null>(null);
   const activeClause = pinnedClause ?? hoveredClause;
+
+  // Mobile: expand/collapse inline clause cards (red/yellow auto-expanded, green collapsed)
+  const [expandedClauses, setExpandedClauses] = useState<Set<number>>(new Set());
+  const toggleClauseExpanded = useCallback((position: number) => {
+    setExpandedClauses((prev) => {
+      const next = new Set(prev);
+      if (next.has(position)) next.delete(position);
+      else next.add(position);
+      return next;
+    });
+  }, []);
 
   // Scroll suppression — prevent hover from firing during scroll
   const isScrollingRef = useRef(false);
@@ -118,6 +169,10 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       if (prev.some((c) => c.position === result.position)) return prev;
       return [...prev, result];
     });
+    // Auto-expand red/yellow inline cards on mobile
+    if (result.riskLevel !== "green") {
+      setExpandedClauses((prev) => new Set(prev).add(result.position));
+    }
     setFlashingPosition(result.position);
     setTimeout(() => setFlashingPosition(null), 450);
     shimmerStartTimes.current.delete(result.position);
@@ -344,15 +399,27 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   useEffect(() => {
     if (userHasInteracted.current || stream.streamDone || stream.streamError) return;
     if (stream.analyzingPositions.size === 0) return;
-    // Scroll analysis cards panel
-    skeletonRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    // Scroll document panel to the topmost analyzing clause
-    if (docScrollEl) {
-      const minPos = Math.min(...stream.analyzingPositions);
-      const clauseEl = docScrollEl.querySelector(`[data-clause-position="${minPos}"]`);
-      clauseEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (isDesktop) {
+      // Desktop: scroll within panel containers only (prevents progress bar cutoff)
+      const rightEl = rightPanelRef.current;
+      if (rightEl && skeletonRef.current && rightEl.scrollHeight > rightEl.clientHeight) {
+        scrollInContainer(rightEl, skeletonRef.current);
+      }
+      if (docScrollEl) {
+        const minPos = Math.min(...stream.analyzingPositions);
+        const clauseEl = docScrollEl.querySelector(`[data-clause-position="${minPos}"]`);
+        if (clauseEl instanceof HTMLElement) {
+          scrollInContainer(docScrollEl, clauseEl);
+        }
+      }
+    } else {
+      // Mobile: scroll inline skeleton into view on the page
+      if (skeletonRef.current) {
+        skeletonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
     }
-  }, [stream.analyzingPositions, stream.streamDone, stream.streamError, docScrollEl]);
+  }, [stream.analyzingPositions, stream.streamDone, stream.streamError, docScrollEl, isDesktop]);
 
   // Smooth scroll to summary when analysis completes
   useEffect(() => {
@@ -443,6 +510,23 @@ export function AnalysisView({ id }: AnalysisViewProps) {
     }
     return map;
   }, [displayedClauses]);
+
+  // Initialize expanded clauses from DB data (red/yellow expanded, green collapsed)
+  const expandedInitialized = useRef(false);
+  useEffect(() => {
+    if (
+      analysis?.status === "complete" &&
+      analysis.clauses.length > 0 &&
+      !expandedInitialized.current
+    ) {
+      expandedInitialized.current = true;
+      const set = new Set<number>();
+      for (const c of analysis.clauses) {
+        if (c.riskLevel !== "green") set.add(c.position);
+      }
+      setExpandedClauses(set);
+    }
+  }, [analysis]);
 
   // ── LOADING ──────────────────────────────────
   if (isLoading) {
@@ -584,71 +668,97 @@ export function AnalysisView({ id }: AnalysisViewProps) {
             </div>
           )}
 
-          {/* Connecting lines — fixed overlay */}
-          <ConnectingLines
-            activeClause={activeClause}
-            leftPanelRef={leftPanelRef}
-            rightPanelRef={rightPanelRef}
-            docScrollContainer={docScrollEl}
-            clauseRiskLevels={dbClauseRiskLevels}
-          />
+          {/* Connecting lines — desktop only */}
+          {isDesktop && (
+            <ConnectingLines
+              activeClause={activeClause}
+              leftPanelRef={leftPanelRef}
+              rightPanelRef={rightPanelRef}
+              docScrollContainer={docScrollEl}
+              clauseRiskLevels={dbClauseRiskLevels}
+            />
+          )}
 
-          {/* Side-by-side or vertical */}
+          {/* Layout: desktop side-by-side / mobile inline / no-doc vertical */}
           {hasDocPanel ? (
-            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-              <div
-                ref={leftPanelRef}
-                className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
-              >
-                <DocumentPanel
-                  text={dbDocText}
-                  clauses={dbHighlights}
-                  activeClause={activeClause}
-                  onClauseHover={handleClauseHover}
-                  onClauseClick={handleClauseClick}
-                  onScrollContainerRef={setDocScrollEl}
-                />
-              </div>
-              <div
-                ref={rightPanelRef}
-                className="min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
-              >
-                <div className="space-y-3 lg:p-4">
-                  {dbClauses.map((clause) => {
-                    const isGreen = clause.riskLevel === "green";
-                    const isActive = activeClause === clause.position;
-                    return (
-                      // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
-                      <div
-                        key={clause.position}
-                        data-card-position={clause.position}
-                        className={cn(
-                          "cursor-pointer rounded-xl transition-all duration-200",
-                          isActive && "ring-2 ring-blue-400/40 brightness-110",
-                        )}
-                        onMouseEnter={() => handleClauseHover(clause.position)}
-                        onMouseLeave={() => handleClauseHover(null)}
-                        onClick={() => handleClauseClick(clause.position)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleClauseClick(clause.position);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                      >
-                        {isGreen ? (
-                          <GreenClauseCompact clause={clause} />
-                        ) : (
-                          <ClauseCard clause={clause} compact={hasDocPanel} />
-                        )}
-                      </div>
-                    );
-                  })}
+            isDesktop ? (
+              /* ── DESKTOP: side-by-side ── */
+              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+                <div
+                  ref={leftPanelRef}
+                  className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
+                >
+                  <DocumentPanel
+                    text={dbDocText}
+                    clauses={dbHighlights}
+                    hoveredClause={hoveredClause}
+                    pinnedClause={pinnedClause}
+                    onClauseHover={handleClauseHover}
+                    onClauseClick={handleClauseClick}
+                    onScrollContainerRef={setDocScrollEl}
+                  />
+                </div>
+                <div
+                  ref={rightPanelRef}
+                  className="scrollbar-hidden min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
+                >
+                  <div className="space-y-3 lg:p-4">
+                    {dbClauses.map((clause) => {
+                      const isGreen = clause.riskLevel === "green";
+                      const isPinned = pinnedClause === clause.position;
+                      const isHovered = hoveredClause === clause.position && !isPinned;
+                      const shadow = getCardShadow(clause.riskLevel, isPinned, isHovered);
+                      return (
+                        // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
+                        <div
+                          key={clause.position}
+                          data-card-position={clause.position}
+                          className="cursor-pointer rounded-xl transition-all duration-200"
+                          onMouseEnter={() => handleClauseHover(clause.position)}
+                          onMouseLeave={() => handleClauseHover(null)}
+                          onClick={() => handleClauseClick(clause.position)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleClauseClick(clause.position);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                        >
+                          {isGreen ? (
+                            <GreenClauseCompact clause={clause} boxShadow={shadow} />
+                          ) : (
+                            <ClauseCard clause={clause} compact boxShadow={shadow} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* ── MOBILE: dark document with inline analysis sections ── */
+              <DocumentPanel
+                text={dbDocText}
+                clauses={dbHighlights}
+                hoveredClause={null}
+                pinnedClause={null}
+                onClauseHover={() => {}}
+                onClauseClick={toggleClauseExpanded}
+                dark
+                renderClauseSlot={(position) => {
+                  const clause = dbClauses.find((c) => c.position === position);
+                  if (!clause) return null;
+                  return (
+                    <InlineAnalysisSection
+                      clause={clause}
+                      isExpanded={expandedClauses.has(position)}
+                    />
+                  );
+                }}
+              />
+            )
           ) : (
             <div className="mx-auto max-w-3xl space-y-3">
               {dbClauses.map((clause) => (
@@ -711,6 +821,10 @@ export function AnalysisView({ id }: AnalysisViewProps) {
       : !showProcessingSteps
         ? stream.statusMessage
         : null;
+
+  // Pre-compute for all-positions rendering
+  const displayedMap = new Map(displayedClauses.map((c) => [c.position, c]));
+  const firstAnalyzingPos = effectiveAnalyzing.size > 0 ? Math.min(...effectiveAnalyzing) : -1;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0B1120]">
@@ -777,107 +891,216 @@ export function AnalysisView({ id }: AnalysisViewProps) {
           </div>
         )}
 
-        {/* Connecting lines — fixed overlay, rendered outside grid */}
-        <ConnectingLines
-          activeClause={activeClause}
-          leftPanelRef={leftPanelRef}
-          rightPanelRef={rightPanelRef}
-          docScrollContainer={docScrollEl}
-          clauseRiskLevels={clauseRiskLevels}
-        />
+        {/* Connecting lines — desktop only */}
+        {isDesktop && (
+          <ConnectingLines
+            activeClause={activeClause}
+            leftPanelRef={leftPanelRef}
+            rightPanelRef={rightPanelRef}
+            docScrollContainer={docScrollEl}
+            clauseRiskLevels={clauseRiskLevels}
+          />
+        )}
 
-        {/* Side-by-side layout when document text and clause positions are available */}
+        {/* Layout: desktop side-by-side / mobile inline / no-doc vertical */}
         {hasDocPanel && stream.totalClauses > 0 ? (
-          <div
-            className={cn(
-              "grid gap-6 transition-opacity duration-500 lg:grid-cols-[1fr_1fr]",
-              processingVisible ? "opacity-0" : "opacity-100",
-            )}
-          >
-            {/* Document panel */}
+          isDesktop ? (
+            /* ── DESKTOP STREAMING: side-by-side ── */
             <div
-              ref={leftPanelRef}
-              className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
+              className={cn(
+                "grid gap-6 transition-opacity duration-500 lg:grid-cols-[1fr_1fr]",
+                processingVisible ? "opacity-0" : "opacity-100",
+              )}
+            >
+              {/* Document panel */}
+              <div
+                ref={leftPanelRef}
+                className="min-w-0 max-h-[80vh] overflow-hidden lg:sticky lg:top-20"
+              >
+                <DocumentPanel
+                  text={stream.documentText ?? ""}
+                  clauses={clauseHighlights}
+                  hoveredClause={hoveredClause}
+                  pinnedClause={pinnedClause}
+                  onClauseHover={handleClauseHover}
+                  onClauseClick={handleClauseClick}
+                  onScrollContainerRef={setDocScrollEl}
+                />
+              </div>
+
+              {/* Analysis cards */}
+              <div
+                ref={rightPanelRef}
+                className="scrollbar-hidden min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
+              >
+                <div className="space-y-3 lg:p-4">
+                  {stream.positionedClauses
+                    .slice()
+                    .sort((a, b) => a.position - b.position)
+                    .map((pc) => {
+                      const clause = displayedMap.get(pc.position);
+                      if (clause) {
+                        const isGreen = clause.riskLevel === "green";
+                        const isPinned = pinnedClause === clause.position;
+                        const isHovered = hoveredClause === clause.position && !isPinned;
+                        const shadow = getCardShadow(clause.riskLevel, isPinned, isHovered);
+                        return (
+                          // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
+                          <div
+                            key={`pos-${clause.position}`}
+                            data-card-position={clause.position}
+                            className="cursor-pointer rounded-xl transition-all duration-200"
+                            onMouseEnter={() => handleClauseHover(clause.position)}
+                            onMouseLeave={() => handleClauseHover(null)}
+                            onClick={() => handleClauseClick(clause.position)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleClauseClick(clause.position);
+                              }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                          >
+                            {isGreen ? (
+                              <GreenClauseCompact clause={clause} animate boxShadow={shadow} />
+                            ) : (
+                              <ClauseCard
+                                clause={clause}
+                                compact
+                                animate
+                                animationDelay={0}
+                                boxShadow={shadow}
+                              />
+                            )}
+                          </div>
+                        );
+                      }
+                      // Not yet analyzed — skeleton (shimmering if analyzing, faint if pending)
+                      const isCurrentlyAnalyzing = effectiveAnalyzing.has(pc.position);
+                      return (
+                        <div
+                          key={`skeleton-${pc.position}`}
+                          ref={
+                            isCurrentlyAnalyzing && pc.position === firstAnalyzingPos
+                              ? skeletonRef
+                              : undefined
+                          }
+                          data-card-position={pc.position}
+                          style={
+                            !processingVisible
+                              ? {
+                                  animation: `skeleton-enter 400ms ease-out ${pc.position * 40}ms both`,
+                                }
+                              : undefined
+                          }
+                        >
+                          <ClauseSkeleton analyzing={isCurrentlyAnalyzing} />
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ── MOBILE STREAMING: dark document with inline analysis sections ── */
+            <div
+              className={cn(
+                "transition-opacity duration-500",
+                processingVisible ? "opacity-0" : "opacity-100",
+              )}
             >
               <DocumentPanel
                 text={stream.documentText ?? ""}
                 clauses={clauseHighlights}
-                activeClause={activeClause}
-                onClauseHover={handleClauseHover}
-                onClauseClick={handleClauseClick}
-                onScrollContainerRef={setDocScrollEl}
-              />
-            </div>
-
-            {/* Analysis cards */}
-            <div
-              ref={rightPanelRef}
-              className="min-w-0 lg:max-h-[80vh] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-white/10 lg:bg-white/[0.02] lg:sticky lg:top-20"
-            >
-              <div className="space-y-3 lg:p-4">
-                {displayedClauses
-                  .slice()
-                  .sort((a, b) => a.position - b.position)
-                  .map((clause) => {
-                    const isGreen = clause.riskLevel === "green";
-                    const isActive = activeClause === clause.position;
+                hoveredClause={null}
+                pinnedClause={null}
+                onClauseHover={() => {}}
+                onClauseClick={toggleClauseExpanded}
+                dark
+                renderClauseSlot={(position) => {
+                  const clause = displayedMap.get(position);
+                  if (clause) {
                     return (
-                      // biome-ignore lint/a11y/useSemanticElements: div wraps complex card content
-                      <div
-                        key={`pos-${clause.position}`}
-                        data-card-position={clause.position}
-                        className={cn(
-                          "cursor-pointer rounded-xl transition-all duration-200",
-                          isActive && "ring-2 ring-blue-400/40 brightness-110",
-                        )}
-                        onMouseEnter={() => handleClauseHover(clause.position)}
-                        onMouseLeave={() => handleClauseHover(null)}
-                        onClick={() => handleClauseClick(clause.position)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleClauseClick(clause.position);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                      >
-                        {isGreen ? (
-                          <GreenClauseCompact clause={clause} animate />
-                        ) : (
-                          <ClauseCard clause={clause} compact animate animationDelay={0} />
-                        )}
+                      <div data-card-position={position}>
+                        <InlineAnalysisSection
+                          clause={clause}
+                          isExpanded={expandedClauses.has(position)}
+                        />
                       </div>
                     );
-                  })}
-                {/* Skeleton for currently-analyzing clauses */}
-                {isAnalyzing && effectiveAnalyzing.size > 0 && (
-                  <div ref={skeletonRef}>
-                    <ClauseSkeleton analyzing />
-                  </div>
-                )}
-              </div>
+                  }
+                  // Inline skeleton for currently-analyzing clauses
+                  const isCurrentlyAnalyzing = effectiveAnalyzing.has(position);
+                  if (!isCurrentlyAnalyzing) return null;
+                  return (
+                    <div
+                      className="mt-2"
+                      ref={position === firstAnalyzingPos ? skeletonRef : undefined}
+                      data-card-position={position}
+                    >
+                      <div
+                        className="rounded-lg border border-white/[0.06] p-3"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.03)",
+                          boxShadow:
+                            "0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-4 w-20 rounded bg-slate-600 skeleton-shimmer" />
+                          <div className="h-5 w-16 rounded-full bg-slate-600 skeleton-shimmer" />
+                        </div>
+                        <div className="mt-2 h-4 w-full rounded bg-slate-600 skeleton-shimmer" />
+                        <div className="mt-1.5 h-4 w-4/5 rounded bg-slate-600 skeleton-shimmer" />
+                        <p className="text-shimmer mt-2 text-xs font-medium">Analyzing clause...</p>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
             </div>
-          </div>
+          )
         ) : stream.totalClauses > 0 ? (
           /* Fallback: vertical stack (no document text) */
           <div className="mx-auto max-w-3xl space-y-4">
-            {displayedClauses
+            {stream.positionedClauses
               .slice()
               .sort((a, b) => a.position - b.position)
-              .map((clause) => (
-                <ClauseCard
-                  key={`pos-${clause.position}`}
-                  clause={clause}
-                  animate
-                  animationDelay={0}
-                />
-              ))}
-            {isAnalyzing && effectiveAnalyzing.size > 0 && (
-              <div ref={skeletonRef}>
-                <ClauseSkeleton analyzing />
-              </div>
-            )}
+              .map((pc) => {
+                const clause = displayedMap.get(pc.position);
+                if (clause) {
+                  return (
+                    <ClauseCard
+                      key={`pos-${clause.position}`}
+                      clause={clause}
+                      animate
+                      animationDelay={0}
+                    />
+                  );
+                }
+                const isCurrentlyAnalyzing = effectiveAnalyzing.has(pc.position);
+                return (
+                  <div
+                    key={`skeleton-${pc.position}`}
+                    ref={
+                      isCurrentlyAnalyzing && pc.position === firstAnalyzingPos
+                        ? skeletonRef
+                        : undefined
+                    }
+                    data-card-position={pc.position}
+                    style={
+                      !processingVisible
+                        ? {
+                            animation: `skeleton-enter 400ms ease-out ${pc.position * 40}ms both`,
+                          }
+                        : undefined
+                    }
+                  >
+                    <ClauseSkeleton analyzing={isCurrentlyAnalyzing} />
+                  </div>
+                );
+              })}
           </div>
         ) : null}
 
@@ -896,11 +1119,106 @@ export function AnalysisView({ id }: AnalysisViewProps) {
   );
 }
 
-/** Compact display for green (safe) clauses — consistent layout with other cards */
-function GreenClauseCompact({ clause, animate }: { clause: ClauseAnalysis; animate?: boolean }) {
+/**
+ * Mobile unified analysis section — always-visible elevated surface with animated body.
+ * Header (category + badge + chevron) always visible.
+ * Body (explanation + safer alternative) animates via grid-template-rows.
+ */
+function InlineAnalysisSection({
+  clause,
+  isExpanded,
+}: {
+  clause: ClauseAnalysis;
+  isExpanded: boolean;
+}) {
+  const [altExpanded, setAltExpanded] = useState(false);
+  const hasSaferAlt = !!clause.saferAlternative && clause.riskLevel !== "green";
+
   return (
     <div
-      className={`rounded-xl border border-white/10 border-l-4 border-l-green-600 bg-white/5 px-3 py-2.5 ${animate ? "animate-[fade-slide-in_200ms_ease-out_both]" : ""}`}
+      className="mt-2 rounded-lg border border-white/[0.06]"
+      style={{
+        background: "rgba(255, 255, 255, 0.03)",
+        boxShadow: isExpanded
+          ? "0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05)"
+          : "0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
+        transition: "box-shadow 300ms ease-out",
+      }}
+    >
+      {/* Header — always visible */}
+      <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          {clause.category.replace(/_/g, " ")}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <RiskBadge level={clause.riskLevel} />
+          <ChevronDown
+            className={cn(
+              "size-3.5 text-slate-400 transition-transform duration-300",
+              isExpanded && "rotate-180",
+            )}
+          />
+        </div>
+      </div>
+
+      {/* Body — animated via grid-template-rows for smooth open + close */}
+      <div
+        className="grid transition-[grid-template-rows,opacity] duration-300 ease-out"
+        style={{
+          gridTemplateRows: isExpanded ? "1fr" : "0fr",
+          opacity: isExpanded ? 1 : 0,
+        }}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3">
+            <p className="text-sm leading-relaxed text-slate-300">{clause.explanation}</p>
+
+            {hasSaferAlt && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAltExpanded(!altExpanded);
+                  }}
+                  className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-green-400 transition-colors duration-150 hover:text-green-300 focus:outline-none"
+                >
+                  <ChevronDown
+                    className={cn(
+                      "size-4 transition-transform duration-150",
+                      altExpanded && "rotate-180",
+                    )}
+                  />
+                  Safer alternative
+                </button>
+                {altExpanded && (
+                  <div className="mt-2 rounded-lg border border-green-500/20 bg-green-500/10 p-3">
+                    <p className="text-sm text-green-300">{clause.saferAlternative}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Compact display for green (safe) clauses — consistent layout with other cards */
+function GreenClauseCompact({
+  clause,
+  animate,
+  boxShadow,
+}: {
+  clause: ClauseAnalysis;
+  animate?: boolean;
+  boxShadow?: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-white/10 bg-white/5 pl-4 pr-3 py-2.5 ${animate ? "animate-[fade-slide-in_200ms_ease-out_both]" : ""}`}
+      style={{ boxShadow: boxShadow ?? "inset 4px 0 0 0 #00A73D" }}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">

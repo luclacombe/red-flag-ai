@@ -13,9 +13,9 @@ interface ConnectingLinesProps {
 }
 
 const RISK_COLORS: Record<string, string> = {
-  red: "rgba(239, 68, 68, 1)",
-  yellow: "rgba(245, 158, 11, 1)",
-  green: "rgba(34, 197, 94, 0.8)",
+  red: "#DC2626",
+  yellow: "#E17100",
+  green: "#00A73D",
 };
 
 const CORNER_RADIUS = 8;
@@ -85,7 +85,7 @@ export function ConnectingLines({
 
     const x1 = clauseRect.right - svgRect.left;
     const y1 = clampedClauseY - svgRect.top;
-    const x2 = cardRect.left - svgRect.left;
+    const x2 = cardRect.left - svgRect.left + 3;
     const y2 = clampedCardY - svgRect.top;
 
     // Vertical connector in the gap between the two panels
@@ -154,7 +154,7 @@ export function ConnectingLines({
     }
 
     const riskLevel = clauseRiskLevelsRef.current.get(currentClause) ?? "green";
-    const color = RISK_COLORS[riskLevel] ?? "rgba(34, 197, 94, 0.8)";
+    const color = RISK_COLORS[riskLevel] ?? "#00A73D";
 
     pathEl.setAttribute("d", path);
     pathEl.setAttribute("stroke", color);
@@ -231,8 +231,8 @@ export function ConnectingLines({
         ref={pathRef}
         fill="none"
         strokeWidth={3}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeLinecap="butt"
+        strokeLinejoin="miter"
         style={{ display: "none" }}
       />
     </svg>
