@@ -141,9 +141,9 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong className="text-slate-300">Anonymous users:</strong> Data from anonymous
-                uploads is deleted when you close the tab (via best-effort browser notification).
-                As a safety net, any anonymous data that persists is automatically deleted within
-                24 hours.
+                uploads is deleted when you close the tab (via best-effort browser notification). As
+                a safety net, any anonymous data that persists is automatically deleted within 24
+                hours.
               </p>
               <p>
                 <strong className="text-slate-300">Rate limit data:</strong> Hashed rate-limiting
