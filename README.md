@@ -20,32 +20,31 @@
 
 ---
 
-## Features
+> Upload a contract. Get clause-by-clause risk analysis with streaming results.
 
-- **Multi-format upload** — PDF, DOCX, and TXT contracts
-- **AI relevance gate** — rejects non-contracts before wasting compute
-- **RAG-grounded analysis** — 150 curated predatory patterns matched via Voyage AI legal embeddings + pgvector
-- **Real-time streaming** — clause results stream to the UI as they're analyzed, not after
-- **Side-by-side view** — original document with interactive clause highlighting and connecting lines
-- **15-language support** — analysis in the user's chosen language; safer alternatives stay in the document's language
-- **Shareable reports** — expiring share links + downloadable PDF reports
-- **Privacy-first** — AES-256-GCM encryption at rest, 30-day auto-deletion, GDPR-compliant IP hashing
+<h3 align="center">Streaming analysis</h3>
 
 <p align="center">
-  <img src="docs/brand/screenshot-analysis.png" alt="Side-by-side clause analysis with risk badges and connecting lines" width="100%" />
+  <video src="docs/brand/demo-analysis.mp4" autoplay loop muted playsinline width="100%"></video>
 </p>
 
-## How It Works
+## Features
 
-1. Upload a contract (PDF, DOCX, or TXT)
-2. AI checks if it's actually a contract — rejects non-contracts immediately
-3. Clauses are extracted via hybrid parsing (regex heuristic + LLM fallback)
-4. Each clause is analyzed against a RAG knowledge base of 150 predatory patterns
-5. Results stream clause by clause: risk score, explanation, and safer alternative
-6. Summary with overall risk score, top concerns, and a sign/don't-sign recommendation
+- **Multi-format upload** with PDF magic-byte validation, DOCX, and plain text
+- **AI relevance gate** that rejects non-contracts before wasting compute
+- **RAG-grounded analysis** using 150 curated predatory patterns, Voyage AI legal embeddings, and pgvector
+- **Persistent streaming** where the pipeline runs detached from the client. Navigate away mid-analysis, check live progress on the dashboard, click back in and pick up right where you left off.
+- **Side-by-side view** with interactive clause highlighting, hover/pin interactions, and SVG connecting lines between the document and analysis cards
+- **15-language support** for analysis in the user's chosen language, while safer alternatives stay in the document's original language
+- **Full auth system** with email/password, magic links, and OAuth (Google, Microsoft, GitHub)
+- **Dashboard** with rename, rerun, rerun in a different language, share/unshare, download PDF report, renew, and delete
+- **Shareable reports** via 7-day expiring links and downloadable branded PDF exports
+- **Privacy-first** with AES-256-GCM encryption at rest, 30-day auto-deletion, and GDPR-compliant IP hashing
+
+<h3 align="center">Landing page</h3>
 
 <p align="center">
-  <img src="docs/brand/screenshot-landing.png" alt="RedFlag AI landing page" width="100%" />
+  <video src="docs/brand/demo-landing.mp4" autoplay loop muted playsinline width="100%"></video>
 </p>
 
 ## Architecture
@@ -57,7 +56,7 @@ flowchart LR
     B -->|Contract| D[Smart Parse\nHeuristic + Haiku fallback]
     D --> E
 
-    subgraph SA[Combined Analysis — Sonnet streaming]
+    subgraph SA[Combined Analysis, Sonnet streaming]
         E[Risk + Rewrite + Summary\nin one call]
     end
 
@@ -71,118 +70,94 @@ flowchart LR
     D -->|Bulk fetch\nby contract type| G
 ```
 
-### Pipeline
+Three specialized agents, each a pure async function with Zod-validated inputs and outputs. Total: 3-4 Claude API calls per analysis.
 
-| Step | Agent | Model | Purpose |
-|------|-------|-------|---------|
-| 1 | Relevance Gate | Haiku | Classify: is this a contract? What type? What language? |
-| 2 | Smart Parse | Heuristic + Haiku fallback | Split document into individual clauses |
-| 3 | Combined Analysis | Sonnet (streaming) | Score each clause, generate safer alternatives, produce summary |
+| Step | Model | What it does |
+|------|-------|-------------|
+| Relevance Gate | Haiku | Rejects non-contracts. Detects contract type and language. |
+| Smart Parse | Heuristic + Haiku fallback | Splits the document into clauses. Regex runs first (free, instant). Falls back to LLM boundary detection when results look suspicious. |
+| Combined Analysis | Sonnet (streaming) | Scores each clause, generates safer alternatives, and produces a summary in a single streaming call. |
 
-Total: 3–4 API calls per analysis (gate + optional boundary detection + combined analysis + optional summary fallback).
-
-### Knowledge Base (RAG)
-
-150 curated predatory contract patterns covering leases, NDAs, employment contracts, freelance agreements, and terms of service. Each pattern includes a risk description, category, and safer alternative.
-
-Patterns are embedded with [Voyage AI](https://www.voyageai.com/)'s `voyage-law-2` model (legal-domain-specific, 1024 dimensions) and stored via pgvector. At analysis time, all patterns for the detected contract type are bulk-fetched and injected into the system prompt — Claude has domain-specific knowledge about what to flag.
-
-Seed data ships with pre-computed embeddings. No Voyage API key needed for local development.
+150 predatory contract patterns embedded with Voyage AI's `voyage-law-2` model (legal-domain, 1024 dims) and stored in pgvector. Bulk-fetched by contract type and injected into the system prompt so Claude knows what to flag. Seed data ships with pre-computed embeddings, so no Voyage API key is needed for local dev.
 
 ## Engineering Highlights
 
-- **Multi-agent AI pipeline** — Three specialized agents (gate → parse → analysis), each a pure async function with Zod-validated inputs and outputs. No classes, no shared mutable state.
-- **Hybrid clause parsing** — Regex heuristic runs first (instant, free). Falls back to Haiku LLM anchor-based boundary detection when the heuristic produces suspicious results (e.g., 1 clause from a 10-page document). Graceful degradation: if both fail, heuristic result used as-is.
-- **Structured outputs with zero parse errors** — Claude `strict: true` mode (constrained decoding) guarantees valid JSON tool calls. Zero JSON parse failures in production.
-- **Pipeline resilience** — Atomic `UPDATE ... WHERE status = 'pending' RETURNING *` prevents duplicate runs from concurrent SSE reconnects. Parse results are cached. Clause analyses are persisted individually as they stream. On Vercel timeout + reconnect, the pipeline skips completed work and resumes from the last checkpoint.
-- **Streaming architecture** — tRPC SSE subscriptions with typed event streams. First event within 25 seconds (Vercel constraint). Heartbeat-based keepalive prevents timeouts at the 300-second limit.
-- **Application-level encryption** — AES-256-GCM with HKDF-SHA256 per-document key derivation from a master key. Separate key contexts for documents vs. clauses. HMAC-SHA256 IP hashing for rate limits (irreversible, GDPR-compliant).
-- **Monorepo with strict dependency boundaries** — Turborepo with unidirectional deps: `web → api → agents → db → shared`. Internal packages export TypeScript source directly — no per-package build step.
-- **Zero-config local dev** — Single `pnpm run setup` bootstraps Supabase (Postgres + pgvector + Auth + Storage), seeds 150 knowledge patterns with pre-computed embeddings, and outputs the next steps.
+- **446 tests across 38 files.** Pipeline agents, encryption round-trips, rate limiting, tRPC routers, upload validation, auth flows, and PDF report generation. CI blocks merge if any fail.
+- **Zero JSON parse errors.** Claude `strict: true` constrained decoding guarantees valid tool calls. Clauses referenced by position number (not verbatim text), cutting output tokens ~50%.
+- **Pipeline resumes from checkpoint.** Parse results are cached. Clause analyses persist individually as they stream. On Vercel timeout + reconnect, completed work is skipped and the pipeline picks up from the last checkpoint.
+- **Stream survives navigation.** The pipeline runs as a detached async operation with an in-memory event queue. The SSE subscription lives in a layout-level React context. Navigate to the dashboard mid-analysis and the clause count updates live. Navigate back and the UI picks up instantly with no reconnection.
+- **Atomic idempotency.** `UPDATE ... WHERE status = 'pending' RETURNING *` prevents duplicate pipeline runs from concurrent SSE reconnects. Heartbeat updates keep stale detection accurate (30s threshold).
+- **AES-256-GCM encryption at rest.** HKDF-SHA256 derives per-document keys from a master key with separate contexts for documents and clauses. HMAC-SHA256 IP hashing for rate limits (irreversible, GDPR-compliant).
+- **Shimmer-buffered streaming UX.** Each clause result buffers for a minimum 400ms before transitioning from shimmer to final risk color. Flash effect on reveal. Synchronized CSS keyframes across skeleton, text, and document highlights. All animations respect `prefers-reduced-motion`.
+- **Strict monorepo boundaries.** Turborepo with unidirectional deps: `web > api > agents > db > shared`. Internal packages export TypeScript source directly with no per-package build step.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui |
-| API | tRPC v11 — end-to-end type safety, SSE subscriptions |
-| AI | Claude API (Anthropic SDK), multi-agent pipeline |
-| Knowledge Base | 150 curated legal patterns, Voyage AI embeddings (`voyage-law-2`, 1024 dims), pgvector |
-| Database | Supabase — PostgreSQL + pgvector + Auth + Storage |
+| API | tRPC v11 with end-to-end type safety and SSE subscriptions |
+| AI | Claude (Anthropic SDK), multi-agent pipeline, structured outputs |
+| Knowledge Base | 150 curated legal patterns, Voyage AI `voyage-law-2` embeddings, pgvector |
+| Database | Supabase (PostgreSQL + pgvector + Auth + Storage) |
 | ORM | Drizzle |
 | Validation | Zod v4 at all boundaries |
-| Deployment | Vercel (Node.js runtime, 300s function timeout) |
-| CI/CD | GitHub Actions — lint → type-check → test → build |
+| Auth | Supabase Auth with email, magic links, and OAuth (Google, Microsoft, GitHub) |
+| Deployment | Vercel (Node.js runtime, 300s function timeout, daily cron) |
+| CI/CD | GitHub Actions: lint, type-check, test, build |
 | Linting | Biome |
 
 ## Project Structure
 
 ```
-apps/web/              → Next.js App Router (UI + route handlers)
-packages/api/          → tRPC v11 routers, procedures, context
-packages/agents/       → Agent pipeline (gate, smart parse, combined analysis, summary)
-packages/db/           → Drizzle schema, migrations, vector search, embeddings
-packages/shared/       → Zod schemas, types, constants, logger
+apps/web/              Next.js App Router (UI + route handlers)
+packages/api/          tRPC v11 routers, procedures, context
+packages/agents/       Agent pipeline (gate, smart parse, combined analysis, summary)
+packages/db/           Drizzle schema, migrations, vector search, embeddings
+packages/shared/       Zod schemas, types, constants, logger, crypto
 ```
 
-Dependency direction: `web → api → agents → db → shared` (shared is the leaf).
+Dependency direction: `web > api > agents > db > shared` (shared is the leaf).
 
 ## Local Setup
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) 22+
-- [pnpm](https://pnpm.io/) 10+
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for local Supabase)
-- [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) 2.x
-- An [Anthropic API key](https://console.anthropic.com/)
-
-### Quick Start
+**Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x, an [Anthropic API key](https://console.anthropic.com/)
 
 ```bash
-# 1. Clone and install
 git clone https://github.com/luclacombe/red-flag-ai.git
 cd red-flag-ai
 pnpm install
-
-# 2. Start local Supabase (Postgres + pgvector, Auth, Storage, Studio)
-pnpm supabase:start
-
-# 3. Reset database (applies migrations + seeds knowledge base with pre-computed embeddings)
-pnpm supabase:reset
-
-# 4. Configure environment
-cp .env.example .env.local
-# Edit .env.local — add your ANTHROPIC_API_KEY
-
-# 5. Start dev server
+pnpm supabase:start          # Postgres + pgvector, Auth, Storage, Studio
+pnpm supabase:reset           # Apply migrations + seed 150 patterns with pre-computed embeddings
+cp .env.example .env.local    # Add your ANTHROPIC_API_KEY
 pnpm dev
 ```
 
-Open [localhost:3000](http://localhost:3000). Supabase Studio at [127.0.0.1:54323](http://127.0.0.1:54323).
+Open [localhost:3000](http://localhost:3000). Supabase Studio at [127.0.0.1:54323](http://127.0.0.1:54323). Email verification inbox at [localhost:54324](http://localhost:54324).
+
+Admin observability dashboard at `/admin` (gated by `ADMIN_EMAIL` env var). Shows per-step timing, token usage, success rate, and estimated cost.
 
 ## Security
 
-- **AES-256-GCM encryption at rest** — all document content and PII encrypted with per-document derived keys (HKDF-SHA256)
-- **30-day auto-deletion** — documents and analysis data purged automatically via cron
-- **HMAC-SHA256 IP hashing** — rate limit identifiers are irreversibly hashed (GDPR-compliant)
-- **Row Level Security** — Supabase RLS enforced on all tables
-- **Private by default** — analyses require explicit share toggle; share links expire after 7 days
-- **HTTP security headers** — CSP, HSTS, X-Frame-Options, Permissions-Policy
-- **Prompt injection defense** — document text treated as untrusted input in all AI agent prompts
+- **AES-256-GCM encryption at rest** with per-document derived keys (HKDF-SHA256)
+- **30-day auto-deletion** via daily cron, with user-controlled renewal
+- **HMAC-SHA256 IP hashing** so rate limit identifiers are irreversibly hashed (GDPR-compliant)
+- **Row Level Security** enforced on all Supabase tables
+- **Private by default** with explicit share toggle and 7-day link expiry
+- **HTTP security headers** including CSP, HSTS, X-Frame-Options, and Permissions-Policy
+- **Prompt injection defense** where document text is treated as untrusted input in all agent prompts
 
 See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 
-## What I'd Improve With More Time
+## What I'd Build Next
 
-- **Jurisdiction-specific patterns.** The knowledge base is jurisdiction-agnostic. Add region-specific pattern sets (EU, US states, UK).
-- **LLM observability.** Add tracing (e.g., Langfuse) for token usage, latency per agent, and prompt versioning.
-- **Contract comparison.** Upload two versions of a contract, diff the clauses.
-- **PDF viewer.** Render the original PDF in the side-by-side view instead of extracted text.
+- **Jurisdiction awareness.** The knowledge base is currently jurisdiction-agnostic. Adding region-specific pattern sets (EU, US states, UK) and supplementing with live web lookups for relevant regulations during analysis would improve precision.
+- **Contract comparison.** Upload two versions of a contract and diff the clauses.
+- **Native PDF viewer.** Render the original PDF in the side-by-side view instead of extracted text.
 
 ## Cost
 
-Each analysis costs ~**$0.01–$0.05** in Claude API calls depending on document length. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 1 analysis/day for anonymous users, 3/day for authenticated users.
+Each analysis costs ~**$0.15-$0.35** in Claude API calls depending on document length and clause count. The bulk of the cost is the Sonnet streaming call (combined analysis + summary). Haiku steps (gate + parse fallback) add less than $0.02. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 1 analysis/day for anonymous users, 3/day for authenticated.
 
 ## License
 

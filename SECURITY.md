@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability, please report it responsibly:
 
-**Email:** [luc@luclacombe.com](mailto:luc@luclacombe.com)
+**Email:** [security@red-flag-ai.com](mailto:security@red-flag-ai.com)
 
 Please include:
 - A description of the vulnerability

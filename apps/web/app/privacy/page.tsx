@@ -46,8 +46,10 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong className="text-slate-300">Usage metadata:</strong> File type, page count,
-                contract type detected, risk scores, and analysis timestamps. This metadata is not
-                encrypted and is used for rate limiting and service operation.
+                contract type detected, risk scores, analysis timestamps, and pipeline performance
+                data (per-step timing, token counts, model used, success or failure). This metadata
+                is not encrypted and is used for rate limiting, service operation, and internal
+                observability.
               </p>
               <p>
                 <strong className="text-slate-300">Rate limiting identifier:</strong> We hash your
@@ -132,9 +134,16 @@ export default function PrivacyPage() {
             <h2 className="font-heading text-lg font-semibold text-slate-200">5. Data Retention</h2>
             <div className="mt-3 space-y-3">
               <p>
-                <strong className="text-slate-300">Automatic deletion:</strong> All documents,
+                <strong className="text-slate-300">Authenticated users:</strong> Documents,
                 analyses, and associated data are automatically and permanently deleted 30 days
-                after upload. This applies to all users, whether authenticated or anonymous.
+                after upload by default. You can extend this window from your dashboard, which
+                resets the 30-day timer from the date of renewal.
+              </p>
+              <p>
+                <strong className="text-slate-300">Anonymous users:</strong> Data from anonymous
+                uploads is deleted when you close the tab (via best-effort browser notification).
+                As a safety net, any anonymous data that persists is automatically deleted within
+                24 hours.
               </p>
               <p>
                 <strong className="text-slate-300">Rate limit data:</strong> Hashed rate-limiting
@@ -146,8 +155,8 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong className="text-slate-300">Immediate deletion:</strong> Authenticated users
-                can delete their account and all associated data at any time from their account
-                settings.
+                can delete individual analyses from their dashboard or delete their entire account
+                and all associated data at any time from their account settings.
               </p>
             </div>
           </section>
