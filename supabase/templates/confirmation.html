@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confirm your RedFlag AI account</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #0B1120; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #0B1120; font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0B1120;">
     <tr>
       <td align="center" style="padding: 40px 20px;">
@@ -13,31 +13,32 @@
           <!-- Logo -->
           <tr>
             <td align="center" style="padding-bottom: 24px;">
-              <span style="font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.02em;">RedFlag AI</span>
+              <img src="https://red-flag-ai.com/logo-email.png" alt="" width="26" height="26" style="display: inline-block; vertical-align: middle; margin-right: 6px;" />
+              <span style="font-size: 20px; font-weight: 700; color: #F1F5F9; letter-spacing: -0.03em;">RedFlag AI</span>
             </td>
           </tr>
           <!-- Card -->
           <tr>
-            <td style="background-color: #131B2E; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px;">
-              <h1 style="margin: 0 0 12px; font-size: 20px; font-weight: 600; color: #ffffff;">Confirm your account</h1>
-              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #94a3b8;">
+            <td style="background-color: #131B2E; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px;">
+              <h1 style="margin: 0 0 12px; font-size: 20px; font-weight: 600; color: #F1F5F9; letter-spacing: -0.02em;">Confirm your account</h1>
+              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #94A3B8;">
                 Click the button below to verify your email address and activate your RedFlag AI account.
               </p>
               <!-- CTA Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="center">
-                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display: inline-block; background-color: #F59E0B; color: #0f172a; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 32px; border-radius: 8px;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display: inline-block; background-color: #F59E0B; color: #0F172A; font-size: 14px; font-weight: 700; text-decoration: none; padding: 12px 32px; border-radius: 8px; letter-spacing: -0.01em;">
                       Confirm email
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin: 24px 0 0; font-size: 12px; line-height: 1.5; color: #64748b;">
+              <p style="margin: 24px 0 0; font-size: 12px; line-height: 1.5; color: #64748B;">
                 If the button doesn't work, copy and paste this link into your browser:<br />
-                <a href="{{ .ConfirmationURL }}" style="color: #94a3b8; word-break: break-all;">{{ .ConfirmationURL }}</a>
+                <a href="{{ .ConfirmationURL }}" style="color: #94A3B8; word-break: break-all;">{{ .ConfirmationURL }}</a>
               </p>
-              <p style="margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: #64748b;">
+              <p style="margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: #64748B;">
                 If you didn't create an account, you can safely ignore this email.
               </p>
             </td>
