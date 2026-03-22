@@ -7,7 +7,7 @@ import { renderReport } from "./report-document";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
@@ -75,6 +75,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       green: clauseRows.filter((c) => c.riskLevel === "green").length,
     };
 
+    // Derive base URL for loading public assets (logo) in the PDF
+    const proto = request.headers.get("x-forwarded-proto") ?? "http";
+    const host = request.headers.get("host") ?? "localhost:3000";
+    const baseUrl = `${proto}://${host}`;
+
     const pdfBuffer = await renderReport({
       contractType: doc.contractType ?? "unknown",
       filename: decryptedFilename,
@@ -95,6 +100,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         day: "numeric",
       }),
       breakdown,
+      logoUrl: `${baseUrl}/logo-email.png`,
     });
 
     const safeFilename = decryptedFilename.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");

@@ -31,10 +31,22 @@ export function SummaryPanel({
         className,
       )}
     >
-      {/* Header: Risk Score + Recommendation */}
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-        <RiskScore value={summary.overallRiskScore} recommendation={summary.recommendation} />
-        <div className="flex flex-col items-center gap-2 sm:items-start">
+      {/* Header: Risk Score + Recommendation
+           Mobile (col): badge → dial → label
+           Desktop (row): dial | label + badge */}
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+        <h2 className="order-1 font-heading text-lg font-semibold text-white sm:hidden">
+          Overall Risk Score
+        </h2>
+        <RiskScore
+          value={summary.overallRiskScore}
+          recommendation={summary.recommendation}
+          className="order-2 sm:order-none"
+        />
+        <div className="order-3 sm:hidden">
+          <RecommendationBadge recommendation={summary.recommendation} />
+        </div>
+        <div className="order-3 hidden flex-col items-start gap-2 sm:flex">
           <h2 className="font-heading text-lg font-semibold text-white">Overall Risk Score</h2>
           <RecommendationBadge recommendation={summary.recommendation} />
         </div>
