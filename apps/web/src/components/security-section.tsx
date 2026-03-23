@@ -1,7 +1,7 @@
 "use client";
 
-import type { ComponentType } from "react";
 import { EyeOff, Fingerprint, Globe, Lock, Trash2 } from "lucide-react";
+import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import { GithubIcon } from "./oauth-icons";
 import { ScrollReveal } from "./scroll-reveal";
