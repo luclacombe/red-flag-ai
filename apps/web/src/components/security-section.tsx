@@ -1,12 +1,13 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import { EyeOff, Fingerprint, Github, Globe, Lock, Trash2 } from "lucide-react";
+import type { ComponentType } from "react";
+import { EyeOff, Fingerprint, Globe, Lock, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GithubIcon } from "./oauth-icons";
 import { ScrollReveal } from "./scroll-reveal";
 
 interface SecurityFeature {
-  icon: LucideIcon;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   description: string;
   href?: string;
@@ -26,7 +27,7 @@ const features: SecurityFeature[] = [
       "Your contracts are analyzed in real-time, never stored for AI training or shared with third parties.",
   },
   {
-    icon: Github,
+    icon: GithubIcon,
     title: "Open Source",
     description:
       "Our codebase is publicly available on GitHub. Inspect the code, verify our claims, and contribute.",
