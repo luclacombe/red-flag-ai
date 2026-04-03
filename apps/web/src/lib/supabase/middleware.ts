@@ -38,15 +38,15 @@ export async function updateSession(request: NextRequest) {
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
-  } catch (err) {
-    // @supabase/ssr uses cookie locking internally. When concurrent requests
-    // hit middleware (prefetches, parallel RSC), a second request can "steal"
-    // the lock from the first, causing an AbortError. This is safe to ignore —
-    // the session will be refreshed on the next request.
-    if (err instanceof Error && err.name === "AbortError") {
-      return response;
-    }
-    throw err;
+  } catch {
+    // Session refresh can fail for several reasons:
+    // - AbortError: @supabase/ssr cookie locking when concurrent requests
+    //   hit middleware (prefetches, parallel RSC). Safe to ignore.
+    // - TypeError (fetch failed): Supabase unreachable (outage, project
+    //   paused on free tier, network issues). Must not block page load.
+    // In all cases, continue without auth state — public routes still work,
+    // protected routes redirect to login as a safe fallback.
+    return response;
   }
 
   if (!user && !isPublicRoute(request.nextUrl.pathname)) {
