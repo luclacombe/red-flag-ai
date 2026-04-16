@@ -18,7 +18,7 @@ Agent pipeline — pure async functions for each step of contract analysis.
 - `src/orchestrator.ts` — Pipeline orchestrator (`analyzeContract(params)` async generator → `SSEEvent`). Chains smart parse (hybrid heuristic + LLM) → bulk RAG → combined streaming analysis → summary fallback. Also exports `computeClausePositions()`. `AnalyzeContractParams` includes `fileType: FileType` — threaded into `document_text` event for frontend viewer dispatch. `clause_positions` event sends full `PositionedClause[]` (with `startIndex`/`endIndex`). Records `pipeline_metrics` for each step (parse, combined_analysis, summary_fallback) via `recordPipelineMetric()` fire-and-forget.
 - `src/prompts/` — System prompts + user message builders (gate, boundary-detect, combined-analysis, summary)
 - `src/__tests__/` — Unit tests for all agents, orchestrator, heuristic parser, boundary detection, smart parse, combined analysis, pattern formatting, matched patterns
-- `src/__tests__/fixtures/generate-pdf.ts` — Minimal valid PDF generator for tests (no deps)
+- `src/__tests__/fixtures/generate-pdf.ts` — Sample contract/article text constants for tests (no deps)
 
 ## Pipeline
 
@@ -34,7 +34,6 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 - `@redflag/shared` — Zod schemas, types (`ParsedClause`, `PositionedClause`, `ClauseAnalysis`, `Summary`, `SSEEvent`, etc.)
 - `@redflag/db` — Database client, schema tables, embedding functions, `getPatternsByContractType()`, `KnowledgePatternWithEmbedding`, Drizzle operators (`eq`, `sql`)
 - `zod` — Internal agent response validation schemas
-- `unpdf` (dev only) — PDF text extraction for tests
 
 ## Key Design Details
 

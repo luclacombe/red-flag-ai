@@ -16,8 +16,5 @@
     "lint": "biome check src/",
     "type-check": "tsc --noEmit",
     "test": "vitest run"
-  },
-  "devDependencies": {
-    "unpdf": "^1.6.0"
   }
 }

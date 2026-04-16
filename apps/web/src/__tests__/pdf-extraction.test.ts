@@ -1,10 +1,10 @@
 import { extractText, getDocumentProxy } from "unpdf";
 import { describe, expect, it } from "vitest";
-import { generateMinimalPdf, SAMPLE_CONTRACT_TEXT } from "./fixtures/generate-pdf";
+import { generateMinimalPdf } from "./fixtures/generate-pdf";
 
 describe("PDF text extraction", { timeout: 30_000 }, () => {
   it("extracts text from a minimal PDF", async () => {
-    const pdfBytes = generateMinimalPdf(SAMPLE_CONTRACT_TEXT);
+    const pdfBytes = generateMinimalPdf("RESIDENTIAL LEASE AGREEMENT");
     const pdf = await getDocumentProxy(pdfBytes);
     const { text } = await extractText(pdf, { mergePages: true });
 
