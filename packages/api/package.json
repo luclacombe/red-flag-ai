@@ -12,7 +12,7 @@
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
     "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.103.0",
+    "@supabase/supabase-js": "^2.104.0",
     "@trpc/client": "^11.16.0",
     "@trpc/server": "^11.16.0",
     "superjson": "^2.2.6",
