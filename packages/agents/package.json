@@ -7,10 +7,10 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.88.0",
+    "@anthropic-ai/sdk": "^0.93.0",
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "scripts": {
     "lint": "biome check src/",
