@@ -101,9 +101,6 @@ importers:
       react-dom:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
-      shadcn:
-        specifier: ^4.6.0
-        version: 4.7.0(@types/node@25.6.0)(typescript@5.9.3)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -129,6 +126,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      shadcn:
+        specifier: ^4.6.0
+        version: 4.7.0(@types/node@25.6.0)(typescript@5.9.3)
 
   packages/agents:
     dependencies:
