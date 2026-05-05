@@ -41,6 +41,7 @@
     ],
     "overrides": {
       "@xmldom/xmldom": "^0.8.13",
+      "hono": "^4.12.14",
       "vite": "8.0.10",
       "vitest>vite": "8.0.10",
       "@vitest/mocker>vite": "8.0.10",
