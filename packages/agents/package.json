@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.93.0",
+    "@anthropic-ai/sdk": "^0.98.0",
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
     "zod": "^4.4.3"
