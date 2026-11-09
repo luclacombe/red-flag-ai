@@ -9,7 +9,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { stream: mockStream },
   }),
-  MODELS: { haiku: "anthropic/claude-haiku-4.5", sonnet: "anthropic/claude-sonnet-4.6" },
+  MODELS: { haiku: "anthropic/claude-haiku-5.5", sonnet: "anthropic/claude-sonnet-5.5" },
 }));
 
 vi.mock("../format-patterns", () => ({

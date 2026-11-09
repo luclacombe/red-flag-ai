@@ -4,7 +4,7 @@ Agent pipeline — pure async functions for each step of contract analysis.
 
 ## What's Here
 
-- `src/client.ts` — Shared Anthropic SDK client factory (`getAnthropicClient()`) pointed at OpenRouter (`baseURL: https://openrouter.ai/api`, `authToken` = `OPENROUTER_API_KEY`, sent as Bearer) + model ID constants as OpenRouter slugs (`MODELS.haiku` = `anthropic/claude-haiku-4.5`, `MODELS.sonnet` = `anthropic/claude-sonnet-4.6`). Gotcha: OpenRouter rejects the key as `x-api-key`, so it must go in `authToken` with `apiKey: null`.
+- `src/client.ts` — Shared Anthropic SDK client factory (`getAnthropicClient()`) pointed at OpenRouter (`baseURL: https://openrouter.ai/api`, `authToken` = `OPENROUTER_API_KEY`, sent as Bearer) + model ID constants as OpenRouter slugs (`MODELS.haiku` = `anthropic/claude-haiku-5.5`, `MODELS.sonnet` = `anthropic/claude-sonnet-5.5`). Gotcha: OpenRouter rejects the key as `x-api-key`, so it must go in `authToken` with `apiKey: null`.
 - `src/gate.ts` — Relevance gate agent (`relevanceGate(text)` → `GateResult`). Uses Haiku, retries once on failure.
 - `src/heuristic-parse.ts` — Heuristic clause splitter (`parseClausesHeuristic(text, contractType, language)` → `ParsedClause[]`). Regex-based, runs in <10ms.
 - `src/boundary-detect.ts` — **Anchor-based** clause boundary detection (`detectClauseBoundaries(text, contractType, language)` → `ParsedClause[]`). Uses Haiku with `strict: true` tool_use. Haiku returns the first ~10 words of each clause copied verbatim; `splitAtAnchors()` finds them via `indexOf()` with whitespace-normalized fallback. Works regardless of PDF line structure. Also exports `findAnchorPosition()` and `splitAtAnchors()`.
@@ -51,7 +51,7 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 - **Resumable pipeline**: Orchestrator caches parse results in `analyses.parsedClauses`. On resume, replays existing clauses and only sends remaining positions to the combined analysis.
 - **Heartbeat**: After each yielded event, orchestrator updates `analyses.updatedAt` to prevent stale reclaim.
 - **clause_positions event**: Emitted immediately after parse (both fresh and resume) for frontend skeleton cards.
-- **max_tokens estimation**: `Math.min(clauseCount * 300 + 4096, 64000)` — ~300 tokens per clause average (green clauses use ~50 tokens with brief explanations, red/yellow use ~600 with conciseness guidance) + 4K buffer. Cap at 64K (Sonnet 4.6 max output).
+- **max_tokens estimation**: `Math.min(clauseCount * 300 + 4096, 64000)` — ~300 tokens per clause average (green clauses use ~50 tokens with brief explanations, red/yellow use ~600 with conciseness guidance) + 4K buffer. Cap at 64K (well under Sonnet 5.5's 128K max output).
 - **RAG degradation**: If Voyage API is down, `computeMatchedPatterns` fails gracefully — `matchedPatterns` stays empty, analysis proceeds normally.
 - **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared`. Error logs for malformed JSON use `jsonBufLength` (not content) to avoid leaking user contract text.
 

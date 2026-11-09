@@ -49,7 +49,7 @@ export function stripCodeFences(text: string): string {
 /** Model IDs (OpenRouter slugs) — centralized so agents don't hardcode strings */
 export const MODELS = {
   /** Fast/cheap — used for relevance gate + boundary detection */
-  haiku: "anthropic/claude-haiku-4.5",
+  haiku: "anthropic/claude-haiku-5.5",
   /** Capable — used for combined analysis + summary */
-  sonnet: "anthropic/claude-sonnet-4.6",
+  sonnet: "anthropic/claude-sonnet-5.5",
 } as const;

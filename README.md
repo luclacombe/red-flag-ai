@@ -97,7 +97,7 @@ Three specialized agents, each a pure async function with Zod-validated inputs a
 |-------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui |
 | API | tRPC v11 with end-to-end type safety and SSE subscriptions |
-| AI | Claude Sonnet 4.6 + Haiku 4.5 via OpenRouter (Anthropic SDK, Messages-compatible endpoint), multi-agent pipeline, structured outputs |
+| AI | Claude Sonnet 5.5 + Haiku 5.5 via OpenRouter (Anthropic SDK, Messages-compatible endpoint), multi-agent pipeline, structured outputs |
 | Knowledge Base | 150 curated legal patterns, Voyage AI `voyage-law-2` embeddings, pgvector |
 | Database | Supabase (PostgreSQL + pgvector + Auth + Storage) |
 | ORM | Drizzle |

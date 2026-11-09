@@ -122,7 +122,7 @@ export interface CombinedAnalysisParams {
  * ~300 tokens per clause average: green clauses use ~50 tokens (brief explanation),
  * red/yellow use ~600 tokens (concise explanation + rewrite).
  * + 4096 buffer for summary + inter-tool text.
- * Cap at 64000 (Sonnet 4.6 max output tokens).
+ * Cap at 64000 (well under Sonnet 5.5's 128K max output).
  */
 function estimateMaxTokens(clauseCount: number): number {
   return Math.min(clauseCount * 300 + 4096, 64000);
