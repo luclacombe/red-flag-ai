@@ -10,7 +10,7 @@
     "@anthropic-ai/sdk": "^0.93.0",
     "@redflag/db": "workspace:*",
     "@redflag/shared": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "scripts": {
     "lint": "biome check src/",

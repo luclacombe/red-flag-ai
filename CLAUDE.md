@@ -119,7 +119,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Row Level Security:** RLS enabled on all tables. Documents: owner-only CRUD for authenticated users. Analyses + clauses: public SELECT (shared analysis pages), owner-only INSERT/UPDATE via documents join. Knowledge patterns: public SELECT. Storage: users upload/read own folder only. Pipeline writes use Drizzle (bypasses RLS). Index on `documents.user_id`.
 - **Application-level encryption:** AES-256-GCM via `node:crypto` in `packages/shared/src/crypto.ts`. Exported via `@redflag/shared/crypto` (separate subpath, NOT in the main barrel — edge runtime can't use `node:crypto`). HKDF-SHA256 derives per-document keys from `MASTER_ENCRYPTION_KEY` env var using documentId as salt and `"document"` or `"clause"` as info. Encrypted format: `"iv.tag.ciphertext"` (base64, dot-separated). Column types stay text. Encrypted fields: `extractedText`, `filename`, `storagePath` (documents); `clauseText`, `explanation`, `saferAlternative` (clauses); `topConcerns`, `summaryText`, `parsedClauses` (analyses). Uploaded files encrypted with `encryptBuffer` before Storage upload. SSE stream sends plaintext — encryption is at-rest only. `keyVersion` column on documents tracks encryption version for future rotation.
 - **IP address hashing:** HMAC-SHA256 in `checkRateLimit()`. Key derived via HKDF from master key with `"rate-limit"` salt and `"ip-hash"` info. Not reversible (GDPR-compliant). Rate limit lookups use the hashed identifier.
-- **Auto-deletion cron:** `GET /api/cron/cleanup` runs daily at 02:00 UTC via Vercel Cron. Deletes documents where `COALESCE(expires_at, created_at + 30 days) < NOW()` (CASCADE handles analyses + clauses). Also deletes anonymous documents (`userId IS NULL`) older than 24 hours. `expiresAt` column on documents enables user-controlled renewal. Decrypts `storagePath` to delete from Storage. Deletes `rate_limits` rows >7 days old. Verifies `CRON_SECRET` bearer token. Config in `vercel.json`.
+- **Auto-deletion cron:** `GET /api/cron/cleanup` runs daily at 02:00 UTC via Vercel Cron. Deletes documents where `COALESCE(expires_at, created_at + 30 days) < NOW()` (CASCADE handles analyses + clauses). Also deletes anonymous documents (`userId IS NULL`) older than 24 hours. `expiresAt` column on documents enables user-controlled renewal. Decrypts `storagePath` to delete from Storage. Deletes `rate_limits` rows >7 days old. Verifies `CRON_SECRET` bearer token. Config in `apps/web/vercel.json` (the Vercel project's root directory is `apps/web`, so a `vercel.json` at the repo root is ignored; that is why the cron never registered before Nov 2026). Build settings come from Vercel's Next.js defaults for that root directory.
 - **Anonymous data cleanup:** Two-layer approach. Layer 1: `POST /api/cleanup` accepts `{ analysisId }` via `sendBeacon` on `visibilitychange` (tab close/switch). Only deletes documents with `userId = null`. Layer 2: cron fallback deletes anonymous documents older than 24h (catches missed sendBeacon calls).
 - **Document renewal:** `analysis.renew` mutation resets the auto-deletion timer by setting `documents.expiresAt = now + 30 days`. Dashboard shows "Auto-deletes in X days" when ≤7 days remaining, with a "Renew" button.
 - **Analysis rerun:** `analysis.rerun` mutation creates a new analysis record for the same document, optionally with a different `responseLanguage`. User redirected to the new analysis page where SSE subscription triggers the pipeline. Original analysis preserved.
@@ -130,11 +130,11 @@ Cross-package deps use pnpm `workspace:*` protocol.
 
 | Dependency | Version | Notes |
 |-----------|---------|-------|
-| Next.js | 16.1.6 | App Router, Turbopack |
+| Next.js | 16.4.6 | App Router, Turbopack |
 | React | 19.2.4 | |
 | tRPC | 11.12.0 | v11 API — NOT v10 patterns |
 | Drizzle ORM | 0.45.1 | `postgres` driver via `drizzle-orm/postgres-js` |
-| Zod | 4.3.6 | v4 — API is backwards-compatible with v3 |
+| Zod | 4.6.7 | v4 — API is backwards-compatible with v3 |
 | Tailwind CSS | 4.2.1 | v4 with `@tailwindcss/postcss` — NOT the old PostCSS plugin |
 | Biome | 2.4.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
 | Vitest | 4.1.0 | |
