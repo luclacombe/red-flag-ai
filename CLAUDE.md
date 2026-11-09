@@ -143,7 +143,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | @react-pdf/renderer | 4.3.2 | Server-side PDF report generation (apps/web only) |
 | sonner | latest | Toast notifications (dark themed, bottom-right) |
 | @supabase/ssr | latest | Auth session management — browser/server/middleware clients (apps/web + packages/api) |
-| Turborepo | 2.8.17 | |
+| Turborepo | 2.11.10 | |
 
 ## Supabase
 
