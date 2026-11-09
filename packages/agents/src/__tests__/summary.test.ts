@@ -39,6 +39,20 @@ describe("summarize", () => {
     mockCreate.mockReset();
   });
 
+  it("sets language and contractType from arguments, not from the model reply", async () => {
+    mockCreate.mockResolvedValueOnce(
+      makeTextResponse(
+        JSON.stringify({ overallRiskScore: 40, recommendation: "caution", topConcerns: ["x"] }),
+      ),
+    );
+    const result = await summarize(sampleAnalyses, "nda", "fr", "en");
+    expect(result.language).toBe("fr");
+    expect(result.contractType).toBe("nda");
+    const args = mockCreate.mock.calls[0]?.[0];
+    expect(args.output_config.format.type).toBe("json_schema");
+    expect(args.output_config.effort).toBe("low");
+  });
+
   it("returns summary with risk score and recommendation", async () => {
     const response = {
       overallRiskScore: 65,

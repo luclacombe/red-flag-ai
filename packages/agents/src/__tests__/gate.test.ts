@@ -43,6 +43,25 @@ describe("relevanceGate", () => {
     expect(GateResultSchema.safeParse(result).success).toBe(true);
   });
 
+  it("requests structured JSON output at low effort with thinking headroom", async () => {
+    mockCreate.mockResolvedValueOnce(
+      makeTextResponse(
+        JSON.stringify({ isContract: true, contractType: "nda", language: "en", reason: "NDA." }),
+      ),
+    );
+    await relevanceGate(SAMPLE_CONTRACT_TEXT);
+    const args = mockCreate.mock.calls[0]?.[0];
+    expect(args.max_tokens).toBe(1024);
+    expect(args.output_config.effort).toBe("low");
+    expect(args.output_config.format.type).toBe("json_schema");
+    expect(args.output_config.format.schema.required).toEqual([
+      "isContract",
+      "contractType",
+      "language",
+      "reason",
+    ]);
+  });
+
   it("returns isContract: false for non-contract text", async () => {
     const gateResponse = {
       isContract: false,

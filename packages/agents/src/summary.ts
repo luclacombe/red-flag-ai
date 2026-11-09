@@ -3,14 +3,25 @@ import { z } from "zod";
 import { getAnthropicClient, MODELS, stripCodeFences } from "./client";
 import { buildSummaryUserMessage, SUMMARY_SYSTEM_PROMPT } from "./prompts/summary";
 
-// What Claude returns — no clauseBreakdown (computed by orchestrator)
+// What Claude returns — no clauseBreakdown (computed by orchestrator); language and
+// contractType are already known, so they are set in code instead of echoed by the model
 const SummaryResponseSchema = z.object({
   overallRiskScore: z.number().int().min(0).max(100),
   recommendation: RecommendationSchema,
   topConcerns: z.array(z.string()),
-  language: z.string(),
-  contractType: z.string(),
 });
+
+/** Structured output schema (0-100 range enforced by Zod; JSON Schema min/max is unsupported) */
+const SUMMARY_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    overallRiskScore: { type: "integer" },
+    recommendation: { type: "string", enum: ["sign", "caution", "do_not_sign"] },
+    topConcerns: { type: "array", items: { type: "string" } },
+  },
+  required: ["overallRiskScore", "recommendation", "topConcerns"],
+  additionalProperties: false,
+};
 
 interface ClauseForSummary {
   riskLevel: string;
@@ -53,7 +64,12 @@ export async function summarize(
       if (attempt > 0) logger.info("Summary retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.sonnet,
-        max_tokens: 1024,
+        // Headroom: 5.5 models can think before replying and thinking counts toward max_tokens
+        max_tokens: 4096,
+        output_config: {
+          effort: "low",
+          format: { type: "json_schema", schema: SUMMARY_OUTPUT_SCHEMA },
+        },
         system: SUMMARY_SYSTEM_PROMPT,
         messages: [
           {
@@ -65,7 +81,9 @@ export async function summarize(
 
       const textBlock = response.content.find((block) => block.type === "text");
       if (!textBlock || textBlock.type !== "text") {
-        throw new Error("No text content in Claude response");
+        throw new Error(
+          `No text content in Claude response (stop_reason: ${response.stop_reason})`,
+        );
       }
 
       const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;
@@ -79,7 +97,7 @@ export async function summarize(
         recommendation: result.recommendation,
         concernCount: result.topConcerns.length,
       });
-      return result;
+      return { ...result, language, contractType };
     } catch (error) {
       logger.error("Summary attempt failed", {
         step: "summary",

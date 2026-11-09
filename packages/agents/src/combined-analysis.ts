@@ -119,13 +119,13 @@ export interface CombinedAnalysisParams {
 
 /**
  * Estimate max output tokens based on clause count.
- * ~300 tokens per clause average: green clauses use ~50 tokens (brief explanation),
- * red/yellow use ~600 tokens (concise explanation + rewrite).
- * + 4096 buffer for summary + inter-tool text.
+ * ~300 visible tokens per clause average (green ~50, red/yellow ~600), doubled for
+ * headroom because Sonnet 5.5 thinks at effort "high" and thinking counts toward
+ * max_tokens. + 8192 buffer for summary + inter-tool text. Unused max_tokens is not billed.
  * Cap at 64000 (well under Sonnet 5.5's 128K max output).
  */
 function estimateMaxTokens(clauseCount: number): number {
-  return Math.min(clauseCount * 300 + 4096, 64000);
+  return Math.min(clauseCount * 600 + 8192, 64000);
 }
 
 /**
@@ -189,6 +189,8 @@ async function* analyzeAllClausesInternal(
   const stream = client.messages.stream({
     model: MODELS.sonnet,
     max_tokens: estimateMaxTokens(params.clauses.length),
+    // Pinned explicitly (= Sonnet 5.5 default) so a default change can't shift behaviour
+    output_config: { effort: "high" },
     system: buildCombinedSystemPrompt(
       formatPatternsForPrompt(params.ragPatterns),
       params.contractType,
@@ -202,6 +204,7 @@ async function* analyzeAllClausesInternal(
       },
     ],
     tools: buildToolDefinitions(params.responseLanguage),
+    // Keep "auto": a forced tool_choice is rejected on Sonnet 5.5
     tool_choice: { type: "auto" },
   });
 
@@ -273,7 +276,14 @@ async function* analyzeAllClausesInternal(
     .filter((c) => !analyzedPositions.has(c.position))
     .map((c) => c.position);
 
-  if (stopReason === "max_tokens" && missingPositions.length > 0) {
+  if (stopReason === "refusal" && missingPositions.length > 0) {
+    logger.warn("Analysis declined by model", { missingPositions });
+    yield {
+      type: "error",
+      message: `Analysis stopped early. ${missingPositions.length} clause(s) could not be analyzed.`,
+      recoverable: true,
+    };
+  } else if (stopReason === "max_tokens" && missingPositions.length > 0) {
     logger.warn("Analysis truncated by max_tokens", { missingPositions });
     yield {
       type: "error",
