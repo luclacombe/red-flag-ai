@@ -148,7 +148,12 @@ function AuthPageInner() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          // Microsoft only returns the user's email when the `email` scope is requested,
+          // and Supabase Auth rejects the sign-in without it ("Error getting user email")
+          ...(provider === "azure" ? { scopes: "email" } : {}),
+        },
       });
       if (error) {
         setError(`Sign-in with ${provider} failed. Please try again.`);
