@@ -14,7 +14,7 @@ export default function PrivacyPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="font-heading text-3xl font-bold text-white">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-slate-500">Last updated: March 19, 2026</p>
+        <p className="mt-2 text-sm text-slate-500">Last updated: November 9, 2026</p>
 
         <div className="mt-10 space-y-10 text-sm leading-relaxed text-slate-400">
           <section>
@@ -41,8 +41,44 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong className="text-slate-300">Account information:</strong> If you create an
-                account, we store your email address and a hashed password (managed by Supabase
-                Auth).
+                account with email, we store your email address and a hashed password (managed by
+                Supabase Auth).
+              </p>
+              <p>
+                <strong className="text-slate-300">
+                  Sign in with Google, Microsoft, or GitHub:
+                </strong>{" "}
+                If you sign in with one of these providers, we request only your basic profile: your
+                name, email address, and profile picture (for Google, the{" "}
+                <code className="text-slate-400">email</code> and{" "}
+                <code className="text-slate-400">profile</code> scopes). We use this information
+                only to create and identify your account and to show which account you are signed in
+                with. We do not access your contacts, files, email, calendar, or any other data in
+                your Google, Microsoft, or GitHub account. This information is stored by Supabase
+                Auth, is never sold, shared with third parties, or used for advertising, and is not
+                used to train AI models. It is deleted when you delete your account. You can also
+                revoke RedFlag AI&apos;s access at any time from your{" "}
+                <a
+                  href="https://myaccount.google.com/connections"
+                  className="text-blue-400 hover:text-blue-300 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google Account settings
+                </a>
+                .
+              </p>
+              <p>
+                RedFlag AI&apos;s use of information received from Google APIs adheres to the{" "}
+                <a
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  className="text-blue-400 hover:text-blue-300 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google API Services User Data Policy
+                </a>
+                , including the Limited Use requirements.
               </p>
               <p>
                 <strong className="text-slate-300">Usage metadata:</strong> File type, page count,
@@ -164,8 +200,9 @@ export default function PrivacyPage() {
                 identifiers are deleted after 7 days.
               </p>
               <p>
-                <strong className="text-slate-300">Account data:</strong> Your email and
-                authentication data persist until you delete your account.
+                <strong className="text-slate-300">Account data:</strong> Your email, profile
+                information from Google, Microsoft, or GitHub sign-in, and authentication data
+                persist until you delete your account, and are then deleted.
               </p>
               <p>
                 <strong className="text-slate-300">Immediate deletion:</strong> Authenticated users
