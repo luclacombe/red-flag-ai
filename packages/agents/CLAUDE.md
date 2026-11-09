@@ -4,7 +4,7 @@ Agent pipeline — pure async functions for each step of contract analysis.
 
 ## What's Here
 
-- `src/client.ts` — Shared Anthropic client factory (`getAnthropicClient()`) + model ID constants (`MODELS.haiku`, `MODELS.sonnet`)
+- `src/client.ts` — Shared Anthropic SDK client factory (`getAnthropicClient()`) pointed at OpenRouter (`baseURL: https://openrouter.ai/api`, `authToken` = `OPENROUTER_API_KEY`, sent as Bearer) + model ID constants as OpenRouter slugs (`MODELS.haiku` = `anthropic/claude-haiku-4.5`, `MODELS.sonnet` = `anthropic/claude-sonnet-4.6`). Gotcha: OpenRouter rejects the key as `x-api-key`, so it must go in `authToken` with `apiKey: null`.
 - `src/gate.ts` — Relevance gate agent (`relevanceGate(text)` → `GateResult`). Uses Haiku, retries once on failure.
 - `src/heuristic-parse.ts` — Heuristic clause splitter (`parseClausesHeuristic(text, contractType, language)` → `ParsedClause[]`). Regex-based, runs in <10ms.
 - `src/boundary-detect.ts` — **Anchor-based** clause boundary detection (`detectClauseBoundaries(text, contractType, language)` → `ParsedClause[]`). Uses Haiku with `strict: true` tool_use. Haiku returns the first ~10 words of each clause copied verbatim; `splitAtAnchors()` finds them via `indexOf()` with whitespace-normalized fallback. Works regardless of PDF line structure. Also exports `findAnchorPosition()` and `splitAtAnchors()`.
@@ -30,7 +30,7 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 
 ## Dependencies
 
-- `@anthropic-ai/sdk` — Claude API client (streaming, tool_use with `strict: true`)
+- `@anthropic-ai/sdk` — Claude API client (via OpenRouter) (streaming, tool_use with `strict: true`)
 - `@redflag/shared` — Zod schemas, types (`ParsedClause`, `PositionedClause`, `ClauseAnalysis`, `Summary`, `SSEEvent`, etc.)
 - `@redflag/db` — Database client, schema tables, embedding functions, `getPatternsByContractType()`, `KnowledgePatternWithEmbedding`, Drizzle operators (`eq`, `sql`)
 - `zod` — Internal agent response validation schemas

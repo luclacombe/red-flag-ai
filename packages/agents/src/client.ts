@@ -2,19 +2,34 @@ import Anthropic from "@anthropic-ai/sdk";
 
 let _client: Anthropic | null = null;
 
+/** OpenRouter's Anthropic-compatible endpoint. The SDK appends `/v1/messages`. */
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api";
+
 /**
- * Shared Anthropic client — lazily initialized, reused across agent calls.
- * Reads ANTHROPIC_API_KEY from environment.
+ * Shared Anthropic SDK client, routed through OpenRouter.
+ * Lazily initialized, reused across agent calls. Reads OPENROUTER_API_KEY from environment.
+ *
+ * OpenRouter speaks the Anthropic Messages API (streaming, tool_use, strict tools),
+ * so the agents keep using the Anthropic SDK unchanged. The key is sent as
+ * `Authorization: Bearer`, which is what OpenRouter expects (not `x-api-key`).
  */
 export function getAnthropicClient(): Anthropic {
   if (_client) return _client;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY environment variable is required");
+    throw new Error("OPENROUTER_API_KEY environment variable is required");
   }
 
-  _client = new Anthropic({ apiKey });
+  _client = new Anthropic({
+    baseURL: OPENROUTER_BASE_URL,
+    authToken: apiKey,
+    apiKey: null,
+    defaultHeaders: {
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://www.red-flag-ai.com",
+      "X-Title": "RedFlag AI",
+    },
+  });
   return _client;
 }
 
@@ -31,10 +46,10 @@ export function stripCodeFences(text: string): string {
     .trim();
 }
 
-/** Model IDs — centralized so agents don't hardcode strings */
+/** Model IDs (OpenRouter slugs) — centralized so agents don't hardcode strings */
 export const MODELS = {
-  /** Fast/cheap — used for relevance gate */
-  haiku: "claude-haiku-4-5-20251001",
-  /** Capable — used for parse, risk, rewrite, summary agents */
-  sonnet: "claude-sonnet-4-6",
+  /** Fast/cheap — used for relevance gate + boundary detection */
+  haiku: "anthropic/claude-haiku-4.5",
+  /** Capable — used for combined analysis + summary */
+  sonnet: "anthropic/claude-sonnet-4.6",
 } as const;

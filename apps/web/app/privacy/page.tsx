@@ -112,6 +112,20 @@ export default function PrivacyPage() {
                 safety purposes, then deleted.
               </p>
               <p>
+                <strong className="text-slate-300">OpenRouter:</strong> Requests to Claude are
+                routed through OpenRouter, an API gateway that forwards them to Anthropic.
+                OpenRouter processes this data in accordance with its{" "}
+                <a
+                  href="https://openrouter.ai/privacy"
+                  className="text-blue-400 hover:text-blue-300 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  privacy policy
+                </a>
+                .
+              </p>
+              <p>
                 <strong className="text-slate-300">Voyage AI:</strong> Clause text is sent to Voyage
                 AI for embedding generation (used to match clauses against our knowledge base of
                 known risky patterns). Voyage AI does not store or train on this data.

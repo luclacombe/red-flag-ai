@@ -89,7 +89,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Streaming** uses tRPC SSE subscriptions via `httpSubscriptionLink` — async generators yielding typed events. SSE subscription is owned by `StreamProvider` (React context at root layout level), not by AnalysisView. This means the subscription survives client-side navigation — navigating to dashboard mid-stream doesn't kill the connection. AnalysisView calls `startStream(id)` and reads raw data from context; shimmer buffering stays local. HistoryView reads live clause counts from the same context for instant dashboard updates.
 - **Vercel constraint:** first SSE event must emit within 25 seconds. Pipeline emits a status event immediately.
 - **RAG vector search** lives in `packages/db`, not `packages/agents` — it's a database query. Bulk fetch by contract type (`getPatternsByContractType()`), injected into system prompt. Orchestrator includes `RAG_TYPE_MAP` to map gate types (e.g. `residential_lease`) to knowledge base types (e.g. `lease`).
-- **Claude models:** Haiku for relevance gate + boundary detection fallback (fast/cheap), Sonnet for combined analysis + summary
+- **Claude models:** Haiku for relevance gate + boundary detection fallback (fast/cheap), Sonnet for combined analysis + summary. All Claude calls go through **OpenRouter's Anthropic-compatible endpoint** (`https://openrouter.ai/api`) using the Anthropic SDK with `authToken` (Bearer) = `OPENROUTER_API_KEY`. Model IDs are OpenRouter slugs (`anthropic/claude-sonnet-4.6`, `anthropic/claude-haiku-4.5`) in `packages/agents/src/client.ts`. Voyage embeddings still call Voyage directly (`VOYAGE_API_KEY`).
 - **Hybrid clause parsing:** Heuristic regex parser runs first (instant, free). If the result is suspicious (e.g. 1 clause for a large document — common with unconventional formatting), falls back to Haiku LLM anchor-based boundary detection (~1-3s, ~$0.001). Haiku returns the first ~10 words of each clause via `strict: true` tool_use; `splitAtAnchors()` finds them via `indexOf()`. Graceful degradation: if Haiku fails, heuristic result used as-is.
 - **Combined streaming analysis:** Single `client.messages.stream()` call with `report_clause` and `report_summary` tools. Claude calls `report_clause` once per clause with brief explanations for green clauses (1 sentence, max 15 words) and full analysis for red/yellow. Uses `strict: true` (constrained decoding — guaranteed valid JSON, zero parse errors) and `eager_input_streaming: true` (fine-grained streaming). Total pipeline: 3-4 API calls (gate + optional Haiku boundary detection + combined analysis + optional summary fallback).
 - **Clause positions** (`startIndex`/`endIndex`) are computed by `computeClausePositions()` via `text.indexOf()` with whitespace-normalized fallback (`findAnchorPosition()`) after hybrid parse. Sent in `clause_positions` SSE event as full `PositionedClause[]` (with `startIndex`/`endIndex`) for immediate gray highlighting in the document panel.
@@ -154,16 +154,16 @@ Cross-package deps use pnpm `workspace:*` protocol.
 - **Connection:** transaction pooler URL (port 6543) with `{ prepare: false }`
 - **Auth:** Email/password + magic links enabled. `@supabase/ssr` for session management.
 - **RLS:** Enabled on all tables. Documents owner-only, analyses/clauses/knowledge_patterns public SELECT. Storage scoped to user folder.
-- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MASTER_ENCRYPTION_KEY`, `CRON_SECRET`, `ADMIN_EMAIL`
+- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MASTER_ENCRYPTION_KEY`, `CRON_SECRET`, `ADMIN_EMAIL`, `OPENROUTER_API_KEY`, `VOYAGE_API_KEY`
 
 ## Local Development (Supabase CLI)
 
-- **Setup:** `pnpm run setup` (starts Supabase + installs deps) → `cp .env.example .env.local` → add `ANTHROPIC_API_KEY` → `pnpm dev`
+- **Setup:** `pnpm run setup` (starts Supabase + installs deps) → `cp .env.example .env.local` → add `OPENROUTER_API_KEY` → `pnpm dev`
 - **Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x
 - **Local ports:** API 54321, Postgres 54322, Studio 54323
 - **Config:** `supabase/config.toml` — project settings, auth, storage bucket
 - **Migrations:** `supabase/migrations/` — 6 files: pgvector extension, consolidated schema (all 5 tables), RLS policies, pipeline_metrics table, share links, document expires_at
 - **Seed:** `supabase/seed.sql` — 150 knowledge patterns with pre-computed Voyage AI embeddings (no API key needed)
-- **Env template:** `.env.example` — committed to git with well-known local Supabase keys (default) + commented-out production section. Copy to `.env.local` and add `ANTHROPIC_API_KEY`.
+- **Env template:** `.env.example` — committed to git with well-known local Supabase keys (default) + commented-out production section. Copy to `.env.local` and add `OPENROUTER_API_KEY`.
 - **Reset:** `pnpm supabase:reset` re-applies all migrations + seed
 - **DB client:** `packages/db/src/client.ts` uses `{ prepare: false }` — works for both Supabase pooler (production) and direct connection (local)

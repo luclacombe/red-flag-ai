@@ -9,7 +9,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { create: mockCreate },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  MODELS: { haiku: "anthropic/claude-haiku-4.5", sonnet: "anthropic/claude-sonnet-4.6" },
 }));
 
 const { detectClauseBoundaries } = await import("../boundary-detect");
@@ -205,7 +205,7 @@ describe("detectClauseBoundaries", () => {
     // Verify the API call
     expect(mockCreate).toHaveBeenCalledTimes(1);
     const callArgs = mockCreate.mock.calls[0]?.[0];
-    expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
+    expect(callArgs.model).toBe("anthropic/claude-haiku-4.5");
     expect(callArgs.max_tokens).toBe(2048);
     expect(callArgs.tool_choice).toEqual({ type: "tool", name: "report_boundaries" });
 

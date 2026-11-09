@@ -125,8 +125,8 @@ export default function TermsPage() {
                 <li>Document content is encrypted at rest using AES-256-GCM</li>
                 <li>All data is automatically deleted after 30 days</li>
                 <li>
-                  Document text is sent to Anthropic (Claude AI) and Voyage AI for analysis. These
-                  providers do not use API data for model training
+                  Document text is sent to Anthropic (Claude AI, via OpenRouter) and Voyage AI for
+                  analysis. These providers do not use API data for model training
                 </li>
                 <li>You can delete your account and data at any time</li>
               </ul>
