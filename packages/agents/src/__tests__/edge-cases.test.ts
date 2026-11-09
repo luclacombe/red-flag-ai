@@ -22,7 +22,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { create: mockCreate },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  MODELS: { haiku: "anthropic/claude-haiku-5.5", sonnet: "anthropic/claude-sonnet-5.5" },
   stripCodeFences: (t: string) => t,
 }));
 

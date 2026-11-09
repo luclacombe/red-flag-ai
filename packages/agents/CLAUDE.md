@@ -4,7 +4,7 @@ Agent pipeline — pure async functions for each step of contract analysis.
 
 ## What's Here
 
-- `src/client.ts` — Shared Anthropic client factory (`getAnthropicClient()`) + model ID constants (`MODELS.haiku`, `MODELS.sonnet`)
+- `src/client.ts` — Shared Anthropic SDK client factory (`getAnthropicClient()`) pointed at OpenRouter (`baseURL: https://openrouter.ai/api`, `authToken` = `OPENROUTER_API_KEY`, sent as Bearer) + model ID constants as OpenRouter slugs (`MODELS.haiku` = `anthropic/claude-haiku-5.5`, `MODELS.sonnet` = `anthropic/claude-sonnet-5.5`). Gotcha: OpenRouter rejects the key as `x-api-key`, so it must go in `authToken` with `apiKey: null`.
 - `src/gate.ts` — Relevance gate agent (`relevanceGate(text)` → `GateResult`). Uses Haiku, retries once on failure.
 - `src/heuristic-parse.ts` — Heuristic clause splitter (`parseClausesHeuristic(text, contractType, language)` → `ParsedClause[]`). Regex-based, runs in <10ms.
 - `src/boundary-detect.ts` — **Anchor-based** clause boundary detection (`detectClauseBoundaries(text, contractType, language)` → `ParsedClause[]`). Uses Haiku with `strict: true` tool_use. Haiku returns the first ~10 words of each clause copied verbatim; `splitAtAnchors()` finds them via `indexOf()` with whitespace-normalized fallback. Works regardless of PDF line structure. Also exports `findAnchorPosition()` and `splitAtAnchors()`.
@@ -30,7 +30,7 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 
 ## Dependencies
 
-- `@anthropic-ai/sdk` — Claude API client (streaming, tool_use with `strict: true`)
+- `@anthropic-ai/sdk` — Claude API client (via OpenRouter) (streaming, tool_use with `strict: true`)
 - `@redflag/shared` — Zod schemas, types (`ParsedClause`, `PositionedClause`, `ClauseAnalysis`, `Summary`, `SSEEvent`, etc.)
 - `@redflag/db` — Database client, schema tables, embedding functions, `getPatternsByContractType()`, `KnowledgePatternWithEmbedding`, Drizzle operators (`eq`, `sql`)
 - `zod` — Internal agent response validation schemas
@@ -51,7 +51,9 @@ Total API calls: 3-4 (gate + optional Haiku boundary detection + combined analys
 - **Resumable pipeline**: Orchestrator caches parse results in `analyses.parsedClauses`. On resume, replays existing clauses and only sends remaining positions to the combined analysis.
 - **Heartbeat**: After each yielded event, orchestrator updates `analyses.updatedAt` to prevent stale reclaim.
 - **clause_positions event**: Emitted immediately after parse (both fresh and resume) for frontend skeleton cards.
-- **max_tokens estimation**: `Math.min(clauseCount * 300 + 4096, 64000)` — ~300 tokens per clause average (green clauses use ~50 tokens with brief explanations, red/yellow use ~600 with conciseness guidance) + 4K buffer. Cap at 64K (Sonnet 4.6 max output).
+- **max_tokens estimation**: `Math.min(clauseCount * 600 + 8192, 64000)`. ~300 visible tokens per clause (green ~50, red/yellow ~600), doubled because Sonnet 5.5 thinks at effort `high` and thinking counts toward `max_tokens`; + 8K buffer. Unused headroom is not billed. Cap at 64K (well under Sonnet 5.5's 128K max output).
+- **5.5 model params (via OpenRouter)**: Combined analysis pins `output_config: { effort: "high" }` and keeps `tool_choice: "auto"` (forced tool_choice is rejected on Sonnet 5.5). Gate (Haiku) and summary fallback (Sonnet) use `output_config: { effort: "low", format: { type: "json_schema", schema } }` with 1024 / 4096 max_tokens; `stripCodeFences` + Zod stay as a backstop. Summary sets `language`/`contractType` in code. Boundary detection (Haiku, forced tool) uses 8192 max_tokens and throws on `stop_reason: "max_tokens"` so smart-parse falls back to the heuristic. A `stop_reason: "refusal"` with missing clauses yields a recoverable error event.
+- **Prompt perspective**: Combined prompt assesses risk for the party reviewing the contract before signing (usually the weaker party); categories are written in the response language (display only); RAG block is framed as calibration examples whose English "Safer" texts must not be copied into non-English rewrites.
 - **RAG degradation**: If Voyage API is down, `computeMatchedPatterns` fails gracefully — `matchedPatterns` stays empty, analysis proceeds normally.
 - **Structured logging**: All agents and orchestrator use `logger` from `@redflag/shared`. Error logs for malformed JSON use `jsonBufLength` (not content) to avoid leaking user contract text.
 

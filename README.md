@@ -97,7 +97,7 @@ Three specialized agents, each a pure async function with Zod-validated inputs a
 |-------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, shadcn/ui |
 | API | tRPC v11 with end-to-end type safety and SSE subscriptions |
-| AI | Claude (Anthropic SDK), multi-agent pipeline, structured outputs |
+| AI | Claude Sonnet 5.5 + Haiku 5.5 via OpenRouter (Anthropic SDK, Messages-compatible endpoint), multi-agent pipeline, structured outputs |
 | Knowledge Base | 150 curated legal patterns, Voyage AI `voyage-law-2` embeddings, pgvector |
 | Database | Supabase (PostgreSQL + pgvector + Auth + Storage) |
 | ORM | Drizzle |
@@ -121,7 +121,7 @@ Dependency direction: `web > api > agents > db > shared` (shared is the leaf).
 
 ## Local Setup
 
-**Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x, an [Anthropic API key](https://console.anthropic.com/)
+**Prerequisites:** Node.js 22+, pnpm 10+, Docker Desktop, Supabase CLI 2.x, an [OpenRouter API key](https://openrouter.ai/keys)
 
 ```bash
 git clone https://github.com/luclacombe/red-flag-ai.git
@@ -129,7 +129,7 @@ cd red-flag-ai
 pnpm install
 pnpm supabase:start          # Postgres + pgvector, Auth, Storage, Studio
 pnpm supabase:reset           # Apply migrations + seed 150 patterns with pre-computed embeddings
-cp .env.example .env.local    # Add your ANTHROPIC_API_KEY
+cp .env.example .env.local    # Add your OPENROUTER_API_KEY
 pnpm dev
 ```
 

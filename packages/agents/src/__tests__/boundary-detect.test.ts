@@ -9,7 +9,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { create: mockCreate },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  MODELS: { haiku: "anthropic/claude-haiku-5.5", sonnet: "anthropic/claude-sonnet-5.5" },
 }));
 
 const { detectClauseBoundaries } = await import("../boundary-detect");
@@ -175,6 +175,27 @@ describe("detectClauseBoundaries", () => {
     vi.resetAllMocks();
   });
 
+  it("treats a max_tokens-truncated anchor list as a failure", async () => {
+    const truncated = {
+      stop_reason: "max_tokens",
+      usage: { input_tokens: 200, output_tokens: 8192 },
+      content: [
+        {
+          type: "tool_use",
+          id: "tu_1",
+          name: "report_boundaries",
+          input: { clauseAnchors: [{ anchor: "1. PREMISES The landlord" }] },
+        },
+      ],
+    };
+    mockCreate.mockResolvedValueOnce(truncated).mockResolvedValueOnce(truncated);
+
+    await expect(
+      detectClauseBoundaries("1. PREMISES The landlord leases the property.", "lease", "en"),
+    ).rejects.toThrow("truncated by max_tokens");
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
   it("calls Haiku with report_boundaries tool and strict: true", async () => {
     mockCreate.mockResolvedValueOnce({
       usage: { input_tokens: 200, output_tokens: 100 },
@@ -205,8 +226,8 @@ describe("detectClauseBoundaries", () => {
     // Verify the API call
     expect(mockCreate).toHaveBeenCalledTimes(1);
     const callArgs = mockCreate.mock.calls[0]?.[0];
-    expect(callArgs.model).toBe("claude-haiku-4-5-20251001");
-    expect(callArgs.max_tokens).toBe(2048);
+    expect(callArgs.model).toBe("anthropic/claude-haiku-5.5");
+    expect(callArgs.max_tokens).toBe(8192);
     expect(callArgs.tool_choice).toEqual({ type: "tool", name: "report_boundaries" });
 
     // Verify tool has strict: true

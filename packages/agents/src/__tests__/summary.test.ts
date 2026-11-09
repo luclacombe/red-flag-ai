@@ -6,7 +6,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { create: mockCreate },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  MODELS: { haiku: "anthropic/claude-haiku-5.5", sonnet: "anthropic/claude-sonnet-5.5" },
   stripCodeFences: (t: string) => t,
 }));
 
@@ -37,6 +37,20 @@ const sampleAnalyses = [
 describe("summarize", () => {
   beforeEach(() => {
     mockCreate.mockReset();
+  });
+
+  it("sets language and contractType from arguments, not from the model reply", async () => {
+    mockCreate.mockResolvedValueOnce(
+      makeTextResponse(
+        JSON.stringify({ overallRiskScore: 40, recommendation: "caution", topConcerns: ["x"] }),
+      ),
+    );
+    const result = await summarize(sampleAnalyses, "nda", "fr", "en");
+    expect(result.language).toBe("fr");
+    expect(result.contractType).toBe("nda");
+    const args = mockCreate.mock.calls[0]?.[0];
+    expect(args.output_config.format.type).toBe("json_schema");
+    expect(args.output_config.effort).toBe("low");
   });
 
   it("returns summary with risk score and recommendation", async () => {

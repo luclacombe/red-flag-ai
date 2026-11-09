@@ -34,7 +34,11 @@ export function formatPatternsForPrompt(patterns: KnowledgePattern[]): string {
     sections.push(`${heading}\n${items.join("\n")}`);
   }
 
-  return `## Known Risk Patterns\n\n${sections.join("\n\n")}`;
+  return `## Known Risk Patterns
+
+Reference examples of risky clauses for this contract type, with their usual risk level and a fairer version. Use them to calibrate your judgement, not as a checklist: a clause can be flagged without matching a pattern, and a similar clause can rate differently if its wording is fairer. Their "Safer" texts are illustrations; write your own saferAlternative in the contract's language.
+
+${sections.join("\n\n")}`;
 }
 
 /**

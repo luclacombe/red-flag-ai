@@ -7,21 +7,21 @@ describe("buildCombinedSystemPrompt with responseLanguage", () => {
     const prompt = buildCombinedSystemPrompt("", "lease", "fr", "en");
 
     expect(prompt).toContain("Document language: fr");
-    expect(prompt).toContain("written in fr");
-    expect(prompt).toContain(
-      "explanations, category labels, top concerns, and recommendations in en",
-    );
-    expect(prompt).toContain(
-      "saferAlternative rewrites in the SAME language as the original clause text (fr), NOT in en",
-    );
+    expect(prompt).toContain("Response language: en");
+    expect(prompt).toContain("## Explanations (in en)");
+    expect(prompt).toContain("## Category (in en)");
+    expect(prompt).toContain("## saferAlternative (in fr)");
+    expect(prompt).toContain("Explanations, categories and topConcerns are in en");
+    expect(prompt).toContain("saferAlternative is in fr");
   });
 
   it("handles same document and response language", () => {
     const prompt = buildCombinedSystemPrompt("", "nda", "de", "de");
 
-    expect(prompt).toContain("written in de");
-    expect(prompt).toContain("recommendations in de");
-    expect(prompt).toContain("clause text (de), NOT in de");
+    expect(prompt).toContain("Document language: de");
+    expect(prompt).toContain("Response language: de");
+    expect(prompt).toContain("## saferAlternative (in de)");
+    expect(prompt).toContain("Explanations, categories and topConcerns are in de");
   });
 
   it("includes RAG patterns text", () => {

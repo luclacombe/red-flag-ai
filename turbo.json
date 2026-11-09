@@ -16,7 +16,7 @@
       "env": [
         "DATABASE_URL",
         "SUPABASE_SERVICE_ROLE_KEY",
-        "ANTHROPIC_API_KEY",
+        "OPENROUTER_API_KEY",
         "VOYAGE_API_KEY",
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_APP_URL"

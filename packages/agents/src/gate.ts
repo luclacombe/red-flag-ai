@@ -5,6 +5,19 @@ import { buildGateUserMessage, GATE_SYSTEM_PROMPT } from "./prompts/gate";
 /** Max chars of extracted text to send to the gate agent */
 const GATE_TEXT_LIMIT = 2000;
 
+/** Structured output schema: the API constrains the reply to this shape (Zod still validates). */
+const GATE_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    isContract: { type: "boolean" },
+    contractType: { anyOf: [{ type: "string" }, { type: "null" }] },
+    language: { anyOf: [{ type: "string" }, { type: "null" }] },
+    reason: { type: "string" },
+  },
+  required: ["isContract", "contractType", "language", "reason"],
+  additionalProperties: false,
+};
+
 /**
  * Relevance gate — classifies whether extracted text is a legal contract.
  * Uses Claude Haiku for fast, cheap classification.
@@ -28,14 +41,21 @@ export async function relevanceGate(
       if (attempt > 0) logger.info("Gate retry", { attempt: attempt + 1 });
       const response = await client.messages.create({
         model: MODELS.haiku,
-        max_tokens: 256,
+        // Headroom: 5.5 models can think before replying and thinking counts toward max_tokens
+        max_tokens: 1024,
+        output_config: {
+          effort: "low",
+          format: { type: "json_schema", schema: GATE_OUTPUT_SCHEMA },
+        },
         system: GATE_SYSTEM_PROMPT,
         messages: [{ role: "user", content: buildGateUserMessage(truncated) }],
       });
 
       const textBlock = response.content.find((block) => block.type === "text");
       if (!textBlock || textBlock.type !== "text") {
-        throw new Error("No text content in Claude response");
+        throw new Error(
+          `No text content in Claude response (stop_reason: ${response.stop_reason})`,
+        );
       }
 
       const parsed = JSON.parse(stripCodeFences(textBlock.text)) as unknown;

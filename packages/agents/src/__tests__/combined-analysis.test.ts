@@ -9,7 +9,7 @@ vi.mock("../client", () => ({
   getAnthropicClient: () => ({
     messages: { stream: mockStream },
   }),
-  MODELS: { haiku: "claude-haiku-4-5-20251001", sonnet: "claude-sonnet-4-6" },
+  MODELS: { haiku: "anthropic/claude-haiku-5.5", sonnet: "anthropic/claude-sonnet-5.5" },
 }));
 
 vi.mock("../format-patterns", () => ({
@@ -290,6 +290,45 @@ describe("analyzeAllClauses", () => {
     expect(errorEvents[0]?.type === "error" && errorEvents[0].message).toContain(
       "1 clause(s) could not be analyzed",
     );
+  });
+
+  it("handles stop_reason: refusal — yields error for missing clauses", async () => {
+    const events: Record<string, unknown>[] = [
+      {
+        type: "message_start",
+        message: { id: "msg_1", type: "message", role: "assistant", content: [] },
+      },
+      ...toolCallEvents(0, "report_clause", {
+        position: 0,
+        riskLevel: "green",
+        explanation: "OK",
+        category: "payment",
+        saferAlternative: "",
+      }),
+      {
+        type: "message_delta",
+        delta: { stop_reason: "refusal", stop_sequence: null },
+        usage: { output_tokens: 50 },
+      },
+      { type: "message_stop" },
+    ];
+
+    mockStream.mockReturnValue(createMockStream(events));
+    const result = await collectEvents(analyzeAllClauses(defaultParams));
+
+    const errorEvents = result.filter((e) => e.type === "error");
+    expect(errorEvents).toHaveLength(1);
+    expect(errorEvents[0]?.type === "error" && errorEvents[0].message).toContain(
+      "Analysis stopped early. 2 clause(s) could not be analyzed",
+    );
+  });
+
+  it("pins effort and keeps tool_choice auto", async () => {
+    mockStream.mockReturnValue(createMockStream([{ type: "message_stop" }]));
+    await collectEvents(analyzeAllClauses(defaultParams));
+    const args = mockStream.mock.calls[0]?.[0];
+    expect(args.output_config).toEqual({ effort: "high" });
+    expect(args.tool_choice).toEqual({ type: "auto" });
   });
 
   it("retries on API error, succeeds on second attempt", async () => {

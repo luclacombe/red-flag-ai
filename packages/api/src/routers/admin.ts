@@ -3,10 +3,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
-/** Cost per million tokens (USD) — approximate Anthropic pricing */
+/** Cost per million tokens (USD) — OpenRouter list prices for Haiku 5.5 / Sonnet 5.5 (Nov 2026) */
 const COST_PER_MILLION: Record<string, { input: number; output: number }> = {
-  haiku: { input: 0.8, output: 4 },
-  sonnet: { input: 3, output: 15 },
+  haiku: { input: 0.1, output: 0.5 },
+  sonnet: { input: 2, output: 10 },
 };
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {

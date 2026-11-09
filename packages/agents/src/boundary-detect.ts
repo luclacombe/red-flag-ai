@@ -275,7 +275,8 @@ export async function detectClauseBoundaries(
 
       const response = await client.messages.create({
         model: MODELS.haiku,
-        max_tokens: 2048,
+        // Long documents can need 80+ anchors; Haiku 5.5's tokenizer counts ~30% more tokens
+        max_tokens: 8192,
         system: BOUNDARY_DETECT_SYSTEM_PROMPT,
         messages: [
           {
@@ -284,8 +285,15 @@ export async function detectClauseBoundaries(
           },
         ],
         tools: [REPORT_BOUNDARIES_TOOL],
+        // Forced tool_choice is fine on Haiku 5.5 but is rejected on Sonnet 5.5; don't switch models here
         tool_choice: { type: "tool", name: "report_boundaries" },
       });
+
+      // A truncated anchor list would make the last "clause" swallow the rest of the document,
+      // so treat truncation as a failure and let smart-parse fall back to the heuristic result
+      if (response.stop_reason === "max_tokens") {
+        throw new Error("Boundary detection truncated by max_tokens");
+      }
 
       // Extract tool call result
       const toolBlock = response.content.find((block) => block.type === "tool_use");
