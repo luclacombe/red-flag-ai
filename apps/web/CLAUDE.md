@@ -12,7 +12,7 @@ Next.js 16 App Router application — UI, route handlers, tRPC integration.
 - `app/api/upload/__tests__/route.test.ts` — Upload route tests (26 tests — validation, gate, rate limiting, auth)
 - `src/__tests__/pdf-extraction.test.ts` — PDF text extraction integration tests (unpdf library verification)
 - `src/__tests__/fixtures/generate-pdf.ts` — Minimal valid PDF generator for tests (no deps)
-- `app/login/page.tsx` — Unified auth page with `mode` state (signin/signup). `BackgroundPaths` renders once. `?mode=signup` initializes signup form. Uses `Suspense` for `useSearchParams`. OAuth buttons (Google, Microsoft, GitHub) call `signInWithOAuth()`.
+- `app/login/page.tsx` — Unified auth page with `mode` state (signin/signup). `BackgroundPaths` renders once. `?mode=signup` initializes signup form. Uses `Suspense` for `useSearchParams`. OAuth buttons (Google, Microsoft, GitHub) call `signInWithOAuth()`. Microsoft (`azure`) must pass `scopes: "email"`, otherwise Supabase fails with "Error getting user email from external provider".
 - `src/components/oauth-icons.tsx` — Branded SVG icons for Google, Microsoft, and GitHub. Custom SVGs (lucide-react v1.0+ removed brand icons).
 - `app/signup/page.tsx` — Server component redirect to `/login?mode=signup`
 - `app/api/cleanup/route.ts` — Best-effort anonymous data cleanup via `sendBeacon` (POST). Deletes anonymous documents + storage.
