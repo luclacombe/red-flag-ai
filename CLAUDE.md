@@ -137,7 +137,7 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | Zod | 4.6.7 | v4 — API is backwards-compatible with v3 |
 | Tailwind CSS | 4.2.1 | v4 with `@tailwindcss/postcss` — NOT the old PostCSS plugin |
 | Biome | 2.4.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
-| Vitest | 4.1.0 | |
+| Vitest | 5.1.0 | |
 | TypeScript | 5.9.3 | |
 | mammoth | 1.12.0 | DOCX text extraction (apps/web only) |
 | @react-pdf/renderer | 4.3.2 | Server-side PDF report generation (apps/web only) |
