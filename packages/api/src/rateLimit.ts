@@ -37,7 +37,7 @@ async function hashIdentifier(identifier: string): Promise<string> {
  * Check and increment rate limit.
  *
  * @param identifier - IP address (anonymous) or user ID (authenticated)
- * @param isAuthenticated - Whether the user is authenticated (10/day vs 2/day)
+ * @param isAuthenticated - Whether the user is authenticated (20/day vs 10/day)
  *
  * Uses atomic UPSERT: INSERT ... ON CONFLICT DO UPDATE SET count = count + 1.
  * Returns whether the identifier is rate-limited BEFORE incrementing — so the caller

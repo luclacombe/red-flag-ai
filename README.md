@@ -157,7 +157,7 @@ See [SECURITY.md](SECURITY.md) for the responsible disclosure policy.
 
 ## Cost
 
-Each analysis costs ~**$0.15-$0.35** in Claude API calls depending on document length and clause count. The bulk of the cost is the Sonnet streaming call (combined analysis + summary). Haiku steps (gate + parse fallback) add less than $0.02. Voyage AI is only used for seeding the knowledge base (one-time cost), not per-analysis. Rate limiting controls spend: 1 analysis/day for anonymous users, 3/day for authenticated.
+Each analysis costs roughly **$0.05-$0.15** in Claude API calls (Sonnet 5.5 + Haiku 5.5 via OpenRouter), depending on document length and clause count. The bulk of the cost is the Sonnet streaming call (combined analysis + summary). Haiku steps (gate + parse fallback) add well under $0.01. Voyage AI embeds each document's clauses for knowledge-base matching (a fraction of a cent per analysis). Rate limiting caps spend: 10 analyses/day for anonymous users, 20/day for authenticated.
 
 ## License
 
