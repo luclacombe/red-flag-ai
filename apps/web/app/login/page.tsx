@@ -26,7 +26,18 @@ function AuthPageInner() {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // /auth/callback redirects here with ?error=auth when an OAuth or magic-link sign-in fails,
+  // /auth/confirm with ?error=confirmation when an email confirmation link is invalid or expired
+  const [error, setError] = useState<string | null>(() => {
+    const callbackError = searchParams.get("error");
+    if (callbackError === "auth") {
+      return "Sign-in didn't complete. Please try again, or use another sign-in method.";
+    }
+    if (callbackError === "confirmation") {
+      return "That confirmation link is invalid or has expired. Please sign in or request a new link.";
+    }
+    return null;
+  });
   const [errorHint, setErrorHint] = useState<"forgot" | "create" | "password" | null>(null);
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
