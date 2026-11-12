@@ -131,19 +131,22 @@ Cross-package deps use pnpm `workspace:*` protocol.
 | Dependency | Version | Notes |
 |-----------|---------|-------|
 | Next.js | 16.4.6 | App Router, Turbopack |
-| React | 19.2.4 | |
-| tRPC | 11.12.0 | v11 API — NOT v10 patterns |
+| React | 19.3.1 | |
+| tRPC | 11.28.0 | v11 API — NOT v10 patterns |
 | Drizzle ORM | 0.45.1 | `postgres` driver via `drizzle-orm/postgres-js` |
 | Zod | 4.6.7 | v4 — API is backwards-compatible with v3 |
-| Tailwind CSS | 4.2.1 | v4 with `@tailwindcss/postcss` — NOT the old PostCSS plugin |
-| Biome | 2.4.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
+| Tailwind CSS | 4.3.5 | v4 with `@tailwindcss/postcss` — NOT the old PostCSS plugin |
+| Biome | 2.6.7 | v2 config format — `organizeImports` is under `assist.actions.source` |
 | Vitest | 5.1.0 | |
 | TypeScript | 5.9.3 | |
 | mammoth | 1.12.0 | DOCX text extraction (apps/web only) |
 | @react-pdf/renderer | 4.3.2 | Server-side PDF report generation (apps/web only) |
 | sonner | latest | Toast notifications (dark themed, bottom-right) |
-| @supabase/ssr | latest | Auth session management — browser/server/middleware clients (apps/web + packages/api) |
+| @supabase/ssr | 0.12.7 | Auth session management — browser/server/middleware clients (apps/web + packages/api) |
 | Turborepo | 2.11.10 | |
+| @anthropic-ai/sdk | 0.137.0 | Pinned to the 0.x line; 1.x is a major, not yet adopted. Calls go via OpenRouter |
+| @supabase/supabase-js | 2.119.0 | |
+| unpdf | 1.9.1 | PDF text extraction (apps/web only) |
 
 ## Supabase
 
