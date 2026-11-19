@@ -13,8 +13,8 @@
     "@redflag/shared": "workspace:*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
-    "@trpc/client": "^11.28.0",
-    "@trpc/server": "^11.28.0",
+    "@trpc/client": "^11.28.3",
+    "@trpc/server": "^11.28.3",
     "superjson": "^2.2.6",
     "zod": "^4.6.7"
   },
